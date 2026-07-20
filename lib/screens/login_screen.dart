@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../config/app_config.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 import '../services/auth_service.dart';
 import '../services/permission_service.dart';
 import 'home_screen.dart';
+import 'platform_login_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,9 +28,9 @@ class _LoginScreenState extends State<LoginScreen>
   bool _btnPressed = false;
   String? _errorMessage;
 
-  static const _navy = Color(0xFF1B4F72);
-  static const _secondary = Color(0xFF006497);
-  static const _softBg = Color(0xFFEBF5FB);
+  // Secret super-admin entry — 5 taps on logo within 2 seconds
+  int _logoTapCount = 0;
+  Timer? _logoTapTimer;
 
   // ── Animation controllers ─────────────────────────────────────────────
   late final AnimationController _entryCtrl;
@@ -192,10 +196,39 @@ class _LoginScreenState extends State<LoginScreen>
     _shakeCtrl.dispose();
     _loginCtrl.dispose();
     _passwordCtrl.dispose();
+    _logoTapTimer?.cancel();
     super.dispose();
   }
 
   // ── Actions ───────────────────────────────────────────────────────────
+
+  void _onLogoTap() {
+    _logoTapTimer?.cancel();
+    _logoTapCount++;
+
+    if (_logoTapCount >= 5) {
+      _logoTapCount = 0;
+      HapticFeedback.mediumImpact();
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, _, _) => const PlatformLoginScreen(),
+          transitionsBuilder: (_, animation, _, child) => FadeTransition(
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            child: child,
+          ),
+          transitionDuration: const Duration(milliseconds: 250),
+        ),
+      );
+      return;
+    }
+
+    if (_logoTapCount >= 3) HapticFeedback.selectionClick();
+
+    _logoTapTimer = Timer(const Duration(seconds: 2), () {
+      _logoTapCount = 0;
+    });
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -263,7 +296,7 @@ class _LoginScreenState extends State<LoginScreen>
     final headerH = screenH * 0.36;
 
     return Scaffold(
-      backgroundColor: _softBg,
+      backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
@@ -274,8 +307,8 @@ class _LoginScreenState extends State<LoginScreen>
             right: 0,
             child: Container(
               height: headerH,
-              decoration: const BoxDecoration(
-                color: _navy,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(40),
                   bottomRight: Radius.circular(40),
@@ -334,33 +367,37 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Logo — Hero landing target + entry scale + ongoing pulse
-        AnimatedBuilder(
-          animation: Listenable.merge([_entryCtrl, _pulseCtrl]),
-          builder: (_, child) => Opacity(
-            opacity: _logoOpacity.value.clamp(0.0, 1.0),
-            child: Transform.scale(
-              scale: _logoScale.value * _logoPulse.value,
-              child: child,
-            ),
-          ),
-          child: Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.10),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.20),
-                width: 1.5,
+        // Logo — 5 secret taps within 2s → super admin login
+        GestureDetector(
+          onTap: _onLogoTap,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_entryCtrl, _pulseCtrl]),
+            builder: (_, child) => Opacity(
+              opacity: _logoOpacity.value.clamp(0.0, 1.0),
+              child: Transform.scale(
+                scale: _logoScale.value * _logoPulse.value,
+                child: child,
               ),
             ),
-            child: Center(
-              child: Image.asset(
-                'assets/images/wight_logo.png',
-                width: 48,
-                height: 48,
-                fit: BoxFit.contain,
+            child: Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.20),
+                  width: 1.5,
+                ),
+              ),
+              child: Center(
+                child: Image.asset(
+                  'assets/images/wight_logo.png',
+                  width: 48,
+                  height: 48,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
@@ -413,7 +450,7 @@ class _LoginScreenState extends State<LoginScreen>
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1B4F72).withValues(alpha: 0.12),
+            color: AppColors.primaryA12,
             blurRadius: 48,
             offset: const Offset(0, 18),
           ),
@@ -430,7 +467,7 @@ class _LoginScreenState extends State<LoginScreen>
               style: GoogleFonts.poppins(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
-                color: _navy,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 4),
@@ -439,7 +476,7 @@ class _LoginScreenState extends State<LoginScreen>
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1B4F72).withValues(alpha: 0.40),
+                color: AppColors.primaryA40,
               ),
             ),
             const SizedBox(height: 24),
@@ -494,7 +531,7 @@ class _LoginScreenState extends State<LoginScreen>
                   _obscurePassword
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
-                  color: const Color(0xFF1B4F72).withValues(alpha: 0.45),
+                  color: AppColors.primaryA45,
                   size: 20,
                 ),
               ),
@@ -514,7 +551,7 @@ class _LoginScreenState extends State<LoginScreen>
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: _secondary,
+                    color: AppColors.blue,
                   ),
                 ),
               ),
@@ -546,21 +583,21 @@ class _LoginScreenState extends State<LoginScreen>
       style: GoogleFonts.poppins(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: _navy,
+        color: AppColors.primary,
       ),
       validator: validator,
       decoration: InputDecoration(
         filled: true,
-        fillColor: _softBg,
+        fillColor: AppColors.background,
         hintText: hint,
         hintStyle: GoogleFonts.poppins(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: const Color(0xFF1B4F72).withValues(alpha: 0.35),
+          color: AppColors.primaryA35,
         ),
         prefixIcon: Padding(
           padding: const EdgeInsets.only(left: 16, right: 10),
-          child: Icon(icon, color: _secondary, size: 20),
+          child: Icon(icon, color: AppColors.blue, size: 20),
         ),
         prefixIconConstraints:
             const BoxConstraints(minWidth: 0, minHeight: 0),
@@ -573,27 +610,27 @@ class _LoginScreenState extends State<LoginScreen>
         suffixIconConstraints:
             const BoxConstraints(minWidth: 0, minHeight: 0),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           borderSide: BorderSide(
-            color: _navy.withValues(alpha: 0.25),
+            color: AppColors.primary.withValues(alpha: 0.25),
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           borderSide:
               const BorderSide(color: Color(0xFFBA1A1A), width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           borderSide:
               const BorderSide(color: Color(0xFFBA1A1A), width: 2),
         ),
@@ -611,7 +648,7 @@ class _LoginScreenState extends State<LoginScreen>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFFFDAD6),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: const Color(0xFFBA1A1A).withValues(alpha: 0.15),
         ),
@@ -702,8 +739,8 @@ class _LoginScreenState extends State<LoginScreen>
             child: ElevatedButton(
               onPressed: _isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _navy,
-                disabledBackgroundColor: _navy.withValues(alpha: 0.75),
+                backgroundColor: AppColors.primary,
+                disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.75),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -752,14 +789,19 @@ class _LoginScreenState extends State<LoginScreen>
     return FadeTransition(
       opacity: _footerOpacity,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 28),
-        child: Text(
-          'Powered by Eye-SaaS HMS',
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1B4F72).withValues(alpha: 0.35),
-          ),
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Powered by Eye-SaaS HMS',
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryA35,
+              ),
+            ),
+          ],
         ),
       ),
     );

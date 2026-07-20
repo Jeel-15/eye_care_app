@@ -3,40 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
+import '../widgets/app_animations.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../services/permission_service.dart';
 import '../services/settings_service.dart';
 
-// ── Pre-computed alpha variants (file-private) ────────────────────────────────
-// Computed once at compile time — avoids Color allocation on every build() call.
-// Formula: alpha × 255 → hex. e.g. 0.40 × 255 = 102 = 0x66
-const _navyA03  = Color(0x081B4F72);
-const _navyA04  = Color(0x0A1B4F72);
-const _navyA05  = Color(0x0D1B4F72);
-const _navyA06  = Color(0x0F1B4F72);
-const _navyA07  = Color(0x121B4F72);
-const _navyA08  = Color(0x141B4F72);
-const _navyA10  = Color(0x1A1B4F72);
-const _navyA15  = Color(0x261B4F72);
-const _navyA18  = Color(0x2E1B4F72);
-const _navyA20  = Color(0x331B4F72);
-const _navyA25  = Color(0x401B4F72);
-const _navyA28  = Color(0x471B4F72);
-const _navyA30  = Color(0x4D1B4F72);
-const _navyA35  = Color(0x591B4F72);
-const _navyA38  = Color(0x611B4F72);
-const _navyA40  = Color(0x661B4F72);
-const _navyA45  = Color(0x731B4F72);
-const _navyA50  = Color(0x801B4F72);
-const _navyA55  = Color(0x8C1B4F72);
-const _white20  = Color(0x33FFFFFF);
-const _white35  = Color(0x59FFFFFF);
-const _white40  = Color(0x66FFFFFF);
-const _white70  = Color(0xB3FFFFFF);
-const _redA60   = Color(0x99DC2626);
-const _fireA04  = Color(0x0A7C0000);
-const _fireA18  = Color(0x2E7C0000);
 
 class SettingsScreen extends StatefulWidget {
   final UserInfo user;
@@ -49,13 +23,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const _navy   = Color(0xFF1B4F72);
-  static const _bg     = Color(0xFFEAF2F8);
-  static const _green  = Color(0xFF16A34A);
-  static const _orange = Color(0xFFEA580C);
-  static const _red    = Color(0xFFDC2626);
-  static const _fire   = Color(0xFF7C0000);
-
   final _formKey = GlobalKey<FormState>();
 
   // General
@@ -249,27 +216,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
       if (!mounted) return;
       setState(() { _isDirty = false; _saving = false; });
-      _snack('Settings saved successfully.');
+      showAppSnackBar(context, 'Settings saved successfully.', isSuccess: true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      _snack(e.toString().replaceFirst('Exception: ', ''), isError: true);
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true, duration: const Duration(seconds: 4));
     }
-  }
-
-  void _snack(String msg, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Row(children: [
-        Icon(isError ? Icons.error_outline_rounded : Icons.check_circle_rounded,
-            color: Colors.white, size: 18),
-        const SizedBox(width: 8),
-        Flexible(child: Text(msg)),
-      ]),
-      backgroundColor: isError ? _red : _green,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      duration: Duration(milliseconds: isError ? 4000 : 2500),
-    ));
   }
 
   // ── Logo upload ────────────────────────────────────────────────────────────
@@ -288,11 +240,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final url = await SettingsService.instance.uploadLogo(File(picked.path));
       if (!mounted) return;
       setState(() { _logoUrl = url; _uploadingLogo = false; });
-      _snack('Logo updated successfully.');
+      showAppSnackBar(context, 'Logo updated successfully.', isSuccess: true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _uploadingLogo = false);
-      _snack(e.toString().replaceFirst('Exception: ', ''), isError: true);
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true, duration: const Duration(seconds: 4));
     }
   }
 
@@ -324,7 +276,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _pickState() async {
     if (_selCountry.isEmpty) {
-      _snack('Please select a country first.', isError: true);
+      showAppSnackBar(context, 'Please select a country first.', isError: true);
       return;
     }
     // Lazily resolve country ID if settings were loaded without it
@@ -341,7 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
       } catch (_) {}
       if (cid == null) {
-        if (mounted) _snack('Country not found — re-select it from the list.', isError: true);
+        if (mounted) showAppSnackBar(context, 'Country not found — re-select it from the list.', isError: true);
         return;
       }
     }
@@ -364,12 +316,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _pickDistrict() async {
     if (_selState.isEmpty) {
-      _snack('Please select a state first.', isError: true);
+      showAppSnackBar(context, 'Please select a state first.', isError: true);
       return;
     }
     final sid = _selStateId;
     if (sid == null) {
-      _snack('Re-select the state to load districts.', isError: true);
+      showAppSnackBar(context, 'Re-select the state to load districts.', isError: true);
       return;
     }
     final picked = await _showPicker<LocationItem>(
@@ -388,12 +340,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _pickCity() async {
     if (_selDistrict.isEmpty) {
-      _snack('Please select a district first.', isError: true);
+      showAppSnackBar(context, 'Please select a district first.', isError: true);
       return;
     }
     final did = _selDistrictId;
     if (did == null) {
-      _snack('Re-select the district to load cities.', isError: true);
+      showAppSnackBar(context, 'Re-select the district to load cities.', isError: true);
       return;
     }
     final picked = await _showPicker<LocationItem>(
@@ -437,9 +389,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     if (!PermissionService.instance.can(Perm.settingsHospital)) {
       return Scaffold(
-        backgroundColor: _bg,
+        backgroundColor: AppColors.backgroundAlt,
         appBar: AppBar(
-          backgroundColor: _navy,
+          backgroundColor: AppColors.primary,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
@@ -456,15 +408,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.lock_outline_rounded, size: 56,
-                    color: _navy.withValues(alpha: 0.25)),
+                    color: AppColors.primary.withValues(alpha: 0.25)),
                 const SizedBox(height: 16),
                 Text('No Access',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700,
-                        color: _navy.withValues(alpha: 0.50))),
+                        color: AppColors.primary.withValues(alpha: 0.50))),
                 const SizedBox(height: 6),
                 Text('You do not have permission to view hospital settings.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: _navy.withValues(alpha: 0.35))),
+                    style: TextStyle(fontSize: 13, color: AppColors.primary.withValues(alpha: 0.35))),
               ],
             ),
           ),
@@ -472,10 +424,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     }
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.backgroundAlt,
       appBar: _buildAppBar(),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: _navy))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _error != null
               ? _buildError()
               : _buildBody(),
@@ -484,7 +436,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: _navy,
+      backgroundColor: AppColors.primary,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
@@ -502,7 +454,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ? const SizedBox(width: 16, height: 16,
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                 : Text('Save', style: TextStyle(
-                    color: _isDirty ? Colors.white : _white35,
+                    color: _isDirty ? Colors.white : const Color(0x59FFFFFF),
                     fontSize: 14, fontWeight: FontWeight.w700)),
           ),
         ),
@@ -515,7 +467,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.error_outline_rounded, size: 48, color: _redA60),
+          Icon(Icons.error_outline_rounded, size: 48, color: AppColors.waitRed.withValues(alpha: 0.60)),
           const SizedBox(height: 12),
           Text(_error!, textAlign: TextAlign.center,
               style: const TextStyle(color: Color(0xFF64748B))),
@@ -524,7 +476,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: _load,
             icon: const Icon(Icons.refresh_rounded),
             label: const Text('Retry'),
-            style: ElevatedButton.styleFrom(backgroundColor: _navy, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
           ),
         ]),
       ),
@@ -558,8 +510,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 24),
                       _buildPrintSection(),
                       const SizedBox(height: 24),
-                      _buildPaginationSection(),
-                      const SizedBox(height: 24),
                       _buildQueueSection(),
                       const SizedBox(height: 24),
                       _buildSecuritySection(),
@@ -582,13 +532,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final name = s.hospitalName.isNotEmpty ? s.hospitalName : widget.hospital.name;
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft, end: Alignment.bottomRight,
-          colors: [Color(0xFF1B4F72), Color(0xFF2980B9)],
+          colors: [AppColors.primary, AppColors.blueLight],
         ),
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(28), bottomRight: Radius.circular(28)),
+          bottomLeft: Radius.circular(AppRadius.xxl), bottomRight: Radius.circular(AppRadius.xxl)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
       child: Column(children: [
@@ -606,18 +556,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             textAlign: TextAlign.center),
         if (s.hospitalEmail.isNotEmpty) ...[
           const SizedBox(height: 6),
-          Text(s.hospitalEmail, style: TextStyle(fontSize: 12, color: _white70),
+          Text(s.hospitalEmail, style: TextStyle(fontSize: 12, color: const Color(0xB3FFFFFF)),
               textAlign: TextAlign.center),
         ],
         if (s.hospitalPhone.isNotEmpty) ...[
           const SizedBox(height: 2),
-          Text(s.hospitalPhone, style: TextStyle(fontSize: 12, color: _white70)),
+          Text(s.hospitalPhone, style: TextStyle(fontSize: 12, color: const Color(0xB3FFFFFF))),
         ],
         const SizedBox(height: 14),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
           decoration: BoxDecoration(
-            color: _white20, borderRadius: BorderRadius.circular(20)),
+            color: const Color(0x33FFFFFF), borderRadius: BorderRadius.circular(AppRadius.xl)),
           child: const Text('HOSPITAL SETTINGS',
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
                   color: Colors.white, letterSpacing: 1.2)),
@@ -631,8 +581,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       width: 72, height: 72,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: _white20,
-        border: Border.all(color: _white40, width: 2),
+        color: const Color(0x33FFFFFF),
+        border: Border.all(color: const Color(0x66FFFFFF), width: 2),
       ),
       child: const Icon(Icons.local_hospital_rounded, color: Colors.white, size: 34),
     );
@@ -642,10 +592,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _sectionHeader(String title, IconData icon) {
     return Row(children: [
-      Icon(icon, size: 18, color: _navyA50),
+      Icon(icon, size: 18, color: AppColors.primaryA50),
       const SizedBox(width: 8),
       Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-          color: _navyA50, letterSpacing: 1.4)),
+          color: AppColors.primaryA50, letterSpacing: 1.4)),
     ]);
   }
 
@@ -654,8 +604,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
         color: Colors.white, borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _navyA08),
-        boxShadow: [BoxShadow(color: _navyA05,
+        border: Border.all(color: AppColors.primaryA08),
+        boxShadow: [BoxShadow(color: AppColors.primaryA05,
             blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
@@ -677,7 +627,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-            color: _navyA40, letterSpacing: 1.0)),
+            color: AppColors.primaryA40, letterSpacing: 1.0)),
         const SizedBox(height: 4),
         Row(children: [
           Expanded(
@@ -696,9 +646,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               validator: validator,
             ),
           ),
-          if (suffix != null) Icon(suffix, size: 20, color: _navyA30),
+          if (suffix != null) Icon(suffix, size: 20, color: AppColors.primaryA30),
         ]),
-        Divider(height: 1, color: enabled ? _navyA18 : _navyA06),
+        Divider(height: 1, color: enabled ? AppColors.primaryA18 : AppColors.primaryA06),
       ],
     );
   }
@@ -709,17 +659,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onTap: onTap,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-            color: _navyA40, letterSpacing: 1.0)),
+            color: AppColors.primaryA40, letterSpacing: 1.0)),
         const SizedBox(height: 4),
         Row(children: [
           Expanded(
             child: Text(value.isEmpty ? '— Select' : value,
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600,
-                    color: value.isEmpty ? _navyA30 : const Color(0xFF1A3A52))),
+                    color: value.isEmpty ? AppColors.primaryA30 : const Color(0xFF1A3A52))),
           ),
-          Icon(Icons.expand_more_rounded, size: 22, color: _navyA40),
+          Icon(Icons.expand_more_rounded, size: 22, color: AppColors.primaryA40),
         ]),
-        Divider(height: 1, color: _navyA18),
+        Divider(height: 1, color: AppColors.primaryA18),
       ]),
     );
   }
@@ -782,7 +732,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ? child
                         : SizedBox(height: 90,
                             child: Center(child: CircularProgressIndicator(
-                                color: _navyA50, strokeWidth: 2))),
+                                color: AppColors.primaryA50, strokeWidth: 2))),
                     errorBuilder: (ctx, e, s) => _logoPlaceholder(),
                   ),
                 )
@@ -794,13 +744,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: OutlinedButton.icon(
             onPressed: _uploadingLogo ? null : _pickAndUploadLogo,
             icon: _uploadingLogo
-                ? const SizedBox(width: 16, height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: _navy))
+                ? SizedBox(width: 16, height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
                 : const Icon(Icons.upload_rounded, size: 18),
             label: Text(_uploadingLogo ? 'Uploading...' : 'Change Logo'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: _navy,
-              side: BorderSide(color: _navyA30),
+              foregroundColor: AppColors.primary,
+              side: BorderSide(color: AppColors.primaryA30),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               padding: const EdgeInsets.symmetric(vertical: 10),
             ),
@@ -809,7 +759,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 6),
         Center(
           child: Text('JPG, PNG, WebP — max 2 MB',
-              style: TextStyle(fontSize: 11, color: _navyA38)),
+              style: TextStyle(fontSize: 11, color: AppColors.primaryA38)),
         ),
       ]),
     ]);
@@ -819,14 +769,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       width: 110, height: 80,
       decoration: BoxDecoration(
-        color: _navyA04,
+        color: AppColors.primaryA04,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _navyA10),
+        border: Border.all(color: AppColors.primaryA10),
       ),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(Icons.image_outlined, size: 28, color: _navyA28),
+        Icon(Icons.image_outlined, size: 28, color: AppColors.primaryA28),
         const SizedBox(height: 4),
-        Text('No Logo', style: TextStyle(fontSize: 10, color: _navyA35)),
+        Text('No Logo', style: TextStyle(fontSize: 10, color: AppColors.primaryA35)),
       ]),
     );
   }
@@ -852,7 +802,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Text(
           'Selecting a country auto-fills the timezone. Each field filters the next.',
           style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic,
-              color: _navyA40),
+              color: AppColors.primaryA40),
         ),
       ),
     ]);
@@ -892,12 +842,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
         decoration: BoxDecoration(
           color: Colors.white, borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _navyA08),
-          boxShadow: [BoxShadow(color: _navyA05, blurRadius: 8, offset: const Offset(0, 2))],
+          border: Border.all(color: AppColors.primaryA08),
+          boxShadow: [BoxShadow(color: AppColors.primaryA05, blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('LETTER PAD', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-              color: _navyA40, letterSpacing: 1.0)),
+              color: AppColors.primaryA40, letterSpacing: 1.0)),
           const SizedBox(height: 12),
           Row(children: [
             _letterPadOption(
@@ -913,7 +863,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ]),
           const SizedBox(height: 16),
-          Divider(height: 1, color: _navyA08),
+          Divider(height: 1, color: AppColors.primaryA08),
           const SizedBox(height: 12),
           _fieldRow(label: 'PRINT HEADER NOTE', ctrl: _headerNoteCtrl, suffix: Icons.notes_rounded),
           const SizedBox(height: 16),
@@ -935,76 +885,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             border: Border.all(
-                color: selected ? _navy : _navyA15, width: selected ? 2 : 1),
+                color: selected ? AppColors.primary : AppColors.primaryA15, width: selected ? 2 : 1),
             borderRadius: BorderRadius.circular(10),
-            color: selected ? _navyA05 : Colors.transparent,
+            color: selected ? AppColors.primaryA05 : Colors.transparent,
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Container(
                 width: 14, height: 14,
                 decoration: BoxDecoration(shape: BoxShape.circle,
-                    border: Border.all(color: selected ? _navy : _navyA30, width: 2)),
+                    border: Border.all(color: selected ? AppColors.primary : AppColors.primaryA30, width: 2)),
                 child: selected ? Center(child: Container(width: 6, height: 6,
-                    decoration: const BoxDecoration(color: _navy, shape: BoxShape.circle))) : null,
+                    decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle))) : null,
               ),
               const SizedBox(width: 6),
               Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
-                  color: selected ? _navy : _navyA55)),
+                  color: selected ? AppColors.primary : AppColors.primaryA55)),
             ]),
             const SizedBox(height: 5),
-            Text(desc, style: TextStyle(fontSize: 10, color: _navyA45, height: 1.3),
+            Text(desc, style: TextStyle(fontSize: 10, color: AppColors.primaryA45, height: 1.3),
                 maxLines: 2, overflow: TextOverflow.ellipsis),
           ]),
         ),
       ),
     );
-  }
-
-  Widget _buildPaginationSection() {
-    const options = ['10', '25', '50', '100'];
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _sectionHeader('PAGINATION', Icons.format_list_numbered_rounded),
-      const SizedBox(height: 10),
-      Container(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-        decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _navyA08),
-          boxShadow: [BoxShadow(color: _navyA05, blurRadius: 8, offset: const Offset(0, 2))],
-        ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('RECORDS PER PAGE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-              color: _navyA40, letterSpacing: 1.0)),
-          const SizedBox(height: 12),
-          Row(
-            children: options.map((opt) {
-              final selected = _paginationLimit == opt;
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () { setState(() => _paginationLimit = opt); _markDirty(); },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    height: 44, alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: selected ? _navy : Colors.transparent,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: selected ? _navy : _navyA18),
-                    ),
-                    child: Text(opt, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
-                        color: selected ? Colors.white : _navyA50)),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 8),
-          Center(child: Text('Number of items shown per page in lists',
-              style: TextStyle(fontSize: 11, color: _navyA38))),
-        ]),
-      ),
-    ]);
   }
 
   Widget _buildQueueSection() {
@@ -1027,7 +931,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 6),
         Text(
           'Auto-filled in primary exam when doctor selects "Yes, Dilated". Doctor can still edit per patient.',
-          style: TextStyle(fontSize: 11, color: _navyA45, height: 1.4),
+          style: TextStyle(fontSize: 11, color: AppColors.primaryA45, height: 1.4),
         ),
       ]),
       const SizedBox(height: 12),
@@ -1050,29 +954,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white, borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _navyA08),
-        boxShadow: [BoxShadow(color: _navyA05, blurRadius: 8, offset: const Offset(0, 2))],
+        border: Border.all(color: AppColors.primaryA08),
+        boxShadow: [BoxShadow(color: AppColors.primaryA05, blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(color: _navyA08, borderRadius: BorderRadius.circular(6)),
-            child: Text(badge, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: _navy)),
+            decoration: BoxDecoration(color: AppColors.primaryA08, borderRadius: BorderRadius.circular(6)),
+            child: Text(badge, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.primary)),
           ),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A3A52))),
-            Text(desc, style: TextStyle(fontSize: 10, color: _navyA45)),
+            Text(desc, style: TextStyle(fontSize: 10, color: AppColors.primaryA45)),
           ])),
         ]),
         const SizedBox(height: 14),
         Row(children: [
-          _waitField('Green',  _waitCtrl[greenKey]!,  _green),
+          _waitField('Green',  _waitCtrl[greenKey]!,  AppColors.waitGreen),
           const SizedBox(width: 6),
-          _waitField('Orange', _waitCtrl[orangeKey]!, _orange),
+          _waitField('Orange', _waitCtrl[orangeKey]!, AppColors.waitOrange),
           const SizedBox(width: 6),
-          _waitField('Red',    _waitCtrl[redKey]!,    _red),
+          _waitField('Red',    _waitCtrl[redKey]!,    AppColors.waitRed),
           const SizedBox(width: 6),
           _fireColumn(_waitCtrl[redKey]!),
         ]),
@@ -1087,20 +991,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Expanded(
       child: Column(children: [
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Container(width: 8, height: 8, decoration: const BoxDecoration(color: _fire, shape: BoxShape.circle)),
+          Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF7C0000), shape: BoxShape.circle)),
           const SizedBox(width: 4),
-          const Text('Fire', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _fire)),
+          const Text('Fire', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF7C0000))),
         ]),
         const SizedBox(height: 6),
         Container(
           height: 48, alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: _fireA04, borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: _fireA18),
+            color: const Color(0x0A7C0000), borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0x2E7C0000)),
           ),
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text('>$redVal m', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: _fire)),
-            const Text('auto', style: TextStyle(fontSize: 8, color: _fire, fontWeight: FontWeight.w600)),
+            Text('>$redVal m', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF7C0000))),
+            const Text('auto', style: TextStyle(fontSize: 8, color: Color(0xFF7C0000), fontWeight: FontWeight.w600)),
           ]),
         ),
       ]),
@@ -1113,7 +1017,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _navyA55)),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primaryA55)),
         ]),
         const SizedBox(height: 6),
         TextFormField(
@@ -1161,21 +1065,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
       decoration: BoxDecoration(
-        color: _navyA03, borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _navyA07),
+        color: AppColors.primaryA03, borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.primaryA07),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('PREVIEW', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
-            color: _navyA35, letterSpacing: 1.0)),
+            color: AppColors.primaryA35, letterSpacing: 1.0)),
         const SizedBox(height: 6),
         Row(children: [
-          _previewPill(badge, '0–${g}m',    _green),
+          _previewPill(badge, '0–${g}m',    AppColors.waitGreen),
           const SizedBox(width: 4),
-          _previewPill(badge, '$g–${o}m',   _orange),
+          _previewPill(badge, '$g–${o}m',   AppColors.waitOrange),
           const SizedBox(width: 4),
-          _previewPill(badge, '$o–${r}m',   _red),
+          _previewPill(badge, '$o–${r}m',   AppColors.waitRed),
           const SizedBox(width: 4),
-          _previewPill(badge, '${r}m+', _fire, isFire: true),
+          _previewPill(badge, '${r}m+', const Color(0xFF7C0000), isFire: true),
         ]),
       ]),
     );
@@ -1186,7 +1090,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8),
+          color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(AppRadius.sm),
           border: Border.all(color: color.withValues(alpha: 0.20)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -1219,17 +1123,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               width: 38, height: 38,
               decoration: BoxDecoration(
-                color: _navyA08, borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.password_rounded, size: 20, color: _navy),
+                color: AppColors.primaryA08, borderRadius: BorderRadius.circular(10)),
+              child: Icon(Icons.password_rounded, size: 20, color: AppColors.primary),
             ),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Change Password',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1A3A52))),
               Text('Update your account login password',
-                  style: TextStyle(fontSize: 11, color: _navyA45)),
+                  style: TextStyle(fontSize: 11, color: AppColors.primaryA45)),
             ])),
-            Icon(Icons.chevron_right_rounded, color: _navyA35),
+            Icon(Icons.chevron_right_rounded, color: AppColors.primaryA35),
           ]),
         ),
       ]),
@@ -1242,7 +1146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _ChangePasswordSheet(onSuccess: () => _snack('Password changed successfully.')),
+      builder: (_) => _ChangePasswordSheet(onSuccess: () => showAppSnackBar(context, 'Password changed successfully.', isSuccess: true)),
     );
   }
 
@@ -1253,7 +1157,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         boxShadow: [BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, -4))],
       ),
       child: SizedBox(
@@ -1261,8 +1165,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ElevatedButton(
           onPressed: (_isDirty && !_saving) ? _save : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: _navy,
-            disabledBackgroundColor: _navyA35,
+            backgroundColor: AppColors.primary,
+            disabledBackgroundColor: AppColors.primaryA35,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             elevation: 0,
@@ -1291,8 +1195,6 @@ class _PickerSheet<T> extends StatefulWidget {
 }
 
 class _PickerSheetState<T> extends State<_PickerSheet<T>> {
-  static const _navy = Color(0xFF1B4F72);
-
   List<T>? _items;
   List<T> _filtered = [];
   bool _loading = true;
@@ -1335,24 +1237,24 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
     return Container(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.78),
       decoration: const BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
       child: Column(children: [
         Center(child: Container(
           margin: const EdgeInsets.only(top: 12, bottom: 4), width: 36, height: 4,
-          decoration: BoxDecoration(color: _navyA15, borderRadius: BorderRadius.circular(2)),
+          decoration: BoxDecoration(color: AppColors.primaryA15, borderRadius: BorderRadius.circular(2)),
         )),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: Column(children: [
-            Text(widget.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _navy)),
+            Text(widget.title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary)),
             const SizedBox(height: 10),
             TextField(
               controller: _searchCtrl, autofocus: true,
               decoration: InputDecoration(
                 hintText: 'Search...',
-                hintStyle: TextStyle(color: _navyA35),
-                prefixIcon: Icon(Icons.search_rounded, color: _navyA40, size: 20),
-                filled: true, fillColor: const Color(0xFFEAF2F8),
+                hintStyle: TextStyle(color: AppColors.primaryA35),
+                prefixIcon: Icon(Icons.search_rounded, color: AppColors.primaryA40, size: 20),
+                filled: true, fillColor: AppColors.backgroundAlt,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                 isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
@@ -1360,11 +1262,11 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
           ]),
         ),
         const SizedBox(height: 8),
-        Divider(height: 1, color: _navyA08),
+        Divider(height: 1, color: AppColors.primaryA08),
         Flexible(
           child: _loading
-              ? const Padding(padding: EdgeInsets.all(40),
-                  child: Center(child: CircularProgressIndicator(color: _navy)))
+              ? Padding(padding: EdgeInsets.all(40),
+                  child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
               : _error != null
                   ? Padding(padding: const EdgeInsets.all(32),
                       child: Text(_error!, textAlign: TextAlign.center,
@@ -1373,7 +1275,7 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
                       ? Padding(padding: const EdgeInsets.all(32),
                           child: Text('No results found.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: _navyA45)))
+                              style: TextStyle(color: AppColors.primaryA45)))
                       : ListView.builder(
                           itemCount: _filtered.length,
                           itemBuilder: (ctx, i) {
@@ -1404,9 +1306,6 @@ class _ChangePasswordSheet extends StatefulWidget {
 }
 
 class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
-  static const _navy = Color(0xFF1B4F72);
-  static const _red  = Color(0xFFDC2626);
-
   final _formKey       = GlobalKey<FormState>();
   final _currentCtrl   = TextEditingController();
   final _newCtrl       = TextEditingController();
@@ -1440,17 +1339,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _savingPw = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Row(children: [
-          const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
-          const SizedBox(width: 8),
-          Flexible(child: Text(e.toString().replaceFirst('Exception: ', ''))),
-        ]),
-        backgroundColor: _red,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(milliseconds: 4000),
-      ));
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true, duration: const Duration(seconds: 4));
     }
   }
 
@@ -1460,22 +1349,22 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
     return Container(
       padding: EdgeInsets.fromLTRB(20, 0, 20, bottom + 20),
       decoration: const BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
       child: Form(
         key: _formKey,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Center(child: Container(
             margin: const EdgeInsets.only(top: 12, bottom: 16), width: 36, height: 4,
-            decoration: BoxDecoration(color: _navyA15, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(color: AppColors.primaryA15, borderRadius: BorderRadius.circular(2)),
           )),
           Row(children: [
             Container(
               width: 38, height: 38,
-              decoration: BoxDecoration(color: _navyA08, borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.password_rounded, size: 20, color: _navy),
+              decoration: BoxDecoration(color: AppColors.primaryA08, borderRadius: BorderRadius.circular(10)),
+              child: Icon(Icons.password_rounded, size: 20, color: AppColors.primary),
             ),
             const SizedBox(width: 12),
-            const Text('Change Password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _navy)),
+            Text('Change Password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary)),
           ]),
           const SizedBox(height: 20),
           _pwField('Current Password', _currentCtrl, _showCurrent,
@@ -1503,10 +1392,10 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
             child: ElevatedButton(
               onPressed: _savingPw ? null : _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _navy,
-                disabledBackgroundColor: _navyA35,
+                backgroundColor: AppColors.primary,
+                disabledBackgroundColor: AppColors.primaryA35,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                 elevation: 0,
               ),
               child: _savingPw
@@ -1525,7 +1414,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
       {String? Function(String?)? validator}) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-          color: _navyA40, letterSpacing: 1.0)),
+          color: AppColors.primaryA40, letterSpacing: 1.0)),
       const SizedBox(height: 4),
       Row(children: [
         Expanded(
@@ -1541,10 +1430,10 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
         GestureDetector(
           onTap: toggleShow,
           child: Icon(show ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-              size: 20, color: _navyA35),
+              size: 20, color: AppColors.primaryA35),
         ),
       ]),
-      Divider(height: 1, color: _navyA18),
+      Divider(height: 1, color: AppColors.primaryA18),
     ]);
   }
 }

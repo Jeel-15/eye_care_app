@@ -1,21 +1,14 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
+import '../widgets/app_animations.dart';
+import '../widgets/app_empty_state.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/foc_models.dart';
 import '../services/foc_service.dart';
 import '../services/permission_service.dart';
 
-abstract final class _C {
-  static const navy    = Color(0xFF1B4F72);
-  static const orange  = Color(0xFFE67E22);
-  static const green   = Color(0xFF27AE60);
-  static const red     = Color(0xFFDC3545);
-  static const amber   = Color(0xFFD4A017);
-
-  static final redA10   = red.withValues(alpha: 0.10);
-  static final greenA10 = green.withValues(alpha: 0.10);
-  static final amberA12 = amber.withValues(alpha: 0.12);
-}
 
 class FocScreen extends StatefulWidget {
   final UserInfo user;
@@ -73,9 +66,9 @@ class _FocScreenState extends State<FocScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: const Text('New FOC Request',
-              style: TextStyle(fontWeight: FontWeight.w600, color: _C.navy)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+          title: Text('New FOC Request',
+              style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary)),
           content: SizedBox(
             width: 360,
             child: Form(
@@ -110,7 +103,7 @@ class _FocScreenState extends State<FocScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: _C.navy),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
               onPressed: submitting
                   ? null
                   : () async {
@@ -125,20 +118,12 @@ class _FocScreenState extends State<FocScreen> {
                         if (ctx.mounted) Navigator.pop(ctx);
                         _load();
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('FOC request submitted.'),
-                                backgroundColor: _C.green),
-                          );
+                          showAppSnackBar(context, 'FOC request submitted.', isSuccess: true);
                         }
                       } catch (e) {
                         setDlg(() => submitting = false);
                         if (ctx.mounted) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(
-                            SnackBar(
-                                content: Text(e.toString()),
-                                backgroundColor: _C.red),
-                          );
+                          showAppSnackBar(ctx, e.toString(), isError: true);
                         }
                       }
                     },
@@ -172,9 +157,9 @@ class _FocScreenState extends State<FocScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
           title: const Text('Reject FOC Request',
-              style: TextStyle(fontWeight: FontWeight.w600, color: _C.red)),
+              style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.red)),
           content: Form(
             key: formKey,
             child: _field(reasonCtrl, 'Reason for rejection',
@@ -188,7 +173,7 @@ class _FocScreenState extends State<FocScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: _C.red),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
               onPressed: submitting
                   ? null
                   : () async {
@@ -202,12 +187,9 @@ class _FocScreenState extends State<FocScreen> {
                       } catch (e) {
                         setDlg(() => submitting = false);
                         if (ctx.mounted) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(
-                            SnackBar(
-                                content: Text(e.toString()),
-                                backgroundColor: _C.red),
-                          );
+                          showAppSnackBar(ctx, e.toString(), isError: true);
                         }
+                        _load();
                       }
                     },
               child: submitting
@@ -231,7 +213,7 @@ class _FocScreenState extends State<FocScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
         title: const Text('Accept FOC Request'),
         content: Text(
           'Accept FOC for ${foc.patient?.fullName ?? "Patient #${foc.patientId}"}?'
@@ -242,7 +224,7 @@ class _FocScreenState extends State<FocScreen> {
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: _C.green),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.green),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Accept',
                 style: TextStyle(color: Colors.white)),
@@ -257,18 +239,13 @@ class _FocScreenState extends State<FocScreen> {
       await FocService.instance.acceptFoc(foc.id);
       _load();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('FOC accepted. Fee waived.'),
-              backgroundColor: _C.green),
-        );
+        showAppSnackBar(context, 'FOC accepted. Fee waived.', isSuccess: true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: _C.red),
-        );
+        showAppSnackBar(context, e.toString(), isError: true);
       }
+      _load();
     }
   }
 
@@ -279,7 +256,7 @@ class _FocScreenState extends State<FocScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FA),
       appBar: AppBar(
-        backgroundColor: _C.navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('FOC Requests',
@@ -302,7 +279,7 @@ class _FocScreenState extends State<FocScreen> {
       ),
       floatingActionButton: _canCreate
           ? FloatingActionButton.extended(
-              backgroundColor: _C.navy,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               icon: const Icon(Icons.add),
               label: const Text('FOC Request'),
@@ -319,7 +296,7 @@ class _FocScreenState extends State<FocScreen> {
   Widget _buildFilterBar() {
     final statuses = <String?>['All', 'pending', 'accepted', 'rejected'];
     final labels   = ['All', 'Pending', 'Accepted', 'Rejected'];
-    final colors   = [_C.navy, _C.amber, _C.green, _C.red];
+    final colors   = [AppColors.primary, Color(0xFFD4A017), AppColors.green, AppColors.red];
 
     return Container(
       color: Colors.white,
@@ -361,10 +338,10 @@ class _FocScreenState extends State<FocScreen> {
     if (_error != null) {
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.error_outline, color: _C.red, size: 48),
+          const Icon(Icons.error_outline, color: AppColors.red, size: 48),
           const SizedBox(height: 8),
           Text(_error!, textAlign: TextAlign.center,
-              style: const TextStyle(color: _C.red)),
+              style: const TextStyle(color: AppColors.red)),
           const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: _load,
@@ -375,14 +352,9 @@ class _FocScreenState extends State<FocScreen> {
       );
     }
     if (_result == null || _result!.items.isEmpty) {
-      return const Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.receipt_long_outlined,
-              size: 64, color: Colors.grey),
-          SizedBox(height: 8),
-          Text('No FOC requests found.',
-              style: TextStyle(color: Colors.grey)),
-        ]),
+      return const AppEmptyState(
+        message: 'No FOC requests found.',
+        icon: Icons.receipt_long_outlined,
       );
     }
 
@@ -403,18 +375,18 @@ class _FocScreenState extends State<FocScreen> {
 
     switch (foc.status) {
       case 'accepted':
-        statusColor = _C.green;
-        statusBg    = _C.greenA10;
+        statusColor = AppColors.green;
+        statusBg    = AppColors.green.withValues(alpha: 0.10);
         statusLabel = 'Accepted';
         break;
       case 'rejected':
-        statusColor = _C.red;
-        statusBg    = _C.redA10;
+        statusColor = AppColors.red;
+        statusBg    = AppColors.red.withValues(alpha: 0.10);
         statusLabel = 'Rejected';
         break;
       default:
-        statusColor = _C.amber;
-        statusBg    = _C.amberA12;
+        statusColor = const Color(0xFFD4A017);
+        statusBg    = Color(0xFFD4A017).withValues(alpha: 0.12);
         statusLabel = 'Pending';
     }
 
@@ -431,10 +403,10 @@ class _FocScreenState extends State<FocScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(
                   foc.patient?.fullName ?? 'Patient #${foc.patientId}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
-                      color: _C.navy),
+                      color: AppColors.primary),
                 ),
                 if (foc.patient?.patientCode.isNotEmpty == true)
                   Text(foc.patient!.patientCode,
@@ -447,7 +419,7 @@ class _FocScreenState extends State<FocScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: statusBg,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
               child: Text(statusLabel,
                   style: TextStyle(
@@ -460,10 +432,10 @@ class _FocScreenState extends State<FocScreen> {
           // Info row
           Wrap(spacing: 16, runSpacing: 4, children: [
             _infoChip(Icons.currency_rupee,
-                foc.focFee.toStringAsFixed(2), _C.orange),
+                foc.focFee.toStringAsFixed(2), AppColors.orange),
             if (foc.doctor != null)
               _infoChip(Icons.person_outline,
-                  'Dr. ${foc.doctor!.name}', _C.navy),
+                  'Dr. ${foc.doctor!.name}', AppColors.primary),
           ]),
           const SizedBox(height: 8),
           Text(foc.reason,
@@ -471,12 +443,12 @@ class _FocScreenState extends State<FocScreen> {
           if (foc.isRejected && foc.rejectedReason != null) ...[
             const SizedBox(height: 6),
             Text('Rejection: ${foc.rejectedReason}',
-                style: const TextStyle(fontSize: 12, color: _C.red)),
+                style: const TextStyle(fontSize: 12, color: AppColors.red)),
           ],
           if (foc.isAccepted && foc.acceptedByUser != null) ...[
             const SizedBox(height: 6),
             Text('Accepted by: ${foc.acceptedByUser!.name}',
-                style: const TextStyle(fontSize: 12, color: _C.green)),
+                style: const TextStyle(fontSize: 12, color: AppColors.green)),
           ],
           // Action buttons (reception only, pending only)
           if (_canAccept && foc.isPending) ...[
@@ -485,8 +457,8 @@ class _FocScreenState extends State<FocScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                      foregroundColor: _C.red,
-                      side: const BorderSide(color: _C.red)),
+                      foregroundColor: AppColors.red,
+                      side: const BorderSide(color: AppColors.red)),
                   icon: const Icon(Icons.close, size: 16),
                   label: const Text('Reject'),
                   onPressed: () => _showRejectDialog(foc),
@@ -496,7 +468,7 @@ class _FocScreenState extends State<FocScreen> {
               Expanded(
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: _C.green,
+                      backgroundColor: AppColors.green,
                       foregroundColor: Colors.white),
                   icon: const Icon(Icons.check, size: 16),
                   label: const Text('Accept'),

@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 import '../utils/app_route.dart';
+import '../widgets/app_animations.dart';
 import 'package:flutter/services.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
 import '../services/masters_service.dart';
+import '../utils/phone_rules.dart';
 import '../services/patient_service.dart';
 import 'opd_bill_screen.dart';
 
@@ -25,10 +29,6 @@ class PatientCheckinScreen extends StatefulWidget {
 }
 
 class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
-  static const _navy = Color(0xFF1B4F72);
-  static const _blue = Color(0xFF2980B9);
-  static const _green = Color(0xFF27AE60);
-
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
@@ -143,7 +143,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: _navy),
+          colorScheme: ColorScheme.light(primary: AppColors.primary),
         ),
         child: child!,
       ),
@@ -201,13 +201,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        showAppSnackBar(context, e.toString(), isError: true, duration: const Duration(seconds: 4));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -219,14 +213,14 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEBF5FB),
+      backgroundColor: AppColors.background,
       body: Column(
         children: [
           _buildAppBar(),
           Expanded(
             child: _mastersLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: _navy))
+                ? Center(
+                    child: CircularProgressIndicator(color: AppColors.primary))
                 : _mastersError != null
                     ? _buildError()
                     : _buildForm(),
@@ -239,9 +233,9 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
   Widget _buildAppBar() {
     final p = widget.patient;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_navy, _blue],
+          colors: [AppColors.primary, AppColors.blueLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -263,7 +257,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
                 height: 44,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: const Icon(Icons.how_to_reg_rounded,
                     color: Colors.white, size: 22),
@@ -305,7 +299,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.wifi_off_rounded,
-                size: 48, color: Color(0xFFDC3545)),
+                size: 48, color: AppColors.red),
             const SizedBox(height: 12),
             Text(_mastersError ?? 'Failed to load form data.',
                 textAlign: TextAlign.center),
@@ -315,7 +309,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Retry'),
               style:
-                  ElevatedButton.styleFrom(backgroundColor: _navy),
+                  ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             ),
           ],
         ),
@@ -354,16 +348,10 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
                     _sectionLabel('Contact No *'),
                     _textField(
                       _contactCtrl,
-                      '10-digit contact',
+                      'Contact number',
                       inputType: TextInputType.phone,
-                      maxLength: 10,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return 'Contact required';
-                        }
-                        if (v.trim().length < 6) return 'Invalid number';
-                        return null;
-                      },
+                      maxLength: 16,
+                      validator: PhoneRules.required,
                     ),
                   ],
                 ),
@@ -494,7 +482,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                flex: 1,
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -559,11 +547,11 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
         color: const Color(0xFFD6EAF8),
         borderRadius: BorderRadius.circular(10),
         border: const Border(
-            left: BorderSide(color: _blue, width: 4)),
+            left: BorderSide(color: AppColors.blueLight, width: 4)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded, color: _blue, size: 18),
+          const Icon(Icons.info_outline_rounded, color: AppColors.blueLight, size: 18),
           const SizedBox(width: 8),
           const Expanded(
             child: Text(
@@ -579,10 +567,10 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
   Widget _sectionLabel(String text) => Padding(
         padding: const EdgeInsets.only(top: 14, bottom: 5),
         child: Text(text,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: _navy)),
+                color: AppColors.primary)),
       );
 
   InputDecoration _inputDeco(String hint,
@@ -590,37 +578,37 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
     return InputDecoration(
       hintText: hint,
       hintStyle:
-          TextStyle(fontSize: 13, color: _navy.withValues(alpha: 0.4)),
+          TextStyle(fontSize: 13, color: AppColors.primaryA40),
       prefixIcon: prefix != null
-          ? Icon(prefix, size: 18, color: _navy.withValues(alpha: 0.5))
+          ? Icon(prefix, size: 18, color: AppColors.primaryA50)
           : null,
       filled: true,
       fillColor:
-          readOnly ? _navy.withValues(alpha: 0.04) : Colors.white,
+          readOnly ? AppColors.primaryA04 : Colors.white,
       contentPadding:
           const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
         borderSide:
-            BorderSide(color: _navy.withValues(alpha: 0.18)),
+            BorderSide(color: AppColors.primaryA18),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
         borderSide:
-            BorderSide(color: _navy.withValues(alpha: 0.18)),
+            BorderSide(color: AppColors.primaryA18),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
-        borderSide: const BorderSide(color: _navy, width: 1.5),
+        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
-        borderSide: const BorderSide(color: Color(0xFFDC3545)),
+        borderSide: const BorderSide(color: AppColors.red),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
         borderSide: const BorderSide(
-            color: Color(0xFFDC3545), width: 1.5),
+            color: AppColors.red, width: 1.5),
       ),
     );
   }
@@ -638,8 +626,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       keyboardType: inputType,
       maxLength: maxLength,
       inputFormatters:
-          inputType == TextInputType.phone ||
-                  inputType == TextInputType.number
+          inputType == TextInputType.number
               ? [FilteringTextInputFormatter.digitsOnly]
               : null,
       decoration: _inputDeco(hint).copyWith(counterText: ''),
@@ -658,7 +645,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       controller: ctrl,
       readOnly: true,
       style: TextStyle(
-          color: _navy.withValues(alpha: 0.65),
+          color: AppColors.primary.withValues(alpha: 0.65),
           fontWeight: FontWeight.w500),
       decoration: _inputDeco(hint, prefix: icon, readOnly: true),
     );
@@ -686,7 +673,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       keyboardType: TextInputType.number,
       decoration: _inputDeco('0').copyWith(
         prefixIcon: const Icon(Icons.currency_rupee_rounded,
-            size: 16, color: _green),
+            size: 16, color: AppColors.green),
         filled: true,
         fillColor: const Color(0xFFEAFAF1),
         enabledBorder: OutlineInputBorder(
@@ -695,11 +682,11 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(11),
-          borderSide: const BorderSide(color: _green, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.green, width: 1.5),
         ),
       ),
       style: const TextStyle(
-          color: _green, fontWeight: FontWeight.w700),
+          color: AppColors.green, fontWeight: FontWeight.w700),
       validator: (v) {
         if (v == null || v.trim().isEmpty) return 'Fee required';
         if (double.tryParse(v.trim()) == null) return 'Invalid fee';
@@ -721,10 +708,10 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       onChanged: onChanged,
       validator: validator,
       decoration: _inputDeco(hint),
-      style: const TextStyle(
-          color: _navy, fontSize: 13, fontWeight: FontWeight.w500),
+      style: TextStyle(
+          color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.w500),
       icon: Icon(Icons.expand_more_rounded,
-          color: _navy.withValues(alpha: 0.6)),
+          color: AppColors.primaryA60),
       dropdownColor: Colors.white,
       isExpanded: true,
     );
@@ -849,9 +836,9 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: _navy,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: _navy.withValues(alpha: 0.5),
+          disabledBackgroundColor: AppColors.primaryA50,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(40)),

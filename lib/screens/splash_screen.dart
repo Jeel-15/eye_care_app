@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 import '../models/auth_models.dart';
 import '../services/auth_service.dart';
 import '../services/permission_service.dart';
@@ -123,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1B4F72),
+      backgroundColor: AppColors.primary,
       body: Stack(
         clipBehavior: Clip.hardEdge,
         children: [
@@ -258,7 +259,7 @@ class _SplashScreenState extends State<SplashScreen>
                     _headline(
                       'HMS',
                       96,
-                      const Color(0xFF9DCBF4).withValues(alpha: 0.90),
+                      AppColors.splashAccent.withValues(alpha: 0.90),
                     ),
                     const SizedBox(height: 24),
                     Text(

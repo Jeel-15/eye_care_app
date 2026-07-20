@@ -1,27 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
+import '../widgets/app_animations.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/report_models.dart';
 import '../services/permission_service.dart';
 import '../services/report_service.dart';
-
-// ── Pre-computed color constants ──────────────────────────────────────────────
-
-abstract final class _C {
-  static const navy    = Color(0xFF1B4F72);
-  static const success = Color(0xFF1F9D55);
-  static const danger  = Color(0xFFD94841);
-  static const muted   = Color(0xFF6B7D93);
-  static const text    = Color(0xFF18324A);
-  static const bg      = Color(0xFFF6FAFD);
-
-  static final navyA06    = navy.withValues(alpha: 0.06);
-  static final navyA10    = navy.withValues(alpha: 0.10);
-  static final navyA12    = navy.withValues(alpha: 0.12);
-  static final mutedA60   = muted.withValues(alpha: 0.60);
-  static final successA12 = success.withValues(alpha: 0.12);
-}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // SCREEN
@@ -112,36 +98,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Future<void> _export(String format) async {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(
-      content: Text('Preparing ${format.toUpperCase()} export…'),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: _C.navy,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      duration: const Duration(seconds: 2),
-    ));
+    showAppSnackBar(context, 'Preparing ${format.toUpperCase()} export…', duration: const Duration(seconds: 2));
     try {
       await ReportService.instance.downloadAndOpenExport(
         format: format,
         filter: _filter,
       );
       if (!mounted) return;
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(SnackBar(
-        content: Text('${format == 'excel' ? 'Excel' : 'PDF'} opened successfully'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: _C.success,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 2),
-      ));
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      showAppSnackBar(context, '${format == 'excel' ? 'Excel' : 'PDF'} opened successfully', isSuccess: true, duration: const Duration(seconds: 2));
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(
-        content: Text(e.toString().replaceFirst('Exception: ', '')),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: _C.danger,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ));
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
@@ -156,7 +124,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           : null,
       builder: (ctx, child) => Theme(
         data: ThemeData.light().copyWith(
-          colorScheme: const ColorScheme.light(primary: _C.navy),
+          colorScheme: ColorScheme.light(primary: AppColors.primary),
         ),
         child: child!,
       ),
@@ -209,7 +177,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget build(BuildContext context) {
     if (!PermissionService.instance.can(Perm.reportsView)) {
       return Scaffold(
-        backgroundColor: _C.bg,
+        backgroundColor: Color(0xFFF6FAFD),
         appBar: _buildAppBar(),
         body: Center(
           child: Padding(
@@ -218,15 +186,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.lock_outline_rounded, size: 56,
-                    color: _C.navy.withValues(alpha: 0.25)),
+                    color: AppColors.primary.withValues(alpha: 0.25)),
                 const SizedBox(height: 16),
                 Text('No Access',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700,
-                        color: _C.navy.withValues(alpha: 0.50))),
+                        color: AppColors.primary.withValues(alpha: 0.50))),
                 const SizedBox(height: 6),
                 Text('You do not have permission to view reports.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: _C.mutedA60)),
+                    style: TextStyle(fontSize: 13, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
               ],
             ),
           ),
@@ -234,14 +202,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
       );
     }
     return Scaffold(
-      backgroundColor: _C.bg,
+      backgroundColor: Color(0xFFF6FAFD),
       appBar: _buildAppBar(),
       body: _buildBody(),
     );
   }
 
   AppBar _buildAppBar() => AppBar(
-        backgroundColor: _C.navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         leading: widget.onMenuTap != null
@@ -255,16 +223,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
         ),
         actions: [
-          IconButton(
-            tooltip: 'Export Excel',
-            onPressed: () => _export('excel'),
-            icon: const Icon(Icons.table_chart_outlined, size: 22),
-          ),
-          IconButton(
-            tooltip: 'Export PDF',
-            onPressed: () => _export('pdf'),
-            icon: const Icon(Icons.picture_as_pdf_outlined, size: 22),
-          ),
+          if (PermissionService.instance.can(Perm.reportsExport)) ...[
+            IconButton(
+              tooltip: 'Export Excel',
+              onPressed: () => _export('excel'),
+              icon: const Icon(Icons.table_chart_outlined, size: 22),
+            ),
+            IconButton(
+              tooltip: 'Export PDF',
+              onPressed: () => _export('pdf'),
+              icon: const Icon(Icons.picture_as_pdf_outlined, size: 22),
+            ),
+          ],
           IconButton(
             tooltip: 'Refresh',
             onPressed: _loading ? null : _load,
@@ -284,7 +254,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final result = _result;
     return RefreshIndicator(
       onRefresh: () => _load(page: _page),
-      color: _C.navy,
+      color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 90),
@@ -322,9 +292,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
           ),
           // Content states
           if (_loading && result == null)
-            const SizedBox(
+            SizedBox(
               height: 260,
-              child: Center(child: CircularProgressIndicator(color: _C.navy)),
+              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
             )
           else if (_error != null && result == null)
             SizedBox(
@@ -335,12 +305,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.wifi_off_rounded, size: 52, color: _C.mutedA60),
+                      Icon(Icons.wifi_off_rounded, size: 52, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
                       const SizedBox(height: 16),
                       Text(
                         _error!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: _C.muted, fontSize: 14),
+                        style: const TextStyle(color: Color(0xFF6B7D93), fontSize: 14),
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
@@ -348,7 +318,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         icon: const Icon(Icons.refresh_rounded, size: 18),
                         label: const Text('Retry'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _C.navy,
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
@@ -371,19 +341,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.bar_chart_rounded, size: 48, color: _C.mutedA60),
+                      Icon(Icons.bar_chart_rounded, size: 48, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
                       const SizedBox(height: 12),
                       Text(
                         'No records found',
                         style: TextStyle(
-                            color: _C.mutedA60,
+                            color: Color(0xFF6B7D93).withValues(alpha: 0.60),
                             fontSize: 15,
                             fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         'Try adjusting your filters',
-                        style: TextStyle(color: _C.mutedA60, fontSize: 13),
+                        style: TextStyle(color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontSize: 13),
                       ),
                     ],
                   ),
@@ -431,14 +401,14 @@ class _CollectionBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_C.success, const Color(0xFF27AE60)],
+          colors: [Color(0xFF1F9D55), const Color(0xFF27AE60)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: _C.success.withValues(alpha: 0.28),
+            color: Color(0xFF1F9D55).withValues(alpha: 0.28),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -450,7 +420,7 @@ class _CollectionBanner extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.20),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 22),
           ),
@@ -546,16 +516,16 @@ class _FilterCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(14, 10, 14, 0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.navyA10),
-        boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 10, offset: const Offset(0, 3))],
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.primaryA10),
+        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Column(
         children: [
           // Header row
           InkWell(
             onTap: onToggle,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
               child: Row(
@@ -563,7 +533,7 @@ class _FilterCard extends StatelessWidget {
                   Icon(
                     Icons.filter_list_rounded,
                     size: 18,
-                    color: hasActive ? _C.navy : _C.muted,
+                    color: hasActive ? AppColors.primary : Color(0xFF6B7D93),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -572,7 +542,7 @@ class _FilterCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: hasActive ? _C.navy : _C.text,
+                        color: hasActive ? AppColors.primary : Color(0xFF18324A),
                       ),
                     ),
                   ),
@@ -580,22 +550,22 @@ class _FilterCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: _C.navyA12,
-                        borderRadius: BorderRadius.circular(20),
+                        color: AppColors.primaryA12,
+                        borderRadius: BorderRadius.circular(AppRadius.xl),
                       ),
                       child: Text(
                         _activeCount.toString(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: _C.navy,
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
                   const SizedBox(width: 6),
                   Icon(
                     isOpen ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                    color: _C.muted,
+                    color: Color(0xFF6B7D93),
                     size: 20,
                   ),
                 ],
@@ -604,14 +574,14 @@ class _FilterCard extends StatelessWidget {
           ),
           // Expanded filter panel
           if (isOpen) ...[
-            Container(height: 1, color: _C.navyA10),
+            Container(height: 1, color: AppColors.primaryA10),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: filterOptionsLoading
-                  ? const Center(
+                  ? Center(
                       child: Padding(
                         padding: EdgeInsets.all(12),
-                        child: CircularProgressIndicator(color: _C.navy, strokeWidth: 2),
+                        child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
                       ),
                     )
                   : _buildFilterForm(),
@@ -647,13 +617,13 @@ class _FilterCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              border: Border.all(color: _C.navyA10),
+              border: Border.all(color: AppColors.primaryA10),
               borderRadius: BorderRadius.circular(10),
-              color: _C.navyA06,
+              color: AppColors.primaryA06,
             ),
             child: Row(
               children: [
-                const Icon(Icons.date_range_rounded, size: 16, color: _C.muted),
+                const Icon(Icons.date_range_rounded, size: 16, color: Color(0xFF6B7D93)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -661,14 +631,14 @@ class _FilterCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: filter.dateRange.isNotEmpty ? _C.navy : _C.muted,
+                      color: filter.dateRange.isNotEmpty ? AppColors.primary : Color(0xFF6B7D93),
                     ),
                   ),
                 ),
                 if (filter.dateRange.isNotEmpty)
                   GestureDetector(
                     onTap: () => onReceptionistChanged(null), // triggers nothing, date clear is below
-                    child: const Icon(Icons.close_rounded, size: 16, color: _C.muted),
+                    child: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF6B7D93)),
                   ),
               ],
             ),
@@ -708,7 +678,7 @@ class _FilterCard extends StatelessWidget {
             _FilterLabel('City'),
             if (isReceptionistLocked) ...[
               const SizedBox(width: 6),
-              const Icon(Icons.lock_outline_rounded, size: 13, color: _C.muted),
+              const Icon(Icons.lock_outline_rounded, size: 13, color: Color(0xFF6B7D93)),
             ],
           ],
         ),
@@ -735,7 +705,7 @@ class _FilterCard extends StatelessWidget {
             _FilterLabel('Case Type'),
             if (isReceptionistLocked) ...[
               const SizedBox(width: 6),
-              const Icon(Icons.lock_outline_rounded, size: 13, color: _C.muted),
+              const Icon(Icons.lock_outline_rounded, size: 13, color: Color(0xFF6B7D93)),
             ],
           ],
         ),
@@ -779,8 +749,8 @@ class _FilterCard extends StatelessWidget {
                 icon: const Icon(Icons.clear_rounded, size: 16),
                 label: const Text('Clear'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: _C.muted,
-                  side: BorderSide(color: _C.navyA10),
+                  foregroundColor: Color(0xFF6B7D93),
+                  side: BorderSide(color: AppColors.primaryA10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(vertical: 11),
                 ),
@@ -794,7 +764,7 @@ class _FilterCard extends StatelessWidget {
                 icon: const Icon(Icons.search_rounded, size: 16),
                 label: const Text('Apply Filter'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _C.navy,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -819,7 +789,7 @@ class _FilterLabel extends StatelessWidget {
         style: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: _C.muted,
+          color: Color(0xFF6B7D93),
           letterSpacing: 0.3,
         ),
       );
@@ -843,23 +813,23 @@ class _DropdownField<T> extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        border: Border.all(color: _C.navyA10),
+        border: Border.all(color: AppColors.primaryA10),
         borderRadius: BorderRadius.circular(10),
-        color: _C.navyA06,
+        color: AppColors.primaryA06,
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
-          hint: Text(hint, style: const TextStyle(fontSize: 13, color: _C.muted)),
+          hint: Text(hint, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7D93))),
           isExpanded: true,
           dropdownColor: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: _C.muted),
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _C.text),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF6B7D93)),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF18324A)),
           items: [
             DropdownMenuItem<T>(
               value: null,
-              child: Text(hint, style: const TextStyle(color: _C.muted, fontSize: 13)),
+              child: Text(hint, style: const TextStyle(color: Color(0xFF6B7D93), fontSize: 13)),
             ),
             ...items,
           ],
@@ -888,13 +858,13 @@ class _SummaryRow extends StatelessWidget {
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: _C.text,
+            color: Color(0xFF18324A),
           ),
         ),
         const Spacer(),
         Text(
           'Page ${meta.currentPage} / ${meta.lastPage}',
-          style: const TextStyle(fontSize: 12, color: _C.muted, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 12, color: Color(0xFF6B7D93), fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -913,16 +883,16 @@ class _PatientCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWalkin = patient.typeLabel == 'Walk-in';
-    final tagColor = isWalkin ? _C.success : _C.navy;
-    final tagBg = isWalkin ? _C.successA12 : _C.navyA12;
+    final tagColor = isWalkin ? Color(0xFF1F9D55) : AppColors.primary;
+    final tagBg = isWalkin ? Color(0xFF1F9D55).withValues(alpha: 0.12) : AppColors.primaryA12;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _C.navyA10),
-        boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 8, offset: const Offset(0, 2))],
+        border: Border.all(color: AppColors.primaryA10),
+        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -939,7 +909,7 @@ class _PatientCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: _C.muted,
+                        color: Color(0xFF6B7D93),
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -949,7 +919,7 @@ class _PatientCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: _C.text,
+                        color: Color(0xFF18324A),
                       ),
                     ),
                   ],
@@ -960,7 +930,7 @@ class _PatientCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
                   color: tagBg,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Text(
                   patient.typeLabel,
@@ -1025,20 +995,20 @@ class _PatientCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: _C.successA12,
-                borderRadius: BorderRadius.circular(8),
+                color: Color(0xFF1F9D55).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.currency_rupee_rounded, size: 13, color: _C.success),
+                  const Icon(Icons.currency_rupee_rounded, size: 13, color: Color(0xFF1F9D55)),
                   const SizedBox(width: 3),
                   Text(
                     patient.caseFee.toStringAsFixed(2),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
-                      color: _C.success,
+                      color: Color(0xFF1F9D55),
                     ),
                   ),
                 ],
@@ -1063,13 +1033,13 @@ class _Chip extends StatelessWidget {
     final row = Row(
       mainAxisSize: maxWidth ? MainAxisSize.max : MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: _C.muted),
+        Icon(icon, size: 12, color: Color(0xFF6B7D93)),
         const SizedBox(width: 4),
         Flexible(
           child: Text(
             text,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _C.muted),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93)),
           ),
         ),
       ],
@@ -1107,8 +1077,8 @@ class _PaginationBar extends StatelessWidget {
             icon: const Icon(Icons.arrow_back_ios_rounded, size: 14),
             label: const Text('Prev'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: _C.navy,
-              side: BorderSide(color: _C.navyA10),
+              foregroundColor: AppColors.primary,
+              side: BorderSide(color: AppColors.primaryA10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
@@ -1116,17 +1086,17 @@ class _PaginationBar extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: loading
-              ? const SizedBox(
+              ? SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(color: _C.navy, strokeWidth: 2),
+                  child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
                 )
               : Text(
                   '${meta.currentPage} / ${meta.lastPage}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    color: _C.navy,
+                    color: AppColors.primary,
                   ),
                 ),
         ),
@@ -1137,8 +1107,8 @@ class _PaginationBar extends StatelessWidget {
             label: const Text('Next'),
             iconAlignment: IconAlignment.end,
             style: OutlinedButton.styleFrom(
-              foregroundColor: _C.navy,
-              side: BorderSide(color: _C.navyA10),
+              foregroundColor: AppColors.primary,
+              side: BorderSide(color: AppColors.primaryA10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),

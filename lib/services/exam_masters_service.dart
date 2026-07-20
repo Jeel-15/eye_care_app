@@ -1,9 +1,9 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 import 'cache_service.dart';
 
 // ── ExamMasterItem ─────────────────────────────────────────────────────────────
@@ -193,7 +193,7 @@ class ExamMastersData {
 // Two-level cache: in-memory (30 min TTL) + SharedPreferences disk cache.
 // Disk cache means dropdowns work even after cold starts / timeouts.
 
-class ExamMastersService {
+class ExamMastersService with AuthenticatedService {
   ExamMastersService._();
   static final ExamMastersService instance = ExamMastersService._();
 
@@ -225,15 +225,6 @@ class ExamMastersService {
     } catch (_) {}
   }
 
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
-
   // ── Fetch a single master list ─────────────────────────────────────────────
 
   // Masters need a longer timeout — 22 calls fire in parallel on first open.
@@ -244,7 +235,7 @@ class ExamMastersService {
       final uri = Uri.parse(
           '${AppConfig.hospitalApiUrl}/masters/detail/$type');
       final resp = await http
-          .get(uri, headers: await _headers)
+          .get(uri, headers: await headers)
           .timeout(_masterTimeout);
 
       if (resp.statusCode != 200) {

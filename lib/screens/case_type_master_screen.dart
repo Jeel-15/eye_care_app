@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
+import '../widgets/app_animations.dart';
 import '../services/case_type_service.dart';
 
 class CaseTypeMasterScreen extends StatefulWidget {
@@ -15,11 +18,6 @@ class CaseTypeMasterScreen extends StatefulWidget {
 }
 
 class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
-  static const _navy  = Color(0xFF1B4F72);
-  static const _red   = Color(0xFFDC3545);
-  static const _bg    = Color(0xFFEAF2F8);
-  static const _green = Color(0xFF27AE60);
-
   List<CaseTypeItem> _all = [];
   bool _loading = false;
   String? _error;
@@ -58,7 +56,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
         title: const Text('Delete?', style: TextStyle(fontWeight: FontWeight.w800)),
         content: Text('Delete "${item.caseType}"? This cannot be undone.'),
         actions: [
@@ -69,7 +67,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete',
-                style: TextStyle(color: _red, fontWeight: FontWeight.w700)),
+                style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -79,7 +77,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
       await CaseTypeService.instance.delete(item.id);
       await _load();
     } catch (e) {
-      if (mounted) _snack(e.toString().replaceFirst('Exception: ', ''), error: true);
+      if (mounted) showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
@@ -106,14 +104,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
     );
   }
 
-  void _snack(String msg, {bool error = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: error ? _red : _navy,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ));
-  }
+
 
   static String _formatFee(double fee) {
     if (fee == fee.roundToDouble()) return '₹ ${fee.toInt()}';
@@ -123,9 +114,9 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.backgroundAlt,
       appBar: AppBar(
-        backgroundColor: _navy,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -165,18 +156,18 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
         height: 44,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _navy.withValues(alpha: 0.12)),
-          boxShadow: [BoxShadow(color: _navy.withValues(alpha: 0.05), blurRadius: 8)],
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 8)],
         ),
         child: TextField(
           onChanged: (v) => setState(() => _query = v.trim()),
-          style: const TextStyle(fontSize: 13.5, color: Color(0xFF1A3A52)),
+          style: const TextStyle(fontSize: 13.5, color: AppColors.darkNavy),
           decoration: const InputDecoration(
             hintText: 'Search case types...',
-            hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+            hintStyle: TextStyle(color: AppColors.textDisabled, fontSize: 13),
             prefixIcon: Icon(Icons.search_rounded,
-                color: Color(0xFF94A3B8), size: 20),
+                color: AppColors.textDisabled, size: 20),
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
@@ -187,7 +178,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: _navy));
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (_error != null) {
       return Center(
@@ -197,18 +188,18 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.error_outline_rounded,
-                  size: 48, color: _red.withValues(alpha: 0.6)),
+                  size: 48, color: AppColors.red.withValues(alpha: 0.6)),
               const SizedBox(height: 12),
               Text(_error!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF64748B))),
+                  style: const TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _load,
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: _navy, foregroundColor: Colors.white),
+                    backgroundColor: AppColors.primary, foregroundColor: Colors.white),
               ),
             ],
           ),
@@ -223,7 +214,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
         Center(
           child: Column(children: [
             Icon(Icons.folder_open_rounded,
-                size: 56, color: _navy.withValues(alpha: 0.15)),
+                size: 56, color: AppColors.primary.withValues(alpha: 0.15)),
             const SizedBox(height: 12),
             Text(
               _query.isNotEmpty
@@ -231,7 +222,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
                   : 'No case types yet.\nTap + to add one.',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  color: Color(0xFF94A3B8),
+                  color: AppColors.textDisabled,
                   fontSize: 14,
                   fontWeight: FontWeight.w500),
             ),
@@ -241,7 +232,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
     }
 
     return RefreshIndicator(
-      color: _navy,
+      color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -256,9 +247,9 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _navy.withValues(alpha: 0.08)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
                 boxShadow: [BoxShadow(
-                  color: _navy.withValues(alpha: 0.05),
+                  color: AppColors.primary.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )],
@@ -271,7 +262,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: widget.accentColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: Text('${i + 1}',
                         style: TextStyle(
@@ -287,22 +278,22 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A3A52),
+                          color: AppColors.darkNavy,
                         )),
                   ),
                   // Fee badge
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _green.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.green.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: Text(
                       _formatFee(item.caseFee),
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: _green,
+                        color: AppColors.green,
                       ),
                     ),
                   ),
@@ -310,22 +301,22 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
                   // Edit
                   InkWell(
                     onTap: () => _openSheet(item: item),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
                       child: Icon(Icons.edit_outlined,
-                          size: 18, color: Color(0xFFE67E22)),
+                          size: 18, color: AppColors.orange),
                     ),
                   ),
                   const SizedBox(width: 2),
                   // Delete
                   InkWell(
                     onTap: () => _delete(item),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
                       child: Icon(Icons.delete_outline_rounded,
-                          size: 18, color: _red),
+                          size: 18, color: AppColors.red),
                     ),
                   ),
                 ],
@@ -356,8 +347,6 @@ class _CaseTypeSheet extends StatefulWidget {
 }
 
 class _CaseTypeSheetState extends State<_CaseTypeSheet> {
-  static const _navy = Color(0xFF1B4F72);
-
   late final TextEditingController _nameCtrl;
   late final TextEditingController _feeCtrl;
   bool _saving = false;
@@ -408,12 +397,7 @@ class _CaseTypeSheetState extends State<_CaseTypeSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: const Color(0xFFDC3545),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
       }
     }
   }
@@ -431,7 +415,7 @@ class _CaseTypeSheetState extends State<_CaseTypeSheet> {
             margin: const EdgeInsets.only(top: 10, bottom: 4),
             width: 40, height: 4,
             decoration: BoxDecoration(
-              color: _navy.withValues(alpha: 0.18),
+              color: AppColors.primary.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -456,13 +440,13 @@ class _CaseTypeSheetState extends State<_CaseTypeSheet> {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A3A52),
+                      color: AppColors.darkNavy,
                     ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded,
-                      size: 20, color: Color(0xFF94A3B8)),
+                      size: 20, color: AppColors.textDisabled),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -479,13 +463,13 @@ class _CaseTypeSheetState extends State<_CaseTypeSheet> {
                 labelText: 'Case Type Name',
                 errorText: _nameError,
                 filled: true,
-                fillColor: const Color(0xFFF0F6FB),
+                fillColor: AppColors.surfaceFill,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide(color: widget.accentColor, width: 1.5),
                 ),
               ),
@@ -506,13 +490,13 @@ class _CaseTypeSheetState extends State<_CaseTypeSheet> {
                 errorText: _feeError,
                 prefixText: '₹ ',
                 filled: true,
-                fillColor: const Color(0xFFF0F6FB),
+                fillColor: AppColors.surfaceFill,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide(color: widget.accentColor, width: 1.5),
                 ),
               ),
@@ -529,7 +513,7 @@ class _CaseTypeSheetState extends State<_CaseTypeSheet> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     child: const Text('Cancel'),
                   ),
@@ -540,11 +524,11 @@ class _CaseTypeSheetState extends State<_CaseTypeSheet> {
                   child: ElevatedButton(
                     onPressed: _saving ? null : _save,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _navy,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     child: _saving
                         ? const SizedBox(

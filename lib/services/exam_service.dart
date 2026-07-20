@@ -1,22 +1,14 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/medicine_models.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 import 'exam_masters_service.dart';
 
-class ExamService {
+class ExamService with AuthenticatedService {
   ExamService._();
   static final ExamService instance = ExamService._();
 
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
 
   Map<String, dynamic> _parseBody(http.Response res) {
     final body = jsonDecode(res.body) as Map<String, dynamic>;
@@ -32,7 +24,7 @@ class ExamService {
     final uri = Uri.parse(
         '${AppConfig.hospitalApiUrl}/exams/primary/$patientId');
     final resp = await http
-        .get(uri, headers: await _headers)
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
     final body = _parseBody(resp);
     final data = body['data'];
@@ -45,7 +37,7 @@ class ExamService {
     final uri = Uri.parse(
         '${AppConfig.hospitalApiUrl}/exams/primary/$patientId');
     final resp = await http
-        .post(uri, headers: await _headers, body: jsonEncode(payload))
+        .post(uri, headers: await headers, body: jsonEncode(payload))
         .timeout(AppConfig.requestTimeout);
     final body = _parseBody(resp);
     return body['data'] as Map<String, dynamic>;
@@ -57,7 +49,7 @@ class ExamService {
     final uri = Uri.parse(
         '${AppConfig.hospitalApiUrl}/exams/secondary/$patientId');
     final resp = await http
-        .get(uri, headers: await _headers)
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
     final body = _parseBody(resp);
     final data = body['data'];
@@ -70,7 +62,7 @@ class ExamService {
     final uri = Uri.parse(
         '${AppConfig.hospitalApiUrl}/exams/secondary/$patientId');
     final resp = await http
-        .post(uri, headers: await _headers, body: jsonEncode(payload))
+        .post(uri, headers: await headers, body: jsonEncode(payload))
         .timeout(AppConfig.requestTimeout);
     final body = _parseBody(resp);
     return body['data'] as Map<String, dynamic>;
@@ -102,7 +94,7 @@ class ExamService {
     try {
       final uri = Uri.parse('${AppConfig.hospitalApiUrl}/medicine-groups')
           .replace(queryParameters: {'per_page': '200'});
-      final resp = await http.get(uri, headers: await _headers).timeout(AppConfig.requestTimeout);
+      final resp = await http.get(uri, headers: await headers).timeout(AppConfig.requestTimeout);
       final body = _parseBody(resp);
       final list = body['data'] as List? ?? [];
       return list.map((e) => MedGroup.fromJson(e as Map<String, dynamic>)).toList();
@@ -114,7 +106,7 @@ class ExamService {
   Future<List<dynamic>> _fetchList(String path) async {
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/$path');
     final resp = await http
-        .get(uri, headers: await _headers)
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
     final body = _parseBody(resp);
     return body['data'] as List? ?? [];
@@ -127,7 +119,7 @@ class ExamService {
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/medicines')
         .replace(queryParameters: {'search': query, 'per_page': '20'});
     final resp = await http
-        .get(uri, headers: await _headers)
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
     final body = _parseBody(resp);
     final list = body['data'] as List? ?? [];

@@ -86,15 +86,37 @@ class UserInfo {
 class HospitalInfo {
   final String name;
   final String slug;
+  final int? primaryColor;
+  final int? primaryLightColor;
+  final int? secondaryColor;
+  final int? backgroundColor;
 
-  const HospitalInfo({required this.name, required this.slug});
+  const HospitalInfo({
+    required this.name,
+    required this.slug,
+    this.primaryColor,
+    this.primaryLightColor,
+    this.secondaryColor,
+    this.backgroundColor,
+  });
 
   factory HospitalInfo.fromJson(Map<String, dynamic> json) => HospitalInfo(
         name: json['name'] as String,
         slug: json['slug'] as String,
+        primaryColor:      json['primary_color']       as int?,
+        primaryLightColor: json['primary_light_color'] as int?,
+        secondaryColor:    json['secondary_color']     as int?,
+        backgroundColor:   json['background_color']    as int?,
       );
 
-  Map<String, dynamic> toJson() => {'name': name, 'slug': slug};
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'slug': slug,
+        if (primaryColor != null)      'primary_color':       primaryColor,
+        if (primaryLightColor != null) 'primary_light_color': primaryLightColor,
+        if (secondaryColor != null)    'secondary_color':     secondaryColor,
+        if (backgroundColor != null)   'background_color':    backgroundColor,
+      };
 }
 
 class LoginResult {

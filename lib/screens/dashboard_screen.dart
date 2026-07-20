@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_section_header.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/dashboard_models.dart';
@@ -16,6 +17,8 @@ import 'users_screen.dart';
 import 'settings_screen.dart';
 import 'masters_screen.dart';
 import 'share_history_screen.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 
 class DashboardScreen extends StatefulWidget {
   final UserInfo user;
@@ -43,19 +46,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   late final AnimationController _countCtrl;
   late final Animation<double> _countAnim;
 
-  static const _primary = Color(0xFF1B4F72);
-  static const _softBg = Color(0xFFEBF5FB);
-  static const _teal = Color(0xFF1ABC9C);
-  static const _purple = Color(0xFF8E44AD);
-  static const _green = Color(0xFF27AE60);
-  static const _orange = Color(0xFFE67E22);
-  static const _secondary = Color(0xFF2E86C1);
-  static const _waitGreen = Color(0xFF16A34A);
-  static const _waitOrange = Color(0xFFEA580C);
-  static const _waitRed = Color(0xFFDC2626);
-  static const _textSub = Color(0xFF64748B);
-
   @override
+
   void initState() {
     super.initState();
     _countCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
@@ -118,7 +110,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _softBg,
+      backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
       body: _loading && _data == null
           ? _buildSkeleton()
@@ -127,15 +119,15 @@ class _DashboardScreenState extends State<DashboardScreen>
               : Stack(
                   children: [
                     RefreshIndicator(
-                      color: _primary,
+                      color: AppColors.primary,
                       onRefresh: _fetch,
                       child: _buildBody(),
                     ),
                     if (_refreshing)
-                      const LinearProgressIndicator(
+                      LinearProgressIndicator(
                         minHeight: 2,
                         backgroundColor: Colors.transparent,
-                        color: _primary,
+                        color: AppColors.primary,
                       ),
                   ],
                 ),
@@ -150,7 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         ? name.split(RegExp(r'\s+')).map((w) => w[0]).take(2).join().toUpperCase()
         : '?';
     return AppBar(
-      backgroundColor: _primary,
+      backgroundColor: AppColors.primary,
       elevation: 0,
       leading: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -283,16 +275,16 @@ class _DashboardScreenState extends State<DashboardScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.wifi_off_rounded, size: 56, color: _primary.withValues(alpha: 0.20)),
+            Icon(Icons.wifi_off_rounded, size: 56, color: AppColors.primary.withValues(alpha: 0.20)),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Could not load dashboard',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _primary),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primary),
             ),
             const SizedBox(height: 8),
             Text(
               _error ?? '',
-              style: const TextStyle(fontSize: 12, color: _textSub),
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -301,10 +293,10 @@ class _DashboardScreenState extends State<DashboardScreen>
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _primary,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
               ),
             ),
           ],
@@ -321,7 +313,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFFEF3C7),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.40)),
       ),
       child: const Row(
@@ -354,6 +346,139 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
+  // ── Greeting hero card ────────────────────────────────────────────────────
+
+  Widget _buildGreetingCard(DashboardData d) {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    final firstName = widget.user.name.trim().split(RegExp(r'\s+')).first;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    final now = DateTime.now();
+    final dateStr = '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryLight],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.38),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  greeting,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.70),
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  firstName,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    height: 1.1,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _heroPill(Icons.calendar_today_rounded, dateStr),
+                    _heroPill(Icons.people_alt_rounded, '${d.isDoctor ? d.myTodayPatients : d.todayPatients} patients'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedBuilder(
+                  animation: _countAnim,
+                  builder: (_, _) => Text(
+                    '${((d.isDoctor ? d.myPrimaryPending : d.primaryQueueCount) * _countAnim.value).round()}',
+                    style: const TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      height: 1,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'In Queue',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.75),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _heroPill(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.white.withValues(alpha: 0.85)),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.white.withValues(alpha: 0.92),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBody() {
     final d = _data!;
     final p = PermissionService.instance;
@@ -366,10 +491,11 @@ class _DashboardScreenState extends State<DashboardScreen>
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
       children: [
+        _buildGreetingCard(d),
         if (hasNoPermissions) _buildNoPermissionsBanner(),
         if (d.subscriptionDaysLeft != null && d.subscriptionDaysLeft! <= 14)
           _buildSubscriptionBanner(d.subscriptionDaysLeft!),
-        _sectionLabel("Today's Overview"),
+        const AppSectionHeader(title: "Today's Overview"),
         _buildStatsRow1(d),
         const SizedBox(height: 10),
         _buildStatsRow2(d),
@@ -379,11 +505,11 @@ class _DashboardScreenState extends State<DashboardScreen>
         ],
         const SizedBox(height: 20),
         _buildPrimaryQueue(d),
-        if (!d.isDoctor) ...[
+        if (!d.isDoctor && p.can(Perm.reportsView)) ...[
           const SizedBox(height: 16),
           _buildRevenueCard(d),
         ],
-        if (!d.isDoctor && d.receptionists.isNotEmpty) ...[
+        if (p.isSuper && d.receptionists.isNotEmpty) ...[
           const SizedBox(height: 16),
           _buildReceptionTable(d),
         ],
@@ -405,7 +531,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFFEF3C7),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.40)),
       ),
       child: Row(
@@ -431,23 +557,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  // ── Section label ─────────────────────────────────────────────────────────
-
-  Widget _sectionLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: _primary,
-          letterSpacing: 0.2,
-        ),
-      ),
-    );
-  }
-
   // ── Stat card rows ────────────────────────────────────────────────────────
 
   Widget _buildStatsRow1(DashboardData d) {
@@ -459,7 +568,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             label: d.isOtDoctor ? 'My OT Today' : d.isDoctor ? 'My Patients' : "Today's Patients",
             value: '${d.isDoctor ? d.myTodayPatients : d.todayPatients}',
             icon: d.isOtDoctor ? Icons.medical_services_rounded : Icons.person_2_rounded,
-            iconBg: _purple,
+            iconBg: AppColors.purple,
             badge: d.isOtDoctor ? 'OT' : 'OPD',
             rawCount: d.isDoctor ? d.myTodayPatients : d.todayPatients,
           ),
@@ -469,7 +578,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               label: 'Primary Queue',
               value: '${d.isDoctor ? d.myPrimaryPending : d.primaryQueueCount}',
               icon: Icons.groups_rounded,
-              iconBg: _green,
+              iconBg: AppColors.green,
               badge: 'Waiting',
               rawCount: d.isDoctor ? d.myPrimaryPending : d.primaryQueueCount,
             ),
@@ -478,7 +587,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               label: 'Secondary Queue',
               value: '${d.isDoctor ? d.mySecondaryPending : d.secondaryQueueCount}',
               icon: Icons.group_add_rounded,
-              iconBg: _orange,
+              iconBg: AppColors.orange,
               badge: 'Post-Exam',
               rawCount: d.isDoctor ? d.mySecondaryPending : d.secondaryQueueCount,
             ),
@@ -488,7 +597,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             label: 'OT Today',
             value: '${d.otToday}',
             icon: Icons.medical_services_rounded,
-            iconBg: _teal,
+            iconBg: AppColors.teal,
             badge: '${d.otOperated} done',
             rawCount: d.otToday,
           ),
@@ -498,6 +607,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildStatsRow2(DashboardData d) {
+    final p = PermissionService.instance;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -506,7 +616,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             label: 'Walk-ins',
             value: '${d.todayWalkin}',
             icon: Icons.directions_walk_rounded,
-            iconBg: _primary,
+            iconBg: AppColors.primary,
             badge: 'Walkin',
             rawCount: d.todayWalkin,
           ),
@@ -515,29 +625,31 @@ class _DashboardScreenState extends State<DashboardScreen>
             label: 'Phone Appts',
             value: '${d.todayPhone}',
             icon: Icons.phone_in_talk_rounded,
-            iconBg: _secondary,
+            iconBg: AppColors.secondary,
             badge: 'Phone',
             rawCount: d.todayPhone,
           ),
-          if (!d.isDoctor) ...[
+          if (!d.isDoctor && p.can(Perm.reportsView)) ...[
             const SizedBox(width: 10),
             _statCard(
               label: 'Revenue Today',
               value: _fmtRupee(d.revenueToday),
               icon: Icons.currency_rupee_rounded,
-              iconBg: _green,
+              iconBg: AppColors.green,
               badge: '${_fmtRupee(d.revenueMonth)} mo',
             ),
           ],
-          const SizedBox(width: 10),
-          _statCard(
-            label: 'Total Staff',
-            value: '${d.totalStaff}',
-            icon: Icons.badge_rounded,
-            iconBg: _primary,
-            badge: 'Active',
-            rawCount: d.totalStaff,
-          ),
+          if (p.isSuper) ...[
+            const SizedBox(width: 10),
+            _statCard(
+              label: 'Total Staff',
+              value: '${d.totalStaff}',
+              icon: Icons.badge_rounded,
+              iconBg: AppColors.primary,
+              badge: 'Active',
+              rawCount: d.totalStaff,
+            ),
+          ],
         ],
       ),
     );
@@ -553,10 +665,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   }) {
     return Container(
       width: 152,
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -565,53 +676,70 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: iconBg.withValues(alpha: 0.13),
-                  borderRadius: BorderRadius.circular(10),
+              // Left accent color strip
+              Container(width: 4, color: iconBg),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: iconBg.withValues(alpha: 0.13),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(icon, size: 18, color: iconBg),
+                          ),
+                          if (badge != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: iconBg.withValues(alpha: 0.10),
+                                borderRadius: BorderRadius.circular(AppRadius.xl),
+                              ),
+                              child: Text(
+                                badge,
+                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: iconBg),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      rawCount != null
+                          ? AnimatedBuilder(
+                              animation: _countAnim,
+                              builder: (_, _) => Text(
+                                '${(rawCount * _countAnim.value).round()}',
+                                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.primary, height: 1),
+                              ),
+                            )
+                          : Text(
+                              value,
+                              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.primary, height: 1),
+                            ),
+                      const SizedBox(height: 5),
+                      Text(
+                        label,
+                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Icon(icon, size: 18, color: iconBg),
               ),
-              if (badge != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: iconBg.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    badge,
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: iconBg),
-                  ),
-                ),
             ],
           ),
-          const SizedBox(height: 12),
-          rawCount != null
-              ? AnimatedBuilder(
-                  animation: _countAnim,
-                  builder: (_, _) => Text(
-                    '${(rawCount * _countAnim.value).round()}',
-                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: _primary, height: 1),
-                  ),
-                )
-              : Text(
-                  value,
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: _primary, height: 1),
-                ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: _textSub, fontWeight: FontWeight.w500),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -622,7 +750,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -638,26 +766,38 @@ class _DashboardScreenState extends State<DashboardScreen>
             padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
             child: Row(
               children: [
-                const Text(
+                Text(
                   'Primary Queue',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _primary),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary),
                 ),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: _green.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.green.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
                   ),
                   child: Text(
                     '${d.isDoctor ? d.primaryQueue.length : d.primaryQueueCount} waiting',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _green),
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.green),
                   ),
                 ),
                 const Spacer(),
-                const Text(
-                  'View All',
-                  style: TextStyle(fontSize: 12, color: _secondary, fontWeight: FontWeight.w600),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).push(appRoute(
+                    ClinicalQueueScreen(user: widget.user, hospital: widget.hospital),
+                  )),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
+                    ),
+                    child: Text(
+                      'View All →',
+                      style: TextStyle(fontSize: 11, color: AppColors.secondary, fontWeight: FontWeight.w700),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -669,7 +809,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: Center(
                 child: Text(
                   'No patients in queue right now',
-                  style: TextStyle(fontSize: 13, color: _textSub),
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                 ),
               ),
             )
@@ -697,71 +837,85 @@ class _DashboardScreenState extends State<DashboardScreen>
     if (p.gender != null) parts.add(_genderShort(p.gender!));
     final ageGender = parts.join('/');
 
+    final initials = p.fullName.trim().isNotEmpty
+        ? p.fullName.trim().split(RegExp(r'\s+')).map((w) => w[0]).take(2).join().toUpperCase()
+        : '#';
+    final avatarColors = [AppColors.purple, AppColors.green, AppColors.teal, AppColors.orange, AppColors.secondary, AppColors.primary];
+    final avatarColor = avatarColors[(rank - 1) % avatarColors.length];
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       child: Row(
         children: [
-          SizedBox(
-            width: 28,
-            child: Text(
-              '#$rank',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: _primary,
+          // Rank circle
+          Container(
+            width: 22, height: 22,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '$rank',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary),
               ),
             ),
           ),
+          const SizedBox(width: 9),
+          // Patient avatar
+          CircleAvatar(
+            radius: 19,
+            backgroundColor: avatarColor.withValues(alpha: 0.14),
+            child: Text(
+              initials,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: avatarColor),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Name + code
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   p.fullName.isNotEmpty ? p.fullName : '—',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: _primary,
+                    color: AppColors.primary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   [p.patientCode, if (ageGender.isNotEmpty) ageGender].join(' · '),
-                  style: const TextStyle(fontSize: 11, color: _textSub),
+                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                 ),
               ],
             ),
           ),
           if (p.hasHistory)
             Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Tooltip(
-                message: 'Has exam history',
-                child: Icon(Icons.history_rounded,
-                    size: 16, color: _secondary.withValues(alpha: 0.70)),
-              ),
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(Icons.history_rounded, size: 15, color: AppColors.secondary.withValues(alpha: 0.65)),
             ),
           if (p.doctorPatientNo != null)
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: Text(
                 'Dr#${p.doctorPatientNo}',
-                style: const TextStyle(fontSize: 11, color: _textSub),
+                style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
               ),
             ),
+          // Wait pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
               color: waitColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
             child: Text(
               _fmtWait(wait),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: waitColor,
-              ),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: waitColor),
             ),
           ),
         ],
@@ -775,15 +929,15 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B4F72), Color(0xFF154360)],
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: _primary.withValues(alpha: 0.30),
+            color: AppColors.primary.withValues(alpha: 0.30),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -809,7 +963,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Text(
                   _dateLabel(),
@@ -870,7 +1024,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -882,14 +1036,14 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(16, 14, 16, 10),
             child: Text(
               'Reception Performance',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
-                color: _primary,
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -930,13 +1084,13 @@ class _DashboardScreenState extends State<DashboardScreen>
               children: [
                 CircleAvatar(
                   radius: 14,
-                  backgroundColor: _primary.withValues(alpha: 0.10),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.10),
                   child: Text(
                     r.name.isNotEmpty ? r.name[0].toUpperCase() : '?',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: _primary,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -944,10 +1098,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                 Expanded(
                   child: Text(
                     r.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: _primary,
+                      color: AppColors.primary,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -960,7 +1114,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             child: Text(
               '${r.todayCount}',
               textAlign: TextAlign.right,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _primary),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary),
             ),
           ),
           Expanded(
@@ -968,7 +1122,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             child: Text(
               _fmtRupee(r.todayGross),
               textAlign: TextAlign.right,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _textSub),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
             ),
           ),
           Expanded(
@@ -976,7 +1130,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             child: Text(
               _fmtRupee(r.todayNet),
               textAlign: TextAlign.right,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _green),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.green),
             ),
           ),
         ],
@@ -991,13 +1145,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   void _comingSoon(String label) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('$label — Coming Soon'),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: _primary,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      duration: const Duration(seconds: 2),
-    ));
+    showAppSnackBar(context, '$label — Coming Soon', duration: const Duration(seconds: 2));
   }
 
   // ── Receptionist-specific stats row ──────────────────────────────────────
@@ -1011,7 +1159,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             label: 'My Patients Today',
             value: '${rs.myPatientsToday}',
             icon: Icons.person_pin_rounded,
-            iconBg: _purple,
+            iconBg: AppColors.purple,
             badge: 'Today',
             rawCount: rs.myPatientsToday,
           ),
@@ -1020,7 +1168,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             label: "Today's Collection",
             value: _fmtRupee(rs.todayCollection),
             icon: Icons.currency_rupee_rounded,
-            iconBg: _green,
+            iconBg: AppColors.green,
             badge: 'Revenue',
           ),
           const SizedBox(width: 10),
@@ -1028,7 +1176,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             label: 'Pending Phone',
             value: '${rs.pendingPhoneCheckin}',
             icon: Icons.phone_missed_rounded,
-            iconBg: _orange,
+            iconBg: AppColors.orange,
             badge: 'Check-in',
             rawCount: rs.pendingPhoneCheckin,
           ),
@@ -1037,7 +1185,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             label: 'My Walk-ins',
             value: '${rs.myWalkin}',
             icon: Icons.directions_walk_rounded,
-            iconBg: _secondary,
+            iconBg: AppColors.secondary,
             badge: 'Mine',
             rawCount: rs.myWalkin,
           ),
@@ -1052,7 +1200,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('Doctors Today'),
+        const AppSectionHeader(title: 'Doctors Today'),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -1085,20 +1233,20 @@ class _DashboardScreenState extends State<DashboardScreen>
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: _primary.withValues(alpha: 0.10),
+                                color: AppColors.primary.withValues(alpha: 0.10),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.person_rounded,
-                                  size: 14, color: _primary),
+                              child: Icon(Icons.person_rounded,
+                                  size: 14, color: AppColors.primary),
                             ),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 c.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: _primary,
+                                  color: AppColors.primary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -1109,9 +1257,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _doctorStat('${c.assignedToday}', 'Total', _primary),
-                            _doctorStat('${c.primaryCount}', 'Primary', _green),
-                            _doctorStat('${c.secondaryCount}', 'Secondary', _orange),
+                            _doctorStat('${c.assignedToday}', 'Total', AppColors.primary),
+                            _doctorStat('${c.primaryCount}', 'Primary', AppColors.green),
+                            _doctorStat('${c.secondaryCount}', 'Secondary', AppColors.orange),
                           ],
                         ),
                       ],
@@ -1135,7 +1283,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         const SizedBox(height: 2),
         Text(label,
             style: const TextStyle(
-                fontSize: 9, fontWeight: FontWeight.w500, color: _textSub)),
+                fontSize: 9, fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
       ],
     );
   }
@@ -1147,23 +1295,23 @@ class _DashboardScreenState extends State<DashboardScreen>
     final actions = <_QA>[
       // OPD
       if (p.can(Perm.opdPatientRegister))
-        _QA(Icons.person_add_rounded,       'New Walk-in',    _purple,
+        _QA(Icons.person_add_rounded,       'New Walk-in',    AppColors.purple,
             () => _push(PatientFormScreen(mode: PatientFormMode.addWalkIn, user: u, hospital: h))),
       if (p.can(Perm.opdPatientRegisterPhone))
-        _QA(Icons.phone_rounded,            'Phone Patient',  _secondary,
+        _QA(Icons.phone_rounded,            'Phone Patient',  AppColors.secondary,
             () => _push(PatientFormScreen(mode: PatientFormMode.addPhone,  user: u, hospital: h))),
       if (p.can(Perm.opdPatientView))
-        _QA(Icons.people_alt_rounded,       'Patient List',   _teal,
+        _QA(Icons.people_alt_rounded,       'Patient List',   AppColors.teal,
             () => _push(PatientsScreen(user: u, hospital: h))),
       // Queue & OT
       if (p.can(Perm.opdExamPrimary) || p.can(Perm.opdExamSecondary))
-        _QA(Icons.queue_rounded,            'Clinical Queue', _green,
+        _QA(Icons.queue_rounded,            'Clinical Queue', AppColors.green,
             () => _push(ClinicalQueueScreen(user: u, hospital: h))),
       if (p.canModule('ot'))
-        _QA(Icons.medical_services_rounded, 'OT Booking',     _teal,
+        _QA(Icons.medical_services_rounded, 'OT Booking',     AppColors.teal,
             () => _comingSoon('OT Booking')),
       if (p.can(Perm.opdPatientView))
-        _QA(Icons.share_rounded,            'Share History',  _orange,
+        _QA(Icons.share_rounded,            'Share History',  AppColors.orange,
             () => _push(ShareHistoryScreen(user: u, hospital: h, initialTab: 0))),
       // Finance & Catalog
       if (p.can(Perm.reportsView))
@@ -1177,7 +1325,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             () => _push(MastersScreen(user: u, hospital: h))),
       // Admin
       if (p.can(Perm.masterDoctors) || p.can(Perm.masterReceptions) || p.can(Perm.masterOtStaff))
-        _QA(Icons.manage_accounts_rounded,  'Users',          _secondary,
+        _QA(Icons.manage_accounts_rounded,  'Users',          AppColors.secondary,
             () => _push(UsersScreen(user: u, hospital: h))),
       if (p.can(Perm.settingsHospital))
         _QA(Icons.settings_rounded,         'Settings',       const Color(0xFF475569),
@@ -1190,7 +1338,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('Quick Actions'),
+        const AppSectionHeader(title: 'Quick Actions'),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -1210,12 +1358,12 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
@@ -1223,20 +1371,22 @@ class _DashboardScreenState extends State<DashboardScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      width: 52,
+                      height: 52,
                       decoration: BoxDecoration(
-                        color: qa.color.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
+                        color: qa.color,
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(qa.icon, color: qa.color, size: 22),
+                      child: Icon(qa.icon, color: Colors.white, size: 24),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Text(
                       qa.label,
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _primary,
+                        color: Color(0xFF1E293B),
+                        height: 1.3,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
@@ -1286,9 +1436,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Color _waitColor(int minutes, WaitThresholds t) {
-    if (minutes < t.rGreen) return _waitGreen;
-    if (minutes < t.rOrange) return _waitOrange;
-    return _waitRed;
+    if (minutes < t.rGreen) return AppColors.waitGreen;
+    if (minutes < t.rOrange) return AppColors.waitOrange;
+    return AppColors.waitRed;
   }
 
   String _genderShort(String gender) {

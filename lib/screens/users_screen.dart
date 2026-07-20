@@ -1,30 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import '../utils/app_route.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
+import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../models/auth_models.dart';
 import '../services/permission_service.dart';
 import '../services/user_service.dart';
 import 'user_form_screen.dart';
-
-// ── Pre-computed alpha variants ───────────────────────────────────────────────
-const _navy    = Color(0xFF1B4F72);
-const _textSub = Color(0xFF64748B);
-// white
-const _white65 = Color(0xA6FFFFFF);
-const _white55 = Color(0x8CFFFFFF);
-const _white18 = Color(0x2EFFFFFF);
-const _white15 = Color(0x26FFFFFF);
-const _white12 = Color(0x1FFFFFFF);
-// navy alphas
-const _navyA18 = Color(0x2E1B4F72);
-const _navyA07 = Color(0x121B4F72);
-const _navyA05 = Color(0x0D1B4F72);
-// textSub alphas
-const _textSubA80 = Color(0xCC64748B);
-const _textSubA70 = Color(0xB364748B);
-const _textSubA65 = Color(0xA664748B);
-const _textSubA50 = Color(0x8064748B);
 
 class UsersScreen extends StatefulWidget {
   final UserInfo user;
@@ -37,12 +21,10 @@ class UsersScreen extends StatefulWidget {
 }
 
 class _UsersScreenState extends State<UsersScreen> {
-  static const _navy   = Color(0xFF1B4F72);
-  static const _bg     = Color(0xFFEAF2F8);
-  static const _textSub = Color(0xFF64748B);
-
   final _searchCtrl  = TextEditingController();
   final _scrollCtrl  = ScrollController();
+  final _searchFocus = FocusNode();
+  Timer? _debounce;
 
   List<HospitalUserModel> _users  = [];
   int  _currentPage = 1;
@@ -50,6 +32,7 @@ class _UsersScreenState extends State<UsersScreen> {
   int  _total       = 0;
   bool _loading     = true;
   bool _loadingMore = false;
+  bool _searchOpen  = false;
   String? _error;
   String _search = '';
 
@@ -62,8 +45,10 @@ class _UsersScreenState extends State<UsersScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchCtrl.dispose();
     _scrollCtrl.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -134,7 +119,22 @@ class _UsersScreenState extends State<UsersScreen> {
 
   void _onSearch(String value) {
     _search = value;
-    _load(refresh: true);
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) _load(refresh: true);
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() => _searchOpen = !_searchOpen);
+    if (_searchOpen) {
+      Future.delayed(const Duration(milliseconds: 50), () => _searchFocus.requestFocus());
+    } else {
+      _debounce?.cancel();
+      _searchCtrl.clear();
+      _search = '';
+      _load(refresh: true);
+    }
   }
 
   Future<void> _openAdd() async {
@@ -164,12 +164,12 @@ class _UsersScreenState extends State<UsersScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete User',
-            style: TextStyle(fontWeight: FontWeight.w800, color: _navy)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+        title: Text('Delete User',
+            style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary)),
         content: Text(
           'Delete "${u.name}"? This action cannot be undone.',
-          style: const TextStyle(color: _textSub),
+          style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
@@ -181,7 +181,7 @@ class _UsersScreenState extends State<UsersScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade600,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
             ),
             child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
@@ -194,25 +194,12 @@ class _UsersScreenState extends State<UsersScreen> {
     try {
       await UserService.instance.deleteUser(u.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('"${u.name}" deleted successfully'),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      showAppSnackBar(context, '"${u.name}" deleted successfully', isSuccess: true);
       _load(refresh: true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+      _load(refresh: true);
     }
   }
 
@@ -243,14 +230,8 @@ class _UsersScreenState extends State<UsersScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+      _load(refresh: true);
     }
   }
 
@@ -261,9 +242,9 @@ class _UsersScreenState extends State<UsersScreen> {
         !p.can(Perm.masterReceptions) &&
         !p.can(Perm.masterOtStaff)) {
       return Scaffold(
-        backgroundColor: _bg,
+        backgroundColor: AppColors.backgroundAlt,
         appBar: AppBar(
-          backgroundColor: _navy,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
           title: const Text('Users',
@@ -276,15 +257,15 @@ class _UsersScreenState extends State<UsersScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.lock_outline_rounded, size: 56,
-                    color: _navy.withValues(alpha: 0.25)),
+                    color: AppColors.primary.withValues(alpha: 0.25)),
                 const SizedBox(height: 16),
                 Text('No Access',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700,
-                        color: _navy.withValues(alpha: 0.50))),
+                        color: AppColors.primary.withValues(alpha: 0.50))),
                 const SizedBox(height: 6),
                 Text('You do not have permission to manage users.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: _navy.withValues(alpha: 0.35))),
+                    style: TextStyle(fontSize: 13, color: AppColors.primary.withValues(alpha: 0.35))),
               ],
             ),
           ),
@@ -292,9 +273,9 @@ class _UsersScreenState extends State<UsersScreen> {
       );
     }
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.backgroundAlt,
       appBar: AppBar(
-        backgroundColor: _navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         title: Column(
@@ -314,30 +295,50 @@ class _UsersScreenState extends State<UsersScreen> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: _white65,
+                  color: Color(0xA6FFFFFF),
                 ),
               ),
           ],
         ),
         actions: [
           IconButton(
+            onPressed: _toggleSearch,
+            tooltip: _searchOpen ? 'Close Search' : 'Search',
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: _searchOpen ? Colors.white24 : const Color(0x26FFFFFF),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                _searchOpen ? Icons.close_rounded : Icons.search_rounded,
+                size: 20,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          IconButton(
             onPressed: _openAdd,
             icon: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: _white15,
+                color: const Color(0x26FFFFFF),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.add_rounded, size: 20, color: Colors.white),
             ),
             tooltip: 'Add User',
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
         ],
       ),
       body: Column(
         children: [
-          _buildSearchBar(),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            child: _searchOpen ? _buildSearchBar() : const SizedBox.shrink(),
+          ),
           Expanded(child: _buildBody()),
         ],
       ),
@@ -346,30 +347,34 @@ class _UsersScreenState extends State<UsersScreen> {
 
   Widget _buildSearchBar() {
     return Container(
-      color: _navy,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      color: AppColors.primary,
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Container(
         decoration: BoxDecoration(
-          color: _white12,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _white18),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
         ),
         child: TextField(
           controller: _searchCtrl,
+          focusNode: _searchFocus,
           onChanged: _onSearch,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          style: TextStyle(
+            color: AppColors.primary,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
           decoration: InputDecoration(
             hintText: 'Search by name, email or contact...',
             hintStyle: TextStyle(
-              color: _white55,
+              color: Colors.grey[400],
               fontSize: 13,
             ),
             prefixIcon: Icon(Icons.search_rounded,
-                color: _white65, size: 20),
+                color: AppColors.primary, size: 20),
             suffixIcon: _searchCtrl.text.isNotEmpty
                 ? IconButton(
                     icon: Icon(Icons.close_rounded,
-                        size: 18, color: _white65),
+                        size: 18, color: Colors.grey[500]),
                     onPressed: () {
                       _searchCtrl.clear();
                       _onSearch('');
@@ -387,8 +392,8 @@ class _UsersScreenState extends State<UsersScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(
-        child: CircularProgressIndicator(color: _navy),
+      return Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
@@ -405,7 +410,7 @@ class _UsersScreenState extends State<UsersScreen> {
               Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: _textSub, fontSize: 14),
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
@@ -413,7 +418,7 @@ class _UsersScreenState extends State<UsersScreen> {
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _navy,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
@@ -431,7 +436,7 @@ class _UsersScreenState extends State<UsersScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.manage_accounts_rounded,
-                size: 64, color: _navyA18),
+                size: 64, color: AppColors.primaryA18),
             const SizedBox(height: 16),
             Text(
               _search.isEmpty
@@ -439,7 +444,7 @@ class _UsersScreenState extends State<UsersScreen> {
                   : 'No users match "$_search"',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: _textSubA70,
+                color: Color(0xB364748B),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -450,7 +455,7 @@ class _UsersScreenState extends State<UsersScreen> {
     }
 
     return RefreshIndicator(
-      color: _navy,
+      color: AppColors.primary,
       onRefresh: () => _load(refresh: true),
       child: ListView.builder(
         controller: _scrollCtrl,
@@ -458,9 +463,9 @@ class _UsersScreenState extends State<UsersScreen> {
         itemCount: _users.length + (_loadingMore ? 1 : 0),
         itemBuilder: (ctx, i) {
           if (i == _users.length) {
-            return const Padding(
+            return Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
-              child: Center(child: CircularProgressIndicator(color: _navy)),
+              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
             );
           }
           return AnimatedListItem(
@@ -495,8 +500,6 @@ class _UserCard extends StatelessWidget {
     required this.onToggleStatus,
   });
 
-  static const _navy = Color(0xFF1B4F72);
-
   String _initials(String name) {
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty) return '?';
@@ -508,7 +511,7 @@ class _UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final roleColor = user.role?.parsedColor ?? _navy;
+    final roleColor = user.role?.parsedColor ?? AppColors.primary;
     final isActive  = user.status == 'active';
     final initials  = _initials(user.name);
 
@@ -517,10 +520,10 @@ class _UserCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _navyA07),
+        border: Border.all(color: AppColors.primaryA07),
         boxShadow: [
           BoxShadow(
-            color: _navyA05,
+            color: AppColors.primaryA05,
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -560,10 +563,10 @@ class _UserCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           user.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 14,
-                            color: _navy,
+                            color: AppColors.primary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -578,7 +581,7 @@ class _UserCard extends StatelessWidget {
                             color: isActive
                                 ? Colors.green.shade50
                                 : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadius.xl),
                             border: Border.all(
                               color: isActive
                                   ? Colors.green.shade300
@@ -604,7 +607,7 @@ class _UserCard extends StatelessWidget {
                     user.email,
                     style: TextStyle(
                       fontSize: 12,
-                      color: _textSubA80,
+                      color: Color(0xCC64748B),
                       fontWeight: FontWeight.w500,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -618,7 +621,7 @@ class _UserCard extends StatelessWidget {
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: roleColor.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadius.xl),
                             border: Border.all(
                                 color: roleColor.withValues(alpha: 0.25)),
                           ),
@@ -653,7 +656,7 @@ class _UserCard extends StatelessWidget {
                               horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
                             color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadius.xl),
                             border: Border.all(color: Colors.blue.shade200),
                           ),
                           child: Text(
@@ -671,13 +674,13 @@ class _UserCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Icon(Icons.phone_rounded,
                             size: 11,
-                            color: _textSubA50),
+                            color: Color(0x8064748B)),
                         const SizedBox(width: 2),
                         Text(
                           user.contact,
                           style: TextStyle(
                             fontSize: 10,
-                            color: _textSubA65,
+                            color: Color(0xA664748B),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -692,7 +695,7 @@ class _UserCard extends StatelessWidget {
               children: [
                 _ActionBtn(
                   icon: Icons.edit_rounded,
-                  color: _navy,
+                  color: AppColors.primary,
                   onTap: onEdit,
                 ),
                 const SizedBox(height: 6),

@@ -1,27 +1,19 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/role_models.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
-class RolesService {
+class RolesService with AuthenticatedService {
   RolesService._();
   static final RolesService instance = RolesService._();
 
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
 
   Future<List<RoleModel>> fetchRoles() async {
     final resp = await http
         .get(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/roles'),
-          headers: await _headers,
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
@@ -39,7 +31,7 @@ class RolesService {
     final resp = await http
         .get(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/roles/$id'),
-          headers: await _headers,
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
@@ -54,7 +46,7 @@ class RolesService {
     final resp = await http
         .get(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/roles/permissions'),
-          headers: await _headers,
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
@@ -74,7 +66,7 @@ class RolesService {
     final resp = await http
         .post(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/roles'),
-          headers: await _headers,
+          headers: await headers,
           body: jsonEncode({
             'name': name,
             if (color != null) 'color': color,
@@ -100,7 +92,7 @@ class RolesService {
     final resp = await http
         .put(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/roles/$id'),
-          headers: await _headers,
+          headers: await headers,
           body: jsonEncode(<String, dynamic>{
             'name': ?name,
             'color': ?color,
@@ -120,7 +112,7 @@ class RolesService {
     final resp = await http
         .delete(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/roles/$id'),
-          headers: await _headers,
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 

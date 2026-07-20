@@ -8,6 +8,9 @@ import '../models/patient_models.dart';
 import '../services/exam_masters_service.dart';
 import '../services/exam_service.dart';
 import '../services/simple_master_service.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
+import '../widgets/app_animations.dart';
 
 
 class _CoRow {
@@ -45,10 +48,6 @@ class PrimaryExamScreen extends StatefulWidget {
 }
 
 class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
-  static const _navy = Color(0xFF1B4F72);
-  static const _blue = Color(0xFF2980B9);
-  static const _green = Color(0xFF27AE60);
-
   late PageController _pageCtrl;
   int _currentStep = 0;
   final _stepBarCtrl = ScrollController();
@@ -315,12 +314,9 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       await ExamService.instance.savePrimaryExam(widget.patient.id, _buildStepPayload(_currentStep));
       if (!mounted) return;
       _anySaved = true;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${_stepNames[_currentStep]} saved.'),
-        backgroundColor: _green,
-      ));
+      showAppSnackBar(context, '${_stepNames[_currentStep]} saved.', isSuccess: true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red, duration: const Duration(seconds: 4)));
+      if (mounted) showAppSnackBar(context, e.toString(), isError: true, duration: const Duration(seconds: 4));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -438,7 +434,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
 
   Widget _buildStepBar() {
     return Container(
-      color: _navy,
+      color: AppColors.primary,
       height: 50,
       child: ListView.builder(
         controller: _stepBarCtrl,
@@ -455,7 +451,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.3)),
               ),
               child: Text(
@@ -463,7 +459,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
-                  color: isActive ? _navy : Colors.white,
+                  color: isActive ? AppColors.primary : Colors.white,
                 ),
               ),
             ),
@@ -476,7 +472,9 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
   Widget _buildNavButtons() {
     final isFirst = _currentStep == 0;
     final isLast  = _currentStep == _stepNames.length - 1;
-    return Container(
+    return SafeArea(
+      top: false,
+      child: Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFE0E0E0)))),
       child: Row(children: [
@@ -486,22 +484,24 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             child: OutlinedButton.icon(
               onPressed: () => _goToStep(_currentStep - 1),
               icon: const Icon(Icons.arrow_back_rounded, size: 16),
-              label: Text(_stepNames[_currentStep - 1], overflow: TextOverflow.ellipsis),
-              style: OutlinedButton.styleFrom(foregroundColor: _navy, side: const BorderSide(color: _navy), padding: const EdgeInsets.symmetric(vertical: 10)),
+              label: Text(_stepNames[_currentStep - 1], maxLines: 1, overflow: TextOverflow.ellipsis),
+              style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: BorderSide(color: AppColors.primary), padding: EdgeInsets.symmetric(vertical: 10)),
             ),
           ),
           const SizedBox(width: 8),
         ],
         // ── Save Exam ────────────────────────────────────────────────────────
         Expanded(
+          flex: 2,
           child: ElevatedButton.icon(
             onPressed: _saving ? null : _save,
             icon: _saving
               ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
               : const Icon(Icons.save_rounded, size: 16, color: Colors.white),
             label: Text(_saving ? 'Saving…' : 'Save ${_stepNames[_currentStep]}',
+                maxLines: 1, overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
-            style: ElevatedButton.styleFrom(backgroundColor: _navy, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 10)),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: EdgeInsets.symmetric(vertical: 10)),
           ),
         ),
         // ── Next ─────────────────────────────────────────────────────────────
@@ -511,9 +511,9 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             child: ElevatedButton.icon(
               onPressed: () => _goToStep(_currentStep + 1),
               icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-              label: Text(_stepNames[_currentStep + 1], overflow: TextOverflow.ellipsis),
+              label: Text(_stepNames[_currentStep + 1], maxLines: 1, overflow: TextOverflow.ellipsis),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _navy.withValues(alpha: 0.75),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.75),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 10),
               ),
@@ -521,12 +521,13 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           ),
         ],
       ]),
+    ),
     );
   }
 
   Widget _iopBadge(String label, Color color) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-    decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: color.withValues(alpha: 0.4))),
+    decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(AppRadius.xl), border: Border.all(color: color.withValues(alpha: 0.4))),
     child: Row(mainAxisSize: MainAxisSize.min, children: [
       Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
       const SizedBox(width: 6),
@@ -583,7 +584,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       decoration: BoxDecoration(
         color: Colors.amber.shade50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: Colors.amber.shade200),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -600,7 +601,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           children: favs.map((item) => Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               border: Border.all(color: Colors.amber.shade300),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -635,7 +636,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
         decoration: BoxDecoration(
           color: Colors.amber.shade50,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(color: Colors.amber.shade200),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -647,7 +648,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           ]),
           const SizedBox(height: 8),
           Wrap(spacing: 6, runSpacing: 6, children: kcoFavs.map((item) => Container(
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(color: Colors.amber.shade300)),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               GestureDetector(
@@ -677,10 +678,10 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
   Widget _buildVisionStep() => ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 100), children: [
     _sectionHeader('Visual Acuity'),
     Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: _navy.withValues(alpha: 0.12))),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.primary.withValues(alpha: 0.12))),
       child: Column(children: [
         Container(
-          decoration: BoxDecoration(color: _navy.withValues(alpha: 0.06), borderRadius: const BorderRadius.vertical(top: Radius.circular(11))),
+          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.06), borderRadius: BorderRadius.vertical(top: Radius.circular(11))),
           child: Row(children: [const SizedBox(width: 40), _thCell('VN (Dist)'), _thCell('Pinhole'), _thCell('Near VN')]),
         ),
         _visionEyeRow('RE', true, _vnRe, _pnvnRe, _nrvnRe, 'vn', 'pnvn', 'nrvn'),
@@ -706,13 +707,13 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _navy.withValues(alpha: 0.12)),
-        boxShadow: [BoxShadow(color: _navy.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 6, offset: Offset(0, 2))],
       ),
       child: Column(children: [
         Container(
-          decoration: const BoxDecoration(color: _navy, borderRadius: BorderRadius.vertical(top: Radius.circular(11))),
+          decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.vertical(top: Radius.circular(11))),
           child: Row(children: [
             const SizedBox(width: 80),
             Expanded(child: Padding(
@@ -742,11 +743,11 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               const Text('IOP', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1e293b), letterSpacing: .04)),
               const SizedBox(height: 2),
-              Text('mmHg', style: TextStyle(fontSize: 10, color: _navy.withValues(alpha: 0.4), fontWeight: FontWeight.w500)),
+              Text('mmHg', style: TextStyle(fontSize: 10, color: AppColors.primary.withValues(alpha: 0.4), fontWeight: FontWeight.w500)),
             ]),
           ),
           Expanded(child: Padding(padding: const EdgeInsets.all(12), child: _nctField(_nctIopRe))),
-          Container(width: 1, color: _navy.withValues(alpha: 0.08)),
+          Container(width: 1, color: AppColors.primary.withValues(alpha: 0.08)),
           Expanded(child: Padding(padding: const EdgeInsets.all(12), child: _nctField(_nctIopLe))),
         ])),
       ]),
@@ -757,7 +758,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _navy.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
       ),
       child: Wrap(alignment: WrapAlignment.spaceAround, spacing: 8, runSpacing: 6, children: [
         _iopBadge('Normal 10–21', const Color(0xFF22C55E)),
@@ -781,20 +782,20 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     _sectionHeader('Dilation'),
     Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: _navy.withValues(alpha: 0.12))),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.primary.withValues(alpha: 0.12))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Dilate patient?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _navy)),
+        Text('Dilate patient?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary)),
         const SizedBox(height: 10),
         Row(children: [
-          ChoiceChip(label: const Text('Yes'), selected: _dilate == 'Yes', selectedColor: _navy,
-              labelStyle: TextStyle(color: _dilate == 'Yes' ? Colors.white : _navy, fontWeight: FontWeight.w700),
+          ChoiceChip(label: Text('Yes'), selected: _dilate == 'Yes', selectedColor: AppColors.primary,
+              labelStyle: TextStyle(color: _dilate == 'Yes' ? Colors.white : AppColors.primary, fontWeight: FontWeight.w700),
               onSelected: (_) => setState(() {
                 _dilate = 'Yes';
                 if (_dilationTimeCtrl.text.trim().isEmpty) _dilationTimeCtrl.text = '40';
               })),
           const SizedBox(width: 8),
-          ChoiceChip(label: const Text('No'), selected: _dilate == 'No', selectedColor: _navy,
-              labelStyle: TextStyle(color: _dilate == 'No' ? Colors.white : _navy, fontWeight: FontWeight.w700),
+          ChoiceChip(label: Text('No'), selected: _dilate == 'No', selectedColor: AppColors.primary,
+              labelStyle: TextStyle(color: _dilate == 'No' ? Colors.white : AppColors.primary, fontWeight: FontWeight.w700),
               onSelected: (_) => setState(() { _dilate = 'No'; _dilationTimeCtrl.clear(); })),
           if (_dilate == 'Yes') ...[
             const SizedBox(width: 12),
@@ -820,7 +821,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         if (!_loading && _loadError == null) _buildStepBar(),
         Expanded(
           child: _loading
-              ? const Center(child: CircularProgressIndicator(color: _navy))
+              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
               : _loadError != null
                   ? _buildError()
                   : PageView(
@@ -849,7 +850,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
   Widget _buildAppBar() {
     final p = widget.patient;
     return Container(
-      decoration: const BoxDecoration(gradient: LinearGradient(colors: [_navy, _blue], begin: Alignment.topLeft, end: Alignment.bottomRight)),
+      decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.blueLight], begin: Alignment.topLeft, end: Alignment.bottomRight)),
       child: SafeArea(bottom: false, child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
         child: Row(children: [
@@ -874,7 +875,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         const SizedBox(height: 12),
         Text(_loadError ?? 'Failed to load exam.', textAlign: TextAlign.center),
         const SizedBox(height: 16),
-        ElevatedButton.icon(onPressed: _loadAll, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry'), style: ElevatedButton.styleFrom(backgroundColor: _navy)),
+        ElevatedButton.icon(onPressed: _loadAll, icon: Icon(Icons.refresh_rounded), label: Text('Retry'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary)),
       ]));
 
   // ── History chips ─────────────────────────────────────────────────────────────
@@ -886,8 +887,8 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _navy.withValues(alpha: 0.12)),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // Selected chips
@@ -898,7 +899,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               label: Text(chip, style: const TextStyle(fontSize: 12)),
               deleteIcon: const Icon(Icons.close, size: 14),
               onDeleted: () => setState(() => _historyChips.remove(chip)),
-              backgroundColor: _navy.withValues(alpha: 0.08),
+              backgroundColor: AppColors.primary.withValues(alpha: 0.08),
               deleteIconColor: Colors.red,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -915,7 +916,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               return Container(
                 decoration: BoxDecoration(
                   color: selected ? Colors.amber.shade50 : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(color: Colors.amber.shade300),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -949,7 +950,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           initialValue: '',
           hint: 'Search or type history item...',
           icon: Icons.history_edu_rounded,
-          color: _navy,
+          color: AppColors.primary,
           onChanged: (_) {},
           onToggleFavourite: (item) => _toggleFavourite('hno', item),
           onSelected: (val) {
@@ -970,7 +971,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     return Container(
       key: ValueKey('co_$idx'),
       margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: _navy.withValues(alpha: 0.12))),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.primary.withValues(alpha: 0.12))),
       child: Column(children: [
         Row(children: [
           Expanded(child: _MasterAutocompleteField(
@@ -979,7 +980,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             initialValue: row.complaint,
             hint: 'Complaint',
             icon: Icons.report_problem_outlined,
-            color: _navy,
+            color: AppColors.primary,
             onChanged: (v) => setState(() => row.complaint = v),
             onToggleFavourite: (item) => _toggleFavourite('complaints', item),
           )),
@@ -1006,7 +1007,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     return Container(
       key: ValueKey('kco_$idx'),
       margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: _navy.withValues(alpha: 0.12))),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.primary.withValues(alpha: 0.12))),
       child: Column(children: [
         Row(children: [
           Expanded(child: _MasterAutocompleteField(
@@ -1015,7 +1016,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             initialValue: row.condition,
             hint: 'Known condition',
             icon: Icons.medical_information_outlined,
-            color: _navy,
+            color: AppColors.primary,
             onChanged: (v) => setState(() => row.condition = v),
             onToggleFavourite: (item) => _toggleFavourite('kcos', item),
           )),
@@ -1055,14 +1056,14 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       final picked = await showModalBottomSheet<String>(
         context: context,
         isScrollControlled: true,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
         builder: (_) => DraggableScrollableSheet(
           expand: false, initialChildSize: 0.5, maxChildSize: 0.85,
           builder: (_, sc) => Column(children: [
             Container(margin: const EdgeInsets.only(top: 10, bottom: 6),
-                width: 36, height: 4, decoration: BoxDecoration(color: _navy.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
+                width: 36, height: 4, decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
             Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: const Text('Select value', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _navy))),
+                child: Text('Select value', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary))),
             Expanded(child: ListView(controller: sc, padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
               children: [
                 ...items.where((i) => i.isFavourite).map((i) => ListTile(
@@ -1092,19 +1093,19 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         onTap: items.isEmpty ? null : openPicker,
         readOnly: false,
         decoration: InputDecoration(
-          hintText: '—', hintStyle: TextStyle(color: _navy.withValues(alpha: 0.3), fontSize: 13),
+          hintText: '—', hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3), fontSize: 13),
           suffixIcon: items.isNotEmpty
             ? IconButton(
-                icon: Icon(Icons.arrow_drop_down_rounded, size: 18, color: _navy.withValues(alpha: 0.5)),
+                icon: Icon(Icons.arrow_drop_down_rounded, size: 18, color: AppColors.primary.withValues(alpha: 0.5)),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: openPicker,
               )
             : null,
           contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _navy)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary)),
         ),
       ),
     ));
@@ -1120,8 +1121,8 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       if (iop >= 25)      { bdColor = const Color(0xFFEF4444); bgColor = const Color(0xFFFFF5F5); }
       else if (iop >= 22) { bdColor = const Color(0xFFF59E0B); bgColor = const Color(0xFFFFFBF0); }
       else if (iop >= 10) { bdColor = const Color(0xFF22C55E); bgColor = const Color(0xFFF0FFF4); }
-      else                { bdColor = _navy.withValues(alpha: 0.18); bgColor = Colors.white; }
-    } else                { bdColor = _navy.withValues(alpha: 0.18); bgColor = Colors.white; }
+      else                { bdColor = AppColors.primary.withValues(alpha: 0.18); bgColor = Colors.white; }
+    } else                { bdColor = AppColors.primary.withValues(alpha: 0.18); bgColor = Colors.white; }
 
     Future<void> openGrid() async {
       if (items.isEmpty) return;
@@ -1129,7 +1130,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       final picked = await showModalBottomSheet<String>(
         context: context,
         isScrollControlled: true,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
         builder: (ctx) => StatefulBuilder(builder: (ctx, ss) {
           final filtered = query.isEmpty
               ? items
@@ -1138,9 +1139,9 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             initialChildSize: 0.6, maxChildSize: 0.9, minChildSize: 0.35, expand: false,
             builder: (_, sc) => Column(children: [
               Container(margin: const EdgeInsets.only(top: 10, bottom: 6), width: 36, height: 4,
-                  decoration: BoxDecoration(color: _navy.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
+                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
               Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: Row(children: [
-                const Expanded(child: Text('IOP — NCT (mmHg)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _navy))),
+                Expanded(child: Text('IOP — NCT (mmHg)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary))),
                 if (ctrl.text.isNotEmpty) TextButton(
                   onPressed: () => Navigator.pop(ctx, ''),
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -1154,8 +1155,8 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                   prefixIcon: const Icon(Icons.search_rounded, size: 18),
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: _navy.withValues(alpha: 0.2))),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm),
+                      borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.2))),
                 ),
               )),
               Expanded(child: GridView.builder(
@@ -1171,9 +1172,9 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                     onTap: () => Navigator.pop(ctx, v),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isSel ? _navy : Colors.grey.shade100,
+                        color: isSel ? AppColors.primary : Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: isSel ? _navy : Colors.grey.shade300),
+                        border: Border.all(color: isSel ? AppColors.primary : Colors.grey.shade300),
                       ),
                       child: Center(child: Text(v,
                         textAlign: TextAlign.center,
@@ -1198,7 +1199,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
         hintText: '—',
-        hintStyle: TextStyle(fontSize: 22, color: _navy.withValues(alpha: 0.2), fontWeight: FontWeight.w200),
+        hintStyle: TextStyle(fontSize: 22, color: AppColors.primary.withValues(alpha: 0.2), fontWeight: FontWeight.w200),
         suffixIcon: IconButton(
           icon: Icon(Icons.arrow_drop_down_rounded, color: bdColor, size: 22),
           padding: EdgeInsets.zero,
@@ -1248,19 +1249,19 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       final picked = await showModalBottomSheet<String>(
         context: context,
         isScrollControlled: true,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
         builder: (sheetCtx) => DraggableScrollableSheet(
           expand: false, initialChildSize: 0.45, maxChildSize: 0.8,
           builder: (_, sc) => Column(children: [
             Container(margin: const EdgeInsets.only(top: 10, bottom: 6),
-                width: 36, height: 4, decoration: BoxDecoration(color: _navy.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
+                width: 36, height: 4, decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
             Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
               child: Row(children: [
-                const Expanded(child: Text('Select value', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _navy))),
+                Expanded(child: Text('Select value', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary))),
                 if (ctrl.text.isNotEmpty)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: _navy, borderRadius: BorderRadius.circular(6)),
+                    decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(6)),
                     child: Text(ctrl.text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
               ]),
@@ -1270,11 +1271,11 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                 final isSel = ctrl.text == i.value;
                 return ListTile(
                   dense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                  tileColor: isSel ? _navy.withValues(alpha: 0.08) : null,
+                  tileColor: isSel ? AppColors.primary.withValues(alpha: 0.08) : null,
                   title: Text(i.value, style: TextStyle(fontSize: 13,
                       fontWeight: isSel ? FontWeight.w700 : FontWeight.normal,
-                      color: isSel ? _navy : null)),
-                  trailing: isSel ? Icon(Icons.check_rounded, size: 18, color: _navy) : null,
+                      color: isSel ? AppColors.primary : null)),
+                  trailing: isSel ? Icon(Icons.check_rounded, size: 18, color: AppColors.primary) : null,
                   onTap: () => Navigator.pop(sheetCtx, i.value),
                 );
               }).toList(),
@@ -1307,7 +1308,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           },
           child: Container(
             height: 40,
-            decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(8), border: Border.all(color: bdColor)),
+            decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(AppRadius.sm), border: Border.all(color: bdColor)),
             child: Center(child: Text(
               isEmpty ? '—' : t,
               textAlign: TextAlign.center,
@@ -1318,33 +1319,36 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       ));
     }
 
-    // ── AXIS / VN: editable text + chevron dropdown icon ────────────────────
-    final axisOff = disabled && isAxis;
+    // ── VN / Near-VN / AXIS: chip style (value always visible) ─────────────
+    final axisOff = isAxis && disabled;
+    final t = ctrl.text.trim();
+    final isEmpty = t.isEmpty;
+    final Color chipBg, chipBd, chipTxt;
+    if (axisOff) {
+      chipBg = AppColors.primary.withValues(alpha: 0.04);
+      chipBd = AppColors.primary.withValues(alpha: 0.08);
+      chipTxt = AppColors.primary.withValues(alpha: 0.25);
+    } else {
+      chipBg = isEmpty ? Colors.grey.shade50 : AppColors.primary.withValues(alpha: 0.08);
+      chipBd = isEmpty ? Colors.grey.shade300 : AppColors.primary.withValues(alpha: 0.4);
+      chipTxt = isEmpty ? Colors.grey.shade400 : AppColors.primary;
+    }
     return Expanded(child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: TextFormField(
-        controller: ctrl, textAlign: TextAlign.center,
-        enabled: !axisOff,
-        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500,
-            color: axisOff ? _navy.withValues(alpha: 0.25) : null),
-        keyboardType: isAxis ? TextInputType.number : TextInputType.text,
-        decoration: InputDecoration(
-          hintText: '—', hintStyle: TextStyle(color: _navy.withValues(alpha: 0.3), fontSize: 13),
-          filled: axisOff,
-          fillColor: axisOff ? _navy.withValues(alpha: 0.04) : null,
-          suffixIcon: (!axisOff && items.isNotEmpty)
-            ? IconButton(
-                icon: Icon(Icons.arrow_drop_down_rounded, size: 18, color: _navy.withValues(alpha: 0.5)),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: openListPicker,
-              )
-            : null,
-          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-          disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.08))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _navy)),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: GestureDetector(
+        onTap: (!axisOff && items.isNotEmpty) ? openListPicker : null,
+        child: Container(
+          height: 40,
+          decoration: BoxDecoration(
+            color: chipBg,
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            border: Border.all(color: chipBd),
+          ),
+          child: Center(child: Text(
+            isEmpty ? '—' : t,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: chipTxt),
+          )),
         ),
       ),
     ));
@@ -1368,13 +1372,13 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         child: Container(
           width: 58, height: 36,
           decoration: BoxDecoration(
-            color: isSel ? _navy : (isFav ? Colors.amber.shade50 : Colors.grey.shade100),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: isSel ? _navy : (isFav ? Colors.amber.shade300 : Colors.grey.shade300)),
+            color: isSel ? AppColors.primary : (isFav ? Colors.amber.shade50 : Colors.grey.shade100),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            border: Border.all(color: isSel ? AppColors.primary : (isFav ? Colors.amber.shade300 : Colors.grey.shade300)),
           ),
           child: Center(child: Text(label, textAlign: TextAlign.center,
             style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
-                color: isSel ? Colors.white : (isFav ? Colors.amber.shade800 : _navy.withValues(alpha: 0.85))))),
+                color: isSel ? Colors.white : (isFav ? Colors.amber.shade800 : AppColors.primary.withValues(alpha: 0.85))))),
         ),
       );
 
@@ -1384,7 +1388,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         width: 58, height: 36,
         decoration: BoxDecoration(
           color: isSel ? const Color(0xFF475569) : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
           border: Border.all(color: isSel ? const Color(0xFF475569) : Colors.grey.shade400),
         ),
         child: Center(child: Text('0.00', textAlign: TextAlign.center,
@@ -1405,7 +1409,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               return Scaffold(
                 backgroundColor: Colors.white,
                 appBar: AppBar(
-                  backgroundColor: _navy, foregroundColor: Colors.white, elevation: 0,
+                  backgroundColor: AppColors.primary, foregroundColor: Colors.white, elevation: 0,
                   leading: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
                   title: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                 ),
@@ -1430,15 +1434,15 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
-                                color: sign == s ? _navy : Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: sign == s ? _navy : _navy.withValues(alpha: 0.2)),
+                                color: sign == s ? AppColors.primary : Colors.white,
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                border: Border.all(color: sign == s ? AppColors.primary : AppColors.primary.withValues(alpha: 0.2)),
                               ),
                               child: Text(
                                 s == '-' ? 'Minus (−)' : 'Plus (+)',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
-                                    color: sign == s ? Colors.white : _navy),
+                                    color: sign == s ? Colors.white : AppColors.primary),
                               ),
                             ),
                           ),
@@ -1468,21 +1472,21 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                     padding: EdgeInsets.fromLTRB(12, 10, 12, MediaQuery.of(ctx).padding.bottom + 12),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border(top: BorderSide(color: _navy.withValues(alpha: 0.12))),
-                      boxShadow: [BoxShadow(color: _navy.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, -2))],
+                      border: Border(top: BorderSide(color: AppColors.primary.withValues(alpha: 0.12))),
+                      boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.06), blurRadius: 8, offset: Offset(0, -2))],
                     ),
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
                       Row(children: [
                         Expanded(child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                           decoration: BoxDecoration(
-                            color: selected.isNotEmpty ? _navy.withValues(alpha: 0.07) : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
+                            color: selected.isNotEmpty ? AppColors.primary.withValues(alpha: 0.07) : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
                           child: Text(
                             selected.isNotEmpty ? 'SELECTED: $selected' : 'Nothing selected',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                                color: selected.isNotEmpty ? _navy : Colors.grey.shade400),
+                                color: selected.isNotEmpty ? AppColors.primary : Colors.grey.shade400),
                           ),
                         )),
                         const SizedBox(width: 8),
@@ -1492,7 +1496,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.red.shade300),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
                             ),
                             child: Text('Clear', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.red.shade600)),
                           ),
@@ -1506,14 +1510,14 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                           onChanged: (_) => ss(() {}),
                           decoration: InputDecoration(
                             hintText: 'Custom (e.g. ${sign}1.75)',
-                            hintStyle: TextStyle(fontSize: 12, color: _navy.withValues(alpha: 0.4)),
+                            hintStyle: TextStyle(fontSize: 12, color: AppColors.primary.withValues(alpha: 0.4)),
                             contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: _navy.withValues(alpha: 0.3))),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: _navy.withValues(alpha: 0.3))),
-                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: _navy)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm),
+                                borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3))),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm),
+                                borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm),
+                                borderSide: BorderSide(color: AppColors.primary)),
                           ),
                           style: const TextStyle(fontSize: 13),
                         )),
@@ -1533,7 +1537,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
-                            decoration: BoxDecoration(color: _navy, borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(AppRadius.sm)),
                             child: const Text('Apply', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
                           ),
                         ),
@@ -1553,10 +1557,10 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
 
   Widget _pgTable() {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: _navy.withValues(alpha: 0.12))),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.primary.withValues(alpha: 0.12))),
       child: Column(children: [
         Container(
-          decoration: BoxDecoration(color: _navy.withValues(alpha: 0.06), borderRadius: const BorderRadius.vertical(top: Radius.circular(11))),
+          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.06), borderRadius: BorderRadius.vertical(top: Radius.circular(11))),
           child: Row(children: [const SizedBox(width: 68), _thCell('SPH'), _thCell('CYL'), _thCell('AXIS'), _thCell('VN C GL')]),
         ),
         for (final eye in ['re', 'le']) ...[
@@ -1565,7 +1569,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           Padding(padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: Row(children: [
             SizedBox(width: 68, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               _eyeLabel(eye.toUpperCase(), eye == 're'),
-              Text('DIST', style: TextStyle(fontSize: 9, color: _navy.withValues(alpha: 0.5))),
+              Text('DIST', style: TextStyle(fontSize: 9, color: AppColors.primary.withValues(alpha: 0.5))),
             ])),
             ..._pgDistKeys.map((k) => _refractionCell(_pg[eye]![k]!, k,
                 disabled: k == 'ax' && _axisDisabled(_pg[eye]!['dc']!.text))),
@@ -1573,7 +1577,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           // NEAR row
           Padding(padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: Row(children: [
             SizedBox(width: 68, child: Padding(padding: const EdgeInsets.only(left: 2),
-                child: Text('NEAR', style: TextStyle(fontSize: 9, color: _navy.withValues(alpha: 0.5))))),
+                child: Text('NEAR', style: TextStyle(fontSize: 9, color: AppColors.primary.withValues(alpha: 0.5))))),
             ..._pgNearKeys.map((k) => _refractionCell(_pg[eye]![k]!, k,
                 disabled: k == 'na' && _axisDisabled(_pg[eye]!['nc']!.text))),
           ])),
@@ -1591,14 +1595,14 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _navy.withValues(alpha: 0.12)),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
           ),
           child: Column(children: [
             // Eye header
             Container(
-              decoration: const BoxDecoration(
-                color: _navy,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
@@ -1611,7 +1615,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             ),
             // Column headers
             Container(
-              color: _navy.withValues(alpha: 0.04),
+              color: AppColors.primary.withValues(alpha: 0.04),
               child: Row(children: [
                 const SizedBox(width: 46),
                 _thCell('SPH'),
@@ -1627,7 +1631,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               child: Row(children: [
                 SizedBox(width: 46, child: Center(child: Text('DIST',
                     style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700,
-                        color: _navy.withValues(alpha: 0.5), letterSpacing: .04)))),
+                        color: AppColors.primary.withValues(alpha: 0.5), letterSpacing: .04)))),
                 _refractionCell(_st[eye]!['ds']!, 'ds', onChanged: () => _recalcNs(eye)),
                 _refractionCell(_st[eye]!['dc']!, 'dc'),
                 _refractionCell(_st[eye]!['ax']!, 'ax',
@@ -1644,7 +1648,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                   padding: const EdgeInsets.only(top: 12),
                   child: Center(child: Text('NEAR',
                       style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700,
-                          color: _navy.withValues(alpha: 0.5), letterSpacing: .04))),
+                          color: AppColors.primary.withValues(alpha: 0.5), letterSpacing: .04))),
                 )),
                 _stNsCell(eye),
                 _stMirrorCell(_st[eye]!['dc']!),
@@ -1704,7 +1708,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           child: Container(
             height: 40,
             decoration: BoxDecoration(
-                color: bgColor, borderRadius: BorderRadius.circular(8),
+                color: bgColor, borderRadius: BorderRadius.circular(AppRadius.sm),
                 border: Border.all(color: bdColor)),
             child: Center(child: Text(isEmpty ? '—' : ns,
                 textAlign: TextAlign.center,
@@ -1730,7 +1734,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         height: 40,
         decoration: BoxDecoration(
           color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
           border: Border.all(color: Colors.grey.shade300),
         ),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -1738,7 +1742,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             val.isEmpty ? '—' : val,
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-                color: val.isEmpty ? Colors.grey.shade400 : _navy.withValues(alpha: 0.4)),
+                color: val.isEmpty ? Colors.grey.shade400 : AppColors.primary.withValues(alpha: 0.4)),
           ),
           Text('= Dist', style: TextStyle(fontSize: 8, color: Colors.grey.shade400)),
         ]),
@@ -1757,8 +1761,8 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
 
   Widget _stCheck(String label, bool val, void Function(bool?) onChanged) {
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      Checkbox(value: val, onChanged: onChanged, activeColor: _navy, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
-      Text(label, style: const TextStyle(fontSize: 12, color: _navy)),
+      Checkbox(value: val, onChanged: onChanged, activeColor: AppColors.primary, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
+      Text(label, style: TextStyle(fontSize: 12, color: AppColors.primary)),
     ]);
   }
 
@@ -1769,13 +1773,13 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         (eye == 're' ? _oeRe['lens'] : _oeLe['lens'])!.text.toLowerCase().contains('pseudophakia');
 
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _navy.withValues(alpha: 0.12)),
-          boxShadow: [BoxShadow(color: _navy.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 6, offset: Offset(0, 2))]),
       child: Column(children: [
         // Navy header
         Container(
-          decoration: const BoxDecoration(color: _navy, borderRadius: BorderRadius.vertical(top: Radius.circular(11))),
+          decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.vertical(top: Radius.circular(11))),
           child: Row(children: [
             const SizedBox(width: 110),
             Expanded(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1801,7 +1805,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             const Divider(height: 1),
             Padding(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), child: Row(children: [
               SizedBox(width: 100, child: Text(_oeLabels[f] ?? f,
-                  style: TextStyle(fontSize: 12, color: _navy.withValues(alpha: 0.7), fontWeight: FontWeight.w600))),
+                  style: TextStyle(fontSize: 12, color: AppColors.primary.withValues(alpha: 0.7), fontWeight: FontWeight.w600))),
               const SizedBox(width: 6),
               if (isOther) ...[
                 Expanded(child: _oePlainField(_oeRe[f]!)),
@@ -1826,11 +1830,11 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     controller: ctrl,
     style: const TextStyle(fontSize: 12),
     decoration: InputDecoration(
-      hintText: '—', hintStyle: TextStyle(color: _navy.withValues(alpha: 0.3), fontSize: 12),
+      hintText: '—', hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3), fontSize: 12),
       contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), isDense: true,
-      border:        OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _navy)),
+      border:        OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary)),
     ),
   );
 
@@ -1842,15 +1846,15 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       onChanged: (_) => setState(() {}),
       style: const TextStyle(fontSize: 12),
       decoration: InputDecoration(
-        hintText: '—', hintStyle: TextStyle(color: _navy.withValues(alpha: 0.3), fontSize: 12),
+        hintText: '—', hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3), fontSize: 12),
         contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), isDense: true,
         suffixIcon: hasItems ? GestureDetector(
           onTap: () => _openOePickerSheet(fieldKey, ctrl),
-          child: Icon(Icons.arrow_drop_down_rounded, size: 18, color: _navy.withValues(alpha: 0.5)),
+          child: Icon(Icons.arrow_drop_down_rounded, size: 18, color: AppColors.primary.withValues(alpha: 0.5)),
         ) : null,
-        border:        OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _navy)),
+        border:        OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary)),
       ),
       onTap: hasItems ? () => _openOePickerSheet(fieldKey, ctrl) : null,
     );
@@ -1862,7 +1866,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
       builder: (bsCtx) => StatefulBuilder(builder: (_, bsSs) {
         final allItems = _oeMasters[fieldKey] ?? [];
         final favs   = allItems.where((i) => i.isFavourite  && (query.isEmpty || i.value.toLowerCase().contains(query.toLowerCase()))).toList();
@@ -1886,7 +1890,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           title: Text(item.value, style: const TextStyle(fontSize: 13)),
           trailing: IconButton(
             icon: Icon(item.isFavourite ? Icons.star_rounded : Icons.star_outline_rounded,
-                size: 18, color: item.isFavourite ? Colors.amber : _navy.withValues(alpha: 0.3)),
+                size: 18, color: item.isFavourite ? Colors.amber : AppColors.primary.withValues(alpha: 0.3)),
             padding: EdgeInsets.zero, constraints: const BoxConstraints(),
             onPressed: () => doToggle(item),
           ),
@@ -1897,10 +1901,10 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           expand: false, initialChildSize: 0.6, maxChildSize: 0.92, minChildSize: 0.3,
           builder: (_, sc) => Column(children: [
             Container(margin: const EdgeInsets.only(top: 10, bottom: 6), width: 36, height: 4,
-                decoration: BoxDecoration(color: _navy.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
             Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: Row(children: [
               Expanded(child: Text(_oeLabels[fieldKey] ?? fieldKey,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _navy))),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary))),
               if (ctrl.text.isNotEmpty) TextButton(
                 onPressed: () { if (mounted) setState(() => ctrl.text = ''); Navigator.pop(bsCtx); },
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -1912,8 +1916,8 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               decoration: InputDecoration(
                 hintText: 'Search…', prefixIcon: const Icon(Icons.search_rounded, size: 18),
                 isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: _navy.withValues(alpha: 0.2))),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm),
+                    borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.2))),
               ),
             )),
             Expanded(child: ListView(controller: sc, children: [
@@ -1925,12 +1929,12 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               ],
               if (others.isNotEmpty) ...[
                 Padding(padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
-                    child: Text('All', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _navy.withValues(alpha: 0.5)))),
+                    child: Text('All', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary.withValues(alpha: 0.5)))),
                 ...others.map(itemTile),
               ],
               if (favs.isEmpty && others.isEmpty)
                 Padding(padding: const EdgeInsets.all(24), child: Text('No results',
-                    textAlign: TextAlign.center, style: TextStyle(color: _navy.withValues(alpha: 0.35)))),
+                    textAlign: TextAlign.center, style: TextStyle(color: AppColors.primary.withValues(alpha: 0.35)))),
               const SizedBox(height: 24),
             ])),
           ]),
@@ -1948,12 +1952,12 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: current == o ? _navy : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: current == o ? _navy : _navy.withValues(alpha: 0.2)),
+            color: current == o ? AppColors.primary : Colors.white,
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            border: Border.all(color: current == o ? AppColors.primary : AppColors.primary.withValues(alpha: 0.2)),
           ),
           child: Text(o, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-              color: current == o ? Colors.white : _navy)),
+              color: current == o ? Colors.white : AppColors.primary)),
         ),
       )).toList());
 
@@ -1965,24 +1969,24 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFFF0F4FF),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _navy.withValues(alpha: 0.15)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Pseudophakia — $eye', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _navy)),
+          Text('Pseudophakia — $eye', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
           const SizedBox(height: 8),
-          Text('Operation Type', style: TextStyle(fontSize: 11, color: _navy.withValues(alpha: 0.6))),
+          Text('Operation Type', style: TextStyle(fontSize: 11, color: AppColors.primary.withValues(alpha: 0.6))),
           const SizedBox(height: 4),
           opChips(opType, onOpType),
           const SizedBox(height: 8),
           Row(children: [
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Expense', style: TextStyle(fontSize: 11, color: _navy.withValues(alpha: 0.6))),
+              Text('Expense', style: TextStyle(fontSize: 11, color: AppColors.primary.withValues(alpha: 0.6))),
               const SizedBox(height: 4),
               _oePlainField(expenseCtrl),
             ])),
             const SizedBox(width: 8),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Hospital', style: TextStyle(fontSize: 11, color: _navy.withValues(alpha: 0.6))),
+              Text('Hospital', style: TextStyle(fontSize: 11, color: AppColors.primary.withValues(alpha: 0.6))),
               const SizedBox(height: 4),
               _oePlainField(hospitalCtrl),
             ])),
@@ -2004,13 +2008,13 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       return Container(
         margin: isRe ? EdgeInsets.zero : const EdgeInsets.only(top: 12),
         decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _navy.withValues(alpha: 0.12)),
-          boxShadow: [BoxShadow(color: _navy.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
+          color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 6, offset: Offset(0, 2))],
         ),
         child: Column(children: [
           Container(
-            decoration: const BoxDecoration(color: _navy, borderRadius: BorderRadius.vertical(top: Radius.circular(11))),
+            decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.vertical(top: Radius.circular(11))),
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             child: Row(children: [
               const Icon(Icons.remove_red_eye_rounded, color: Colors.white, size: 13),
@@ -2022,8 +2026,8 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           const Divider(height: 1),
           Padding(padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10), child: Row(children: [
             SizedBox(width: 90, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Disc', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _navy)),
-              Text('CDR / Appearance', style: TextStyle(fontSize: 10, color: _navy.withValues(alpha: 0.45))),
+              Text('Disc', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+              Text('CDR / Appearance', style: TextStyle(fontSize: 10, color: AppColors.primary.withValues(alpha: 0.45))),
             ])),
             const SizedBox(width: 8),
             Expanded(child: _fundusPickerField(_fundusDiscMasters, 'disc', discCtrl, 'Disc (CDR)')),
@@ -2032,8 +2036,8 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           const Divider(height: 1),
           Padding(padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10), child: Row(children: [
             SizedBox(width: 90, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('FR', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _navy)),
-              Text('Foveal Reflex', style: TextStyle(fontSize: 10, color: _navy.withValues(alpha: 0.45))),
+              Text('FR', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+              Text('Foveal Reflex', style: TextStyle(fontSize: 10, color: AppColors.primary.withValues(alpha: 0.45))),
             ])),
             const SizedBox(width: 8),
             Expanded(child: _fundusPickerField(_fundusFrMasters, 'fr', frCtrl, 'Foveal Reflex')),
@@ -2041,7 +2045,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           // Comment row — full-width textarea
           const Divider(height: 1),
           Padding(padding: const EdgeInsets.fromLTRB(10, 7, 10, 10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Comment', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _navy.withValues(alpha: 0.6))),
+            Text('Comment', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary.withValues(alpha: 0.6))),
             const SizedBox(height: 4),
             TextFormField(
               controller: commentCtrl,
@@ -2050,11 +2054,11 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               style: const TextStyle(fontSize: 12),
               decoration: InputDecoration(
                 hintText: 'Additional findings…',
-                hintStyle: TextStyle(color: _navy.withValues(alpha: 0.3), fontSize: 12),
+                hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3), fontSize: 12),
                 contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                border:        OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _navy)),
+                border:        OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary)),
               ),
             ),
           ])),
@@ -2074,15 +2078,15 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       readOnly: masterList.isNotEmpty,
       style: const TextStyle(fontSize: 12),
       decoration: InputDecoration(
-        hintText: '—', hintStyle: TextStyle(color: _navy.withValues(alpha: 0.3), fontSize: 12),
+        hintText: '—', hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3), fontSize: 12),
         contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), isDense: true,
         suffixIcon: masterList.isNotEmpty ? GestureDetector(
           onTap: () => _openFundusPickerSheet(masterList, apiType, ctrl, label),
-          child: Icon(Icons.arrow_drop_down_rounded, size: 18, color: _navy.withValues(alpha: 0.5)),
+          child: Icon(Icons.arrow_drop_down_rounded, size: 18, color: AppColors.primary.withValues(alpha: 0.5)),
         ) : null,
-        border:        OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _navy)),
+        border:        OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary)),
       ),
       onTap: masterList.isNotEmpty ? () => _openFundusPickerSheet(masterList, apiType, ctrl, label) : null,
     );
@@ -2093,7 +2097,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
       builder: (bsCtx) => StatefulBuilder(builder: (_, bsSs) {
         final favs   = masterList.where((i) => i.isFavourite  && (query.isEmpty || i.value.toLowerCase().contains(query.toLowerCase()))).toList();
         final others = masterList.where((i) => !i.isFavourite && (query.isEmpty || i.value.toLowerCase().contains(query.toLowerCase()))).toList();
@@ -2115,7 +2119,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           title: Text(item.value, style: const TextStyle(fontSize: 13)),
           trailing: IconButton(
             icon: Icon(item.isFavourite ? Icons.star_rounded : Icons.star_outline_rounded,
-                size: 18, color: item.isFavourite ? Colors.amber : _navy.withValues(alpha: 0.3)),
+                size: 18, color: item.isFavourite ? Colors.amber : AppColors.primary.withValues(alpha: 0.3)),
             padding: EdgeInsets.zero, constraints: const BoxConstraints(),
             onPressed: () => doToggle(item),
           ),
@@ -2126,9 +2130,9 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           expand: false, initialChildSize: 0.6, maxChildSize: 0.92, minChildSize: 0.3,
           builder: (_, sc) => Column(children: [
             Container(margin: const EdgeInsets.only(top: 10, bottom: 6), width: 36, height: 4,
-                decoration: BoxDecoration(color: _navy.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
             Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: Row(children: [
-              Expanded(child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _navy))),
+              Expanded(child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary))),
               if (ctrl.text.isNotEmpty) TextButton(
                 onPressed: () { if (mounted) setState(() => ctrl.text = ''); Navigator.pop(bsCtx); },
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -2140,8 +2144,8 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               decoration: InputDecoration(
                 hintText: 'Search…', prefixIcon: const Icon(Icons.search_rounded, size: 18),
                 isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: _navy.withValues(alpha: 0.2))),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm),
+                    borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.2))),
               ),
             )),
             Expanded(child: ListView(controller: sc, children: [
@@ -2153,12 +2157,12 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               ],
               if (others.isNotEmpty) ...[
                 Padding(padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
-                    child: Text('All', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _navy.withValues(alpha: 0.5)))),
+                    child: Text('All', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary.withValues(alpha: 0.5)))),
                 ...others.map(itemTile),
               ],
               if (favs.isEmpty && others.isEmpty)
                 Padding(padding: const EdgeInsets.all(24), child: Text('No results',
-                    textAlign: TextAlign.center, style: TextStyle(color: _navy.withValues(alpha: 0.35)))),
+                    textAlign: TextAlign.center, style: TextStyle(color: AppColors.primary.withValues(alpha: 0.35)))),
               const SizedBox(height: 24),
             ])),
           ]),
@@ -2172,21 +2176,21 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
   Widget _sectionHeader(String text, {Widget? trailing}) => Padding(
         padding: const EdgeInsets.only(top: 6, bottom: 8),
         child: Row(children: [
-          Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: _navy)),
+          Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary)),
           if (trailing != null) ...[const Spacer(), trailing],
         ]),
       );
 
   Widget _addBtn(VoidCallback onTap) => GestureDetector(onTap: onTap,
         child: Container(padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(color: _navy.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
-            child: const Icon(Icons.add_rounded, color: _navy, size: 18)));
+            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(AppRadius.xl)),
+            child: Icon(Icons.add_rounded, color: AppColors.primary, size: 18)));
 
   Widget _emptyHint(String text) => Padding(padding: const EdgeInsets.only(bottom: 8),
-        child: Text(text, style: TextStyle(fontSize: 12, color: _navy.withValues(alpha: 0.4), fontStyle: FontStyle.italic)));
+        child: Text(text, style: TextStyle(fontSize: 12, color: AppColors.primary.withValues(alpha: 0.4), fontStyle: FontStyle.italic)));
 
   Widget _eyeLabel(String eye, bool isRe) => Padding(padding: const EdgeInsets.only(bottom: 4),
-        child: Text(eye, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: isRe ? Colors.red.shade700 : _navy)));
+        child: Text(eye, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: isRe ? Colors.red.shade700 : AppColors.primary)));
 
   Widget _examField(TextEditingController ctrl, String hint, {bool multiline = false, TextInputType? inputType, int rows = 1}) {
     return TextFormField(controller: ctrl, keyboardType: multiline ? TextInputType.multiline : inputType,
@@ -2194,28 +2198,28 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
   }
 
   InputDecoration _examDeco(String hint, {IconData? prefix}) => InputDecoration(
-        hintText: hint, hintStyle: TextStyle(fontSize: 12, color: _navy.withValues(alpha: 0.35)),
-        prefixIcon: prefix != null ? Icon(prefix, size: 16, color: _navy.withValues(alpha: 0.5)) : null,
+        hintText: hint, hintStyle: TextStyle(fontSize: 12, color: AppColors.primary.withValues(alpha: 0.35)),
+        prefixIcon: prefix != null ? Icon(prefix, size: 16, color: AppColors.primary.withValues(alpha: 0.5)) : null,
         filled: true, fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _navy.withValues(alpha: 0.18))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _navy.withValues(alpha: 0.18))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _navy, width: 1.5)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.18))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.18))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.primary, width: 1.5)),
       );
 
   Widget _thCell(String text) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8),
         child: Text(text, textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _navy.withValues(alpha: 0.7)))));
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary.withValues(alpha: 0.7)))));
 
   Widget _miniField({required String initialValue, required String hint, required void Function(String) onChanged, TextInputType inputType = TextInputType.text}) {
     return TextFormField(initialValue: initialValue, keyboardType: inputType,
         inputFormatters: inputType == TextInputType.number ? [FilteringTextInputFormatter.digitsOnly] : null,
         onChanged: onChanged, style: const TextStyle(fontSize: 12),
-        decoration: InputDecoration(hintText: hint, hintStyle: TextStyle(fontSize: 11, color: _navy.withValues(alpha: 0.35)),
+        decoration: InputDecoration(hintText: hint, hintStyle: TextStyle(fontSize: 11, color: AppColors.primary.withValues(alpha: 0.35)),
           contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10), filled: true, fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _navy))));
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary))));
   }
 
   Widget _miniDropdown({required String value, required List<String> items, required void Function(String?) onChanged, double width = 80}) {
@@ -2223,9 +2227,9 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         initialValue: value, isExpanded: true, icon: const Icon(Icons.expand_more, size: 14),
         style: const TextStyle(fontSize: 11, color: Colors.black87),
         decoration: InputDecoration(contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8), filled: true, fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _navy))),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary))),
         items: items.map((s) => DropdownMenuItem(value: s, child: Text(s, overflow: TextOverflow.ellipsis))).toList(),
         onChanged: onChanged));
   }
@@ -2325,9 +2329,9 @@ class _MasterAutocompleteFieldState extends State<_MasterAutocompleteField> {
           prefixIcon: Icon(widget.icon, size: 16, color: c),
           contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
           filled: true, fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: c.withValues(alpha: 0.15))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: c.withValues(alpha: 0.15))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: c)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: c.withValues(alpha: 0.15))),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: c.withValues(alpha: 0.15))),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: c)),
         ),
       ),
       if (_showSuggestions)
@@ -2336,7 +2340,7 @@ class _MasterAutocompleteFieldState extends State<_MasterAutocompleteField> {
           constraints: const BoxConstraints(maxHeight: 200),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
             border: Border.all(color: c.withValues(alpha: 0.15)),
             boxShadow: [BoxShadow(color: c.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 3))],
           ),
@@ -2386,7 +2390,6 @@ class _MedicineSearchField extends StatefulWidget {
 }
 
 class _MedicineSearchFieldState extends State<_MedicineSearchField> {
-  static const _navy = Color(0xFF1B4F72);
   late TextEditingController _ctrl;
   Timer? _debounce;
   List<MedItem> _results = [];
@@ -2414,24 +2417,24 @@ class _MedicineSearchFieldState extends State<_MedicineSearchField> {
     return Column(children: [
       TextFormField(controller: _ctrl, onChanged: _onChanged, style: const TextStyle(fontSize: 12),
           decoration: InputDecoration(hintText: 'Search medicine...',
-            hintStyle: TextStyle(fontSize: 11, color: _navy.withValues(alpha: 0.35)),
-            prefixIcon: const Icon(Icons.medication_rounded, size: 16, color: _navy),
+            hintStyle: TextStyle(fontSize: 11, color: AppColors.primary.withValues(alpha: 0.35)),
+            prefixIcon: Icon(Icons.medication_rounded, size: 16, color: AppColors.primary),
             contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10), filled: true, fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _navy.withValues(alpha: 0.15))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _navy)))),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.15))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm), borderSide: BorderSide(color: AppColors.primary)))),
       if (_showSuggestions)
         Container(
           margin: const EdgeInsets.only(top: 2),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _navy.withValues(alpha: 0.15)),
-              boxShadow: [BoxShadow(color: _navy.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 3))]),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.sm),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+              boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.1), blurRadius: 8, offset: Offset(0, 3))]),
           child: Column(children: _results.take(6).map((m) => InkWell(
               onTap: () { _ctrl.text = m.name; setState(() => _showSuggestions = false); widget.onSelected(m); },
               child: Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(m.name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _navy)),
-                    if (m.medicineTypeName != null) Text(m.medicineTypeName!, style: TextStyle(fontSize: 10, color: _navy.withValues(alpha: 0.55))),
+                    Text(m.name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                    if (m.medicineTypeName != null) Text(m.medicineTypeName!, style: TextStyle(fontSize: 10, color: AppColors.primary.withValues(alpha: 0.55))),
                   ]))])))
           ).toList()),
         ),

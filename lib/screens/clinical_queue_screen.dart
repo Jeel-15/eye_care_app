@@ -9,38 +9,8 @@ import '../models/patient_models.dart';
 import '../services/clinical_queue_service.dart';
 import 'primary_exam_screen.dart';
 import 'secondary_exam_screen.dart';
-
-// ── Pre-computed color constants ──────────────────────────────────────────────
-
-abstract final class _C {
-  static const navy    = Color(0xFF1B4F72);
-  static const teal    = Color(0xFF2C6E99);
-  static const danger  = Color(0xFFD94841);
-  static const warning = Color(0xFFD97706);
-  static const success = Color(0xFF1F9D55);
-  static const blue    = Color(0xFF2563EB);
-  static const muted   = Color(0xFF6B7D93);
-  static const text    = Color(0xFF18324A);
-  static const bg      = Color(0xFFF6FAFD);
-
-  // Wait pill colors
-  static const wGreen  = Color(0xFF16a34a);
-  static const wOrange = Color(0xFFea580c);
-  static const wRed    = Color(0xFFdc2626);
-
-  // Alpha variants — static final avoids repeated allocation in build()
-  static final navyA04   = navy.withValues(alpha: 0.04);
-  static final navyA06   = navy.withValues(alpha: 0.06);
-  static final navyA08   = navy.withValues(alpha: 0.08);
-  static final navyA10   = navy.withValues(alpha: 0.10);
-  static final navyA12   = navy.withValues(alpha: 0.12);
-  static final dangerA10  = danger.withValues(alpha: 0.10);
-  static final warningA10 = warning.withValues(alpha: 0.10);
-  static final successA10 = success.withValues(alpha: 0.10);
-  static final blueA10    = blue.withValues(alpha: 0.10);
-  static final mutedA60   = muted.withValues(alpha: 0.60);
-  static final mutedA80   = muted.withValues(alpha: 0.80);
-}
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 
 // ── Date / string helpers ─────────────────────────────────────────────────────
 
@@ -65,10 +35,10 @@ String _cap(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
 BoxDecoration _cardDeco() => BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: _C.navyA10),
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      border: Border.all(color: AppColors.primaryA10),
       boxShadow: [
-        BoxShadow(color: _C.navyA06, blurRadius: 10, offset: const Offset(0, 3)),
+        BoxShadow(color: AppColors.primaryA06, blurRadius: 10, offset: const Offset(0, 3)),
       ],
     );
 
@@ -172,7 +142,7 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
       lastDate: DateTime.now().add(const Duration(days: 1)),
       builder: (ctx, child) => Theme(
         data: ThemeData.light().copyWith(
-          colorScheme: const ColorScheme.light(primary: _C.navy),
+          colorScheme: ColorScheme.light(primary: AppColors.primary),
         ),
         child: child!,
       ),
@@ -238,7 +208,7 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _C.bg,
+      backgroundColor: Color(0xFFF6FAFD),
       appBar: _buildAppBar(),
       body: _buildBody(),
     );
@@ -247,7 +217,7 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
   AppBar _buildAppBar() {
     final otherDay = !_isToday;
     return AppBar(
-      backgroundColor: _C.navy,
+      backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       elevation: 0,
       leading: widget.onMenuTap != null
@@ -270,12 +240,12 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: otherDay
-                  ? _C.warning.withValues(alpha: 0.22)
+                  ? Color(0xFFD97706).withValues(alpha: 0.22)
                   : Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               border: Border.all(
                 color: otherDay
-                    ? _C.warning.withValues(alpha: 0.55)
+                    ? Color(0xFFD97706).withValues(alpha: 0.55)
                     : Colors.white.withValues(alpha: 0.30),
               ),
             ),
@@ -325,12 +295,12 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.wifi_off_rounded, size: 52, color: _C.mutedA60),
+              Icon(Icons.wifi_off_rounded, size: 52, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
               const SizedBox(height: 16),
               Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: _C.muted, fontSize: 14),
+                style: const TextStyle(color: Color(0xFF6B7D93), fontSize: 14),
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
@@ -338,7 +308,7 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _C.navy,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
@@ -397,7 +367,7 @@ class _DoctorSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Row(
             children: [
-              Icon(Icons.medical_services_rounded, size: 15, color: _C.mutedA80),
+              Icon(Icons.medical_services_rounded, size: 15, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
               const SizedBox(width: 6),
               Text(
                 'DOCTOR ASSIGNMENTS',
@@ -405,7 +375,7 @@ class _DoctorSection extends StatelessWidget {
                   fontSize: 10.5,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.3,
-                  color: _C.mutedA80,
+                  color: Color(0xFF6B7D93).withValues(alpha: 0.80),
                 ),
               ),
             ],
@@ -463,13 +433,13 @@ class _AllDoctorsCard extends StatelessWidget {
         width: 148,
         padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
-          color: isActive ? _C.navyA08 : Colors.white,
+          color: isActive ? AppColors.primaryA08 : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isActive ? _C.navy.withValues(alpha: 0.28) : _C.navyA12,
+            color: isActive ? AppColors.primary.withValues(alpha: 0.28) : AppColors.primaryA12,
             width: isActive ? 1.5 : 1,
           ),
-          boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 10, offset: const Offset(0, 3))],
+          boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 10, offset: const Offset(0, 3))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -479,9 +449,9 @@ class _AllDoctorsCard extends StatelessWidget {
                 Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: _C.navyA10),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primaryA10),
                   alignment: Alignment.center,
-                  child: const Icon(Icons.groups_rounded, size: 19, color: _C.navy),
+                  child: Icon(Icons.groups_rounded, size: 19, color: AppColors.primary),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -490,12 +460,12 @@ class _AllDoctorsCard extends StatelessWidget {
                     children: [
                       const Text(
                         'All Doctors',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: _C.text),
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: Color(0xFF18324A)),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         '${data.total} Total',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _C.mutedA80),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
                       ),
                     ],
                   ),
@@ -507,8 +477,8 @@ class _AllDoctorsCard extends StatelessWidget {
               spacing: 4,
               runSpacing: 4,
               children: [
-                _CountPill(label: 'Primary',   count: primaryN,   filled: primaryN > 0,   color: _C.navy),
-                _CountPill(label: 'Secondary', count: secondaryN, filled: secondaryN > 0, color: _C.blue),
+                _CountPill(label: 'Primary',   count: primaryN,   filled: primaryN > 0,   color: AppColors.primary),
+                _CountPill(label: 'Secondary', count: secondaryN, filled: secondaryN > 0, color: Color(0xFF2563EB)),
               ],
             ),
           ],
@@ -540,13 +510,13 @@ class _DoctorCard extends StatelessWidget {
         width: 148,
         padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
-          color: isActive ? _C.navyA08 : Colors.white,
+          color: isActive ? AppColors.primaryA08 : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isActive ? _C.navy.withValues(alpha: 0.28) : _C.navyA12,
+            color: isActive ? AppColors.primary.withValues(alpha: 0.28) : AppColors.primaryA12,
             width: isActive ? 1.5 : 1,
           ),
-          boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 10, offset: const Offset(0, 3))],
+          boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 10, offset: const Offset(0, 3))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,14 +526,14 @@ class _DoctorCard extends StatelessWidget {
                 Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: _C.navyA10),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primaryA10),
                   alignment: Alignment.center,
                   child: Text(
                     doctor.initials,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 13,
-                      color: _C.navy,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -574,13 +544,13 @@ class _DoctorCard extends StatelessWidget {
                     children: [
                       Text(
                         doctor.name,
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: _C.text),
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: Color(0xFF18324A)),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
                       Text(
                         '${doctor.totalAssigned} Assigned',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _C.mutedA80),
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
                       ),
                     ],
                   ),
@@ -591,11 +561,11 @@ class _DoctorCard extends StatelessWidget {
             if (doctor.isAllClear)
               Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, size: 13, color: _C.success),
+                  const Icon(Icons.check_circle_rounded, size: 13, color: Color(0xFF1F9D55)),
                   const SizedBox(width: 4),
                   const Text(
                     'All Clear',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _C.success),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1F9D55)),
                   ),
                 ],
               )
@@ -604,8 +574,8 @@ class _DoctorCard extends StatelessWidget {
                 spacing: 4,
                 runSpacing: 4,
                 children: [
-                  _CountPill(label: 'Primary',   count: doctor.primaryPending,   filled: doctor.primaryPending > 0,   color: _C.navy),
-                  _CountPill(label: 'Secondary', count: doctor.secondaryPending, filled: doctor.secondaryPending > 0, color: _C.blue),
+                  _CountPill(label: 'Primary',   count: doctor.primaryPending,   filled: doctor.primaryPending > 0,   color: AppColors.primary),
+                  _CountPill(label: 'Secondary', count: doctor.secondaryPending, filled: doctor.secondaryPending > 0, color: Color(0xFF2563EB)),
                 ],
               ),
           ],
@@ -712,8 +682,8 @@ class _QueuePanel extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: const Color(0xFFF4F8FB),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _C.navyA12),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: AppColors.primaryA12),
       ),
       child: AnimatedBuilder(
         animation: tabCtrl,
@@ -774,9 +744,9 @@ class _QueueTabBtn extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
             color: active ? Colors.white.withValues(alpha: 0.96) : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             boxShadow: active
-                ? [BoxShadow(color: _C.navyA08, blurRadius: 18, offset: const Offset(0, 4))]
+                ? [BoxShadow(color: AppColors.primaryA08, blurRadius: 18, offset: const Offset(0, 4))]
                 : [],
           ),
           child: Column(
@@ -785,14 +755,14 @@ class _QueueTabBtn extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 13, color: active ? _C.navy : _C.muted),
+                  Icon(icon, size: 13, color: active ? AppColors.primary : Color(0xFF6B7D93)),
                   const SizedBox(width: 4),
                   Text(
                     label,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: active ? _C.navy : _C.muted,
+                      color: active ? AppColors.primary : Color(0xFF6B7D93),
                     ),
                   ),
                 ],
@@ -801,7 +771,7 @@ class _QueueTabBtn extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
                 decoration: BoxDecoration(
-                  color: active ? _C.navyA08 : _C.navyA04,
+                  color: active ? AppColors.primaryA08 : AppColors.primaryA04,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -809,7 +779,7 @@ class _QueueTabBtn extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: active ? _C.navy : _C.muted,
+                    color: active ? AppColors.primary : Color(0xFF6B7D93),
                   ),
                 ),
               ),
@@ -842,7 +812,7 @@ class _PrimaryQueueTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: onRefresh,
-      color: _C.navy,
+      color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
@@ -900,7 +870,7 @@ class _PrimaryPatientCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const PulseDot(color: _C.wOrange),
+              const PulseDot(color: AppColors.waitOrange),
               const SizedBox(width: 7),
               Expanded(
                 child: Column(
@@ -908,18 +878,18 @@ class _PrimaryPatientCard extends StatelessWidget {
                   children: [
                     Text(
                       p.fullName,
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: _C.navy),
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.primary),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'MRD: ${p.patientCode}',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _C.mutedA80),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: _C.dangerA10, textColor: _C.danger),
+              _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: Color(0xFFD94841).withValues(alpha: 0.10), textColor: Color(0xFFD94841)),
             ],
           ),
           const SizedBox(height: 10),
@@ -970,7 +940,7 @@ class _DilationWaitingTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: onRefresh,
-      color: _C.navy,
+      color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
@@ -1033,25 +1003,25 @@ class _DilationPatientCard extends StatelessWidget {
                   children: [
                     Text(
                       p.fullName,
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: _C.navy),
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.primary),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'MRD: ${p.patientCode}',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _C.mutedA80),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: _C.warningA10, textColor: _C.warning),
+              _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: Color(0xFFD97706).withValues(alpha: 0.10), textColor: Color(0xFFD97706)),
             ],
           ),
           const SizedBox(height: 10),
           _InfoChip(
             icon: Icons.check_circle_outline_rounded,
             text: 'Primary Done: ${_hhmm(examAt)}',
-            color: _C.success,
+            color: Color(0xFF1F9D55),
           ),
           const SizedBox(height: 5),
           Row(
@@ -1107,7 +1077,7 @@ class _DilationCountdown extends StatelessWidget {
       builder: (_, _, _) {
         final diff = unlockTimeMs - DateTime.now().millisecondsSinceEpoch;
         final done = diff <= 0;
-        final col  = done ? _C.success : _C.danger;
+        final col  = done ? Color(0xFF1F9D55) : Color(0xFFD94841);
         final text = done
             ? '00:00'
             : '${(diff ~/ 60000).toString().padLeft(2, '0')}:'
@@ -1117,8 +1087,8 @@ class _DilationCountdown extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: done ? _C.successA10 : _C.dangerA10,
-            borderRadius: BorderRadius.circular(12),
+            color: done ? Color(0xFF1F9D55).withValues(alpha: 0.10) : Color(0xFFD94841).withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(AppRadius.md),
             border: Border.all(color: col.withValues(alpha: 0.22)),
           ),
           child: Row(
@@ -1172,7 +1142,7 @@ class _SecondaryQueueTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: onRefresh,
-      color: _C.navy,
+      color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
@@ -1240,18 +1210,18 @@ class _SecondaryPatientCard extends StatelessWidget {
                   children: [
                     Text(
                       p.fullName,
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: _C.navy),
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.primary),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'MRD: ${p.patientCode}',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _C.mutedA80),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: _C.blueA10, textColor: _C.blue),
+              _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: Color(0xFF2563EB).withValues(alpha: 0.10), textColor: Color(0xFF2563EB)),
             ],
           ),
           const SizedBox(height: 10),
@@ -1262,7 +1232,7 @@ class _SecondaryPatientCard extends StatelessWidget {
           _InfoChip(
             icon: Icons.check_circle_outline_rounded,
             text: 'Primary Done: ${_hhmm(examAt)}',
-            color: _C.success,
+            color: Color(0xFF1F9D55),
           ),
           const SizedBox(height: 5),
           _InfoChip(icon: Icons.article_outlined, text: 'Findings: ${p.diagnosisText}'),
@@ -1334,9 +1304,9 @@ class _WaitPillState extends State<WaitPill>
   int get _mins => DateTime.now().difference(widget.waitFrom).inMinutes;
 
   Color _color(int mins) {
-    if (mins < widget.thresholds.greenMax) return _C.wGreen;
-    if (mins < widget.thresholds.orangeMax) return _C.wOrange;
-    return _C.wRed;
+    if (mins < widget.thresholds.greenMax) return AppColors.waitGreen;
+    if (mins < widget.thresholds.orangeMax) return AppColors.waitOrange;
+    return AppColors.waitRed;
   }
 
   @override
@@ -1357,7 +1327,7 @@ class _WaitPillState extends State<WaitPill>
           ),
           boxShadow: fire
               ? [BoxShadow(
-                  color: _C.wOrange.withValues(alpha: _pulseAnim.value * 0.50),
+                  color: AppColors.waitOrange.withValues(alpha: _pulseAnim.value * 0.50),
                   blurRadius: 10,
                   spreadRadius: 1,
                 )]
@@ -1418,21 +1388,21 @@ class _QueueEmptyState extends StatelessWidget {
           Container(
             width: 82,
             height: 82,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: _C.navyA08),
+            decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primaryA08),
             alignment: Alignment.center,
-            child: Icon(icon, size: 40, color: _C.navy.withValues(alpha: 0.28)),
+            child: Icon(icon, size: 40, color: AppColors.primary.withValues(alpha: 0.28)),
           ),
           const SizedBox(height: 18),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _C.text),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF18324A)),
           ),
           const SizedBox(height: 6),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: _C.mutedA80),
+            style: TextStyle(fontSize: 12, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
           ),
         ],
       ),
@@ -1479,7 +1449,7 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? _C.muted;
+    final c = color ?? Color(0xFF6B7D93);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1512,8 +1482,8 @@ class _StartButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [_C.navy, _C.teal],
+          gradient: LinearGradient(
+            colors: [AppColors.primary, Color(0xFF2C6E99)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

@@ -3,19 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
+import '../widgets/app_animations.dart';
 
-abstract final class _C {
-  static const navy    = Color(0xFF1B4F72);
-  static const teal    = Color(0xFF1ABC9C);
-  static final navyA08 = navy.withValues(alpha: 0.08);
-  static final navyA12 = navy.withValues(alpha: 0.12);
-  static final navyA18 = navy.withValues(alpha: 0.18);
-  static final navyA55 = navy.withValues(alpha: 0.55);
-  static final navyA70 = navy.withValues(alpha: 0.70);
-  static final tealA12 = teal.withValues(alpha: 0.12);
-}
 
 class OpdBillScreen extends StatefulWidget {
   final UserInfo user;
@@ -48,12 +41,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to generate bill: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showAppSnackBar(context, 'Failed to generate bill: $e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _sharing = false);
@@ -298,7 +286,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEBF5FB),
+      backgroundColor: AppColors.background,
       appBar: _buildAppBar(context),
       body: _buildBody(context),
     );
@@ -306,7 +294,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
 
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: _C.navy,
+      backgroundColor: AppColors.primary,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
@@ -348,11 +336,11 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _C.navyA12),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(color: AppColors.primaryA12),
               boxShadow: [
                 BoxShadow(
-                  color: _C.navyA08,
+                  color: AppColors.primaryA08,
                   blurRadius: 24,
                   offset: const Offset(0, 4),
                 ),
@@ -378,14 +366,14 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
             padding:
                 const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             decoration: BoxDecoration(
-              color: _C.tealA12,
+              color: AppColors.tealA12,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _C.teal.withValues(alpha: 0.3)),
+              border: Border.all(color: AppColors.teal.withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle_rounded, color: _C.teal, size: 20),
+                Icon(Icons.check_circle_rounded, color: AppColors.teal, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   p.type == 'phone'
@@ -394,7 +382,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: _C.teal.withValues(alpha: 0.9),
+                    color: AppColors.teal.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -409,11 +397,11 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
             child: OutlinedButton.icon(
               onPressed: _sharing ? null : _share,
               icon: _sharing
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: _C.navy),
+                          strokeWidth: 2, color: AppColors.primary),
                     )
                   : const Icon(Icons.share_rounded, size: 20),
               label: const Text(
@@ -421,8 +409,8 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
               style: OutlinedButton.styleFrom(
-                foregroundColor: _C.navy,
-                side: BorderSide(color: _C.navyA18, width: 1.5),
+                foregroundColor: AppColors.primary,
+                side: BorderSide(color: AppColors.primaryA18, width: 1.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(40)),
@@ -443,7 +431,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _C.navy,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -468,22 +456,22 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: _C.navyA08,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _C.navyA18),
+              color: AppColors.primaryA08,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              border: Border.all(color: AppColors.primaryA18),
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.local_hospital_rounded,
-                color: _C.navy, size: 30),
+            child: Icon(Icons.local_hospital_rounded,
+                color: AppColors.primary, size: 30),
           ),
           const SizedBox(height: 10),
           Text(
             widget.hospital.name,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w900,
-              color: _C.navy,
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 6),
@@ -491,16 +479,16 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
             padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: _C.navyA08,
-              borderRadius: BorderRadius.circular(20),
+              color: AppColors.primaryA08,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
-            child: const Text(
+            child: Text(
               'OPD BILL / RECEIPT',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.4,
-                color: _C.navy,
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -522,7 +510,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _infoLabel('MRD No.'),
-                _infoValue(p.patientCode, bold: true, color: _C.navy),
+                _infoValue(p.patientCode, bold: true, color: AppColors.primary),
                 const SizedBox(height: 10),
                 _infoLabel('Patient Name'),
                 _infoValue(p.fullName),
@@ -554,7 +542,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
                   _infoValue(
                     p.doctorPatientNo!.toString().padLeft(3, '0'),
                     bold: true,
-                    color: _C.navy,
+                    color: AppColors.primary,
                   ),
                 ],
                 const SizedBox(height: 10),
@@ -584,32 +572,32 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
             padding:
                 const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             decoration: BoxDecoration(
-              color: _C.navyA08,
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.primaryA08,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   flex: 1,
                   child: Text('#',
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: _C.navy)),
+                          color: AppColors.primary)),
                 ),
-                const Expanded(
+                Expanded(
                   flex: 5,
                   child: Text('Description',
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: _C.navy)),
+                          color: AppColors.primary)),
                 ),
                 Text('Amount (₹)',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
-                        color: _C.navyA70)),
+                        color: AppColors.primaryA70)),
               ],
             ),
           ),
@@ -641,26 +629,26 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
             padding: const EdgeInsets.symmetric(
                 vertical: 10, horizontal: 12),
             decoration: BoxDecoration(
-              color: _C.navyA08,
-              borderRadius: BorderRadius.circular(8),
-              border: Border(top: BorderSide(color: _C.navyA18)),
+              color: AppColors.primaryA08,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              border: Border(top: BorderSide(color: AppColors.primaryA18)),
             ),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text('Total Payable',
                       textAlign: TextAlign.right,
                       style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
-                          color: _C.navy)),
+                          color: AppColors.primary)),
                 ),
                 const SizedBox(width: 16),
                 Text('₹${_fmtFee(fee)}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
-                        color: _C.navy)),
+                        color: AppColors.primary)),
               ],
             ),
           ),
@@ -679,7 +667,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
         children: [
           Text(
             'Generated: ${_fmtDateTime(now)}',
-            style: TextStyle(fontSize: 11, color: _C.navyA55),
+            style: TextStyle(fontSize: 11, color: AppColors.primaryA55),
           ),
           const Spacer(),
           Text(
@@ -687,7 +675,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
             style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: _C.navyA70),
+                color: AppColors.primaryA70),
           ),
         ],
       ),
@@ -702,7 +690,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
             fontSize: 9,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
-            color: _C.navyA55),
+            color: AppColors.primaryA55),
       );
 
   Widget _infoValue(String text, {bool bold = false, Color? color}) =>

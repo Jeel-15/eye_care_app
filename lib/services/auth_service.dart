@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
+import '../config/client_theme.dart';
+import '../constants/app_colors.dart';
 import '../models/auth_models.dart';
 
 class AuthService {
@@ -108,6 +110,7 @@ class AuthService {
 
         AppConfig.hospitalName = hospital.name;
         AppConfig.slug = hospital.slug;
+        _applyHospitalTheme(hospital);
 
         return LoginResult(
           success: true,
@@ -205,7 +208,18 @@ class AuthService {
     final hospital = await getStoredHospital();
     if (hospital != null) {
       AppConfig.hospitalName = hospital.name;
+      _applyHospitalTheme(hospital);
     }
+  }
+
+  void _applyHospitalTheme(HospitalInfo hospital) {
+    if (hospital.primaryColor == null) return;
+    AppColors.applyTheme(ClientTheme(
+      primary:      Color(hospital.primaryColor!),
+      primaryLight: Color(hospital.primaryLightColor ?? 0xFF2471A3),
+      secondary:    Color(hospital.secondaryColor    ?? 0xFF2E86C1),
+      background:   Color(hospital.backgroundColor   ?? 0xFFEBF5FB),
+    ));
   }
 
   // ── Token / Session Helpers ────────────────────────────────────────

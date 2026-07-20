@@ -1,21 +1,15 @@
 import 'package:flutter/material.dart';
 import '../utils/app_route.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_empty_state.dart';
 import '../models/auth_models.dart';
 import '../models/role_models.dart';
 import '../services/permission_service.dart';
 import '../services/roles_service.dart';
 
-abstract final class _C {
-  static const navy  = Color(0xFF1B4F72);
-  static const teal  = Color(0xFF1ABC9C);
-  static const green = Color(0xFF27AE60);
-  static const red   = Color(0xFFDC3545);
-
-  static final navyA08  = navy.withValues(alpha: 0.08);
-  static final greenA10 = green.withValues(alpha: 0.10);
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Roles list screen
@@ -66,7 +60,7 @@ class _RolesScreenState extends State<RolesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
         title: const Text('Delete Role'),
         content: Text('Delete role "${role.name}"? This cannot be undone.'),
         actions: [
@@ -75,7 +69,7 @@ class _RolesScreenState extends State<RolesScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: _C.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
@@ -88,18 +82,11 @@ class _RolesScreenState extends State<RolesScreen> {
       await RolesService.instance.deleteRole(role.id);
       _load();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Role "${role.name}" deleted.'),
-            backgroundColor: _C.green,
-          ),
-        );
+        showAppSnackBar(context, 'Role "${role.name}" deleted.', isSuccess: true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: _C.red),
-        );
+        showAppSnackBar(context, e.toString(), isError: true);
       }
     }
   }
@@ -109,7 +96,7 @@ class _RolesScreenState extends State<RolesScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FA),
       appBar: AppBar(
-        backgroundColor: _C.navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Roles & Permissions',
@@ -130,7 +117,7 @@ class _RolesScreenState extends State<RolesScreen> {
       ),
       floatingActionButton: _canManage
           ? FloatingActionButton.extended(
-              backgroundColor: _C.navy,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               icon: const Icon(Icons.add),
               label: const Text('New Role'),
@@ -148,10 +135,10 @@ class _RolesScreenState extends State<RolesScreen> {
     if (_error != null) {
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.error_outline, color: _C.red, size: 48),
+          const Icon(Icons.error_outline, color: AppColors.red, size: 48),
           const SizedBox(height: 8),
           Text(_error!, textAlign: TextAlign.center,
-              style: const TextStyle(color: _C.red)),
+              style: const TextStyle(color: AppColors.red)),
           const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: _load,
@@ -162,9 +149,7 @@ class _RolesScreenState extends State<RolesScreen> {
       );
     }
     if (_roles.isEmpty) {
-      return const Center(
-        child: Text('No roles found.', style: TextStyle(color: Colors.grey)),
-      );
+      return const AppEmptyState(message: 'No roles found.');
     }
 
     return RefreshIndicator(
@@ -183,7 +168,7 @@ class _RolesScreenState extends State<RolesScreen> {
       final hex = role.color.replaceFirst('#', '');
       roleColor = Color(int.parse('FF$hex', radix: 16));
     } catch (_) {
-      roleColor = _C.navy;
+      roleColor = AppColors.primary;
     }
 
     return Card(
@@ -212,21 +197,20 @@ class _RolesScreenState extends State<RolesScreen> {
             // Role info
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  Text(role.name,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                          color: _C.navy)),
-                  if (role.isSuper) ...[
-                    const SizedBox(width: 6),
-                    _badge('Super Admin', _C.teal),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    Text(role.name,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: AppColors.primary)),
+                    if (role.isSuper) _badge('Super Admin', AppColors.teal),
+                    if (role.isSystem) _badge('System', Colors.grey),
                   ],
-                  if (role.isSystem) ...[
-                    const SizedBox(width: 6),
-                    _badge('System', Colors.grey),
-                  ],
-                ]),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   '${role.usersCount} user${role.usersCount == 1 ? '' : 's'}',
@@ -248,14 +232,14 @@ class _RolesScreenState extends State<RolesScreen> {
               Row(mainAxisSize: MainAxisSize.min, children: [
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, size: 20),
-                  color: _C.navy,
+                  color: AppColors.primary,
                   tooltip: 'Edit',
                   onPressed: () => _openRoleEditor(context, role),
                 ),
                 if (role.isDeletable)
                   IconButton(
                     icon: const Icon(Icons.delete_outline, size: 20),
-                    color: _C.red,
+                    color: AppColors.red,
                     tooltip: 'Delete',
                     onPressed: () => _confirmDelete(role),
                   ),
@@ -396,9 +380,7 @@ class _RoleEditorScreenState extends State<RoleEditorScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: _C.red),
-        );
+        showAppSnackBar(context, e.toString(), isError: true);
       }
     }
   }
@@ -408,7 +390,7 @@ class _RoleEditorScreenState extends State<RoleEditorScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FA),
       appBar: AppBar(
-        backgroundColor: _C.navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         title: Text(
           _isEdit ? 'Edit Role' : 'New Role',
@@ -435,10 +417,10 @@ class _RoleEditorScreenState extends State<RoleEditorScreen> {
           : _error != null
               ? Center(
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.error_outline, color: _C.red, size: 48),
+                    const Icon(Icons.error_outline, color: AppColors.red, size: 48),
                     const SizedBox(height: 8),
                     Text(_error!, textAlign: TextAlign.center,
-                        style: const TextStyle(color: _C.red)),
+                        style: const TextStyle(color: AppColors.red)),
                     const SizedBox(height: 12),
                     ElevatedButton.icon(
                       onPressed: _loadPermissions,
@@ -463,7 +445,7 @@ class _RoleEditorScreenState extends State<RoleEditorScreen> {
                             padding: const EdgeInsets.all(16),
                             child: Row(children: [
                               const Icon(Icons.verified_user,
-                                  color: _C.teal, size: 28),
+                                  color: AppColors.teal, size: 28),
                               const SizedBox(width: 12),
                               const Expanded(
                                 child: Text(
@@ -533,14 +515,14 @@ class _RoleEditorScreenState extends State<RoleEditorScreen> {
               title: Row(children: [
                 Text(
                   _moduleLabel(module),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, color: _C.navy, fontSize: 14),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700, color: AppColors.primary, fontSize: 14),
                 ),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: grantedCount > 0 ? _C.greenA10 : _C.navyA08,
+                    color: grantedCount > 0 ? AppColors.green.withValues(alpha: 0.10) : AppColors.primaryA08,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -549,7 +531,7 @@ class _RoleEditorScreenState extends State<RoleEditorScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color:
-                            grantedCount > 0 ? _C.green : Colors.grey.shade600),
+                            grantedCount > 0 ? AppColors.green : Colors.grey.shade600),
                   ),
                 ),
               ]),
@@ -566,10 +548,10 @@ class _RoleEditorScreenState extends State<RoleEditorScreen> {
                   },
                   child: Text(
                     perms.every((p) => p.isGranted) ? 'None' : 'All',
-                    style: const TextStyle(fontSize: 12, color: _C.navy),
+                    style: TextStyle(fontSize: 12, color: AppColors.primary),
                   ),
                 ),
-                const Icon(Icons.expand_more, color: _C.navy),
+                Icon(Icons.expand_more, color: AppColors.primary),
               ]),
               children: perms.asMap().entries.map((e) {
                 final idx  = e.key;
@@ -577,7 +559,7 @@ class _RoleEditorScreenState extends State<RoleEditorScreen> {
                 return CheckboxListTile(
                   dense: true,
                   value: perm.isGranted,
-                  activeColor: _C.navy,
+                  activeColor: AppColors.primary,
                   title: Text(perm.label,
                       style: const TextStyle(fontSize: 13)),
                   subtitle: perm.description.isNotEmpty

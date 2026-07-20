@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 import '../utils/app_route.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
@@ -8,21 +10,6 @@ import '../services/patient_history_service.dart';
 import '../services/permission_service.dart';
 import 'prescription_print_screen.dart';
 
-// ─── Colour constants ──────────────────────────────────────────────────────────
-abstract final class _C {
-  static const navy  = Color(0xFF1B4F72);
-  static const blue  = Color(0xFF2980B9);
-  static const grey  = Color(0xFF6B7280);
-  static final navyA06  = navy.withValues(alpha: 0.06);
-  static final navyA08  = navy.withValues(alpha: 0.08);
-  static final navyA10  = navy.withValues(alpha: 0.10);
-  static final navyA12  = navy.withValues(alpha: 0.12);
-  static final navyA18  = navy.withValues(alpha: 0.18);
-  static final navyA24  = navy.withValues(alpha: 0.24);
-  static final navyA50  = navy.withValues(alpha: 0.50);
-  static final navyA55  = navy.withValues(alpha: 0.55);
-  static final navyA62  = navy.withValues(alpha: 0.62);
-}
 
 // ─── Screen ────────────────────────────────────────────────────────────────────
 
@@ -71,13 +58,13 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEBF5FB),
+      backgroundColor: AppColors.background,
       body: Column(
         children: [
           _buildAppBar(context),
           Expanded(
             child: RefreshIndicator(
-              color: _C.navy,
+              color: AppColors.primary,
               onRefresh: _loadHistory,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -109,9 +96,9 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   Widget _buildAppBar(BuildContext context) {
     final p = widget.patient;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_C.navy, _C.blue],
+          colors: [AppColors.primary, AppColors.blueLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -131,7 +118,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                 width: 44, height: 44,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: const Icon(Icons.person_rounded, color: Colors.white, size: 22),
               ),
@@ -178,7 +165,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: borderColor),
       ),
       child: Row(
@@ -193,14 +180,14 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: _C.navyA08,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: _C.navyA18),
+                color: AppColors.primaryA08,
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+                border: Border.all(color: AppColors.primaryA18),
               ),
               child: Text(
                 'Serial #${p.doctorPatientNo!.toString().padLeft(3, '0')}',
-                style: const TextStyle(
-                    fontSize: 11, fontWeight: FontWeight.w700, color: _C.navy),
+                style: TextStyle(
+                    fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary),
               ),
             ),
         ],
@@ -275,20 +262,20 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _C.navyA12),
-        boxShadow: [BoxShadow(color: _C.navyA08, blurRadius: 8, offset: const Offset(0, 2))],
+        border: Border.all(color: AppColors.primaryA12),
+        boxShadow: [BoxShadow(color: AppColors.primaryA08, blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: _C.navy, size: 14),
+              Icon(icon, color: AppColors.primary, size: 14),
               const SizedBox(width: 6),
               Text(title.toUpperCase(),
                   style: TextStyle(
                       fontSize: 9, fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8, color: _C.navyA55)),
+                      letterSpacing: 0.8, color: AppColors.primaryA55)),
             ],
           ),
           const SizedBox(height: 10),
@@ -299,7 +286,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
               children: [
                 Text(r.$1,
                     style: TextStyle(
-                        fontSize: 9, fontWeight: FontWeight.w600, color: _C.navyA55)),
+                        fontSize: 9, fontWeight: FontWeight.w600, color: AppColors.primaryA55)),
                 const SizedBox(height: 2),
                 Text(r.$2.isEmpty ? '—' : r.$2,
                     style: const TextStyle(
@@ -319,9 +306,9 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.navyA12),
-        boxShadow: [BoxShadow(color: _C.navyA08, blurRadius: 12, offset: const Offset(0, 3))],
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.primaryA12),
+        boxShadow: [BoxShadow(color: AppColors.primaryA08, blurRadius: 12, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,25 +317,25 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             decoration: BoxDecoration(
-              color: _C.navyA06,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              border: Border(bottom: BorderSide(color: _C.navyA10)),
+              color: AppColors.primaryA06,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+              border: Border(bottom: BorderSide(color: AppColors.primaryA10)),
             ),
             child: Row(
               children: [
-                Icon(Icons.history_rounded, size: 16, color: _C.navy),
+                Icon(Icons.history_rounded, size: 16, color: AppColors.primary),
                 const SizedBox(width: 8),
-                const Text('CLINICAL TIMELINE',
+                Text('CLINICAL TIMELINE',
                     style: TextStyle(
                         fontSize: 11, fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8, color: _C.navy)),
+                        letterSpacing: 0.8, color: AppColors.primary)),
                 const Spacer(),
                 if (_history != null)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: _C.navy,
-                      borderRadius: BorderRadius.circular(20),
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                     ),
                     child: Text(
                       '${_history!.patient.visitDays} visit${_history!.patient.visitDays == 1 ? '' : 's'}',
@@ -372,11 +359,11 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
 
   Widget _buildTimelineBody() {
     if (_loading) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: 32),
         child: Center(
           child: CircularProgressIndicator(
-            color: _C.navy, strokeWidth: 2.5),
+            color: AppColors.primary, strokeWidth: 2.5),
         ),
       );
     }
@@ -386,23 +373,23 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Column(
           children: [
-            Icon(Icons.wifi_off_rounded, size: 38, color: _C.navyA50),
+            Icon(Icons.wifi_off_rounded, size: 38, color: AppColors.primaryA50),
             const SizedBox(height: 12),
             Text('Failed to load history',
                 style: TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w600, color: _C.navyA62)),
+                    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primaryA62)),
             const SizedBox(height: 4),
             Text(_error!, textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: _C.navyA50)),
+                style: TextStyle(fontSize: 12, color: AppColors.primaryA50)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _loadHistory,
               icon: const Icon(Icons.refresh_rounded, size: 16),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _C.navy, foregroundColor: Colors.white,
+                backgroundColor: AppColors.primary, foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
+                    borderRadius: BorderRadius.circular(AppRadius.xl)),
               ),
             ),
           ],
@@ -416,11 +403,11 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.folder_open_rounded, size: 38, color: _C.navyA50),
+              Icon(Icons.folder_open_rounded, size: 38, color: AppColors.primaryA50),
               const SizedBox(height: 12),
               Text('No examination records found.',
                   style: TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w600, color: _C.navyA62)),
+                      fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primaryA62)),
             ],
           ),
         ),
@@ -447,8 +434,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: _C.navy,
-                  borderRadius: BorderRadius.circular(20),
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -469,8 +456,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                   height: 2,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(colors: [
-                      _C.navyA24,
-                      _C.navyA06,
+                      AppColors.primaryA24,
+                      AppColors.primaryA06,
                     ]),
                     borderRadius: BorderRadius.circular(1),
                   ),
@@ -479,7 +466,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
               const SizedBox(width: 8),
               Text('${exams.length} exam${exams.length > 1 ? 's' : ''}',
                   style: TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w600, color: _C.navyA50)),
+                      fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryA50)),
             ],
           ),
         ),
@@ -493,8 +480,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   Widget _buildExamCard(ExamRecord exam) {
     final isPrimary  = exam.isPrimary;
     final isExpanded = _expanded.contains(exam.id);
-    final headerBg   = isPrimary ? _C.navyA08 : const Color(0xFFF3F4F6);
-    final headerFg   = isPrimary ? _C.navy : _C.grey;
+    final headerBg   = isPrimary ? AppColors.primaryA08 : const Color(0xFFF3F4F6);
+    final headerFg   = isPrimary ? AppColors.primary : Color(0xFF6B7280);
     final label      = isPrimary ? 'Primary Exam' : 'Secondary Exam';
     final icon       = isPrimary ? Icons.assignment_outlined : Icons.remove_red_eye_outlined;
 
@@ -502,8 +489,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _C.navyA12),
-        boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 6, offset: const Offset(0, 2))],
+        border: Border.all(color: AppColors.primaryA12),
+        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 6, offset: const Offset(0, 2))],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -524,16 +511,16 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _C.navyA12),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
+                    border: Border.all(color: AppColors.primaryA12),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.access_time_rounded, size: 11, color: _C.navyA62),
+                      Icon(Icons.access_time_rounded, size: 11, color: AppColors.primaryA62),
                       const SizedBox(width: 3),
                       Text(_fmtTime(exam.examinedAt),
                           style: TextStyle(
-                              fontSize: 10, fontWeight: FontWeight.w700, color: _C.navyA62)),
+                              fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primaryA62)),
                     ],
                   ),
                 ),
@@ -554,13 +541,13 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                     padding: const EdgeInsets.only(bottom: 10),
                     child: Row(
                       children: [
-                        Icon(Icons.person_outline_rounded, size: 13, color: _C.navyA50),
+                        Icon(Icons.person_outline_rounded, size: 13, color: AppColors.primaryA50),
                         const SizedBox(width: 4),
                         Text('Examined by: ',
-                            style: TextStyle(fontSize: 12, color: _C.navyA50)),
+                            style: TextStyle(fontSize: 12, color: AppColors.primaryA50)),
                         Text('Dr. ${exam.doctorName}',
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w700, color: _C.navy)),
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
                       ],
                     ),
                   ),
@@ -579,10 +566,10 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
-                          color: isExpanded ? _C.navyA08 : Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                          color: isExpanded ? AppColors.primaryA08 : Colors.white,
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
                           border: Border.all(
-                              color: isExpanded ? _C.navyA24 : _C.navyA18),
+                              color: isExpanded ? AppColors.primaryA24 : AppColors.primaryA18),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -591,20 +578,20 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                               isExpanded
                                   ? Icons.visibility_off_outlined
                                   : Icons.description_outlined,
-                              size: 14, color: _C.navy,
+                              size: 14, color: AppColors.primary,
                             ),
                             const SizedBox(width: 6),
                             Text(
                               isExpanded ? 'Hide Clinical Data' : 'View Clinical Data',
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w700, color: _C.navy),
+                              style: TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
                             ),
                             const SizedBox(width: 4),
                             Icon(
                               isExpanded
                                   ? Icons.keyboard_arrow_up_rounded
                                   : Icons.keyboard_arrow_down_rounded,
-                              size: 16, color: _C.navy,
+                              size: 16, color: AppColors.primary,
                             ),
                           ],
                         ),
@@ -626,19 +613,19 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: _C.navyA18),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            border: Border.all(color: AppColors.primaryA18),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.print_outlined, size: 14, color: _C.navy),
+                              Icon(Icons.print_outlined, size: 14, color: AppColors.primary),
                               SizedBox(width: 6),
                               Text('Print Rx',
                                   style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: _C.navy)),
+                                      color: AppColors.primary)),
                             ],
                           ),
                         ),
@@ -690,8 +677,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   Widget _buildBox(String title, Widget content) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: _C.navyA18),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.primaryA18),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -700,7 +687,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: _C.navy,
+              color: AppColors.primary,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(7)),
             ),
@@ -784,13 +771,13 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: _C.navyA06,
+        color: AppColors.primaryA06,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: _C.navyA12),
+        border: Border.all(color: AppColors.primaryA12),
       ),
       child: RichText(
         text: TextSpan(
-          style: const TextStyle(fontSize: 11, color: _C.navy),
+          style: TextStyle(fontSize: 11, color: AppColors.primary),
           children: [
             TextSpan(text: '$label  ',
                 style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -805,7 +792,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     // Flutter Table has no colspan — every row must have exactly 9 children.
     // Group labels are placed only in their first column; filler cells are empty.
     return Table(
-      border: TableBorder.all(color: _C.navyA18, width: 0.8),
+      border: TableBorder.all(color: AppColors.primaryA18, width: 0.8),
       columnWidths: const {
         0: FixedColumnWidth(18),
         1: FlexColumnWidth(),
@@ -820,7 +807,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
       children: [
         // Row 1: group labels — RE label in col-1, LE label in col-5, rest empty
         TableRow(
-          decoration: BoxDecoration(color: _C.navy),
+          decoration: BoxDecoration(color: AppColors.primary),
           children: [
             _th(''),
             _th('RIGHT EYE (RE)'), _th(''), _th(''), _th(''),
@@ -829,7 +816,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
         ),
         // Row 2: column sub-headers
         TableRow(
-          decoration: BoxDecoration(color: _C.navyA08),
+          decoration: BoxDecoration(color: AppColors.primaryA08),
           children: [
             _thSub(''),
             _thSub('SPH'), _thSub('CYL'), _thSub('AXIS'), _thSub('VN'),
@@ -878,11 +865,11 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Text('ADD  ',
+              Text('ADD  ',
                   style: TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w800, color: _C.navy)),
+                      fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
               Text('RE: ${exam.stRe['add'] ?? '-'}  LE: ${exam.stLe['add'] ?? '-'}',
-                  style: const TextStyle(fontSize: 11, color: _C.navy)),
+                  style: TextStyle(fontSize: 11, color: AppColors.primary)),
             ],
           ),
         ],
@@ -895,8 +882,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
             children: exam.stBadges.map((b) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: _C.navy,
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Text(b,
                   style: const TextStyle(
@@ -914,7 +901,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
             children: [
               RichText(
                 text: TextSpan(
-                  style: const TextStyle(fontSize: 11, color: _C.navy),
+                  style: TextStyle(fontSize: 11, color: AppColors.primary),
                   children: [
                     const TextSpan(text: 'Dx: ',
                         style: TextStyle(fontWeight: FontWeight.w800)),
@@ -960,7 +947,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     ];
 
     return Table(
-      border: TableBorder.all(color: _C.navyA18, width: 0.8),
+      border: TableBorder.all(color: AppColors.primaryA18, width: 0.8),
       columnWidths: const {
         0: FlexColumnWidth(1.6),
         1: FlexColumnWidth(1.0),
@@ -968,7 +955,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
       },
       children: [
         TableRow(
-          decoration: BoxDecoration(color: _C.navy),
+          decoration: BoxDecoration(color: AppColors.primary),
           children: [
             _th('O/E', align: TextAlign.left),
             _th('RIGHT'),
@@ -988,7 +975,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
 
   Widget _buildFundusTable(Map<String, dynamic> fundus) {
     return Table(
-      border: TableBorder.all(color: _C.navyA18, width: 0.8),
+      border: TableBorder.all(color: AppColors.primaryA18, width: 0.8),
       columnWidths: const {
         0: FlexColumnWidth(1.6),
         1: FlexColumnWidth(1.0),
@@ -996,7 +983,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
       },
       children: [
         TableRow(
-          decoration: BoxDecoration(color: _C.navy),
+          decoration: BoxDecoration(color: AppColors.primary),
           children: [
             _th('Fundus', align: TextAlign.left),
             _th('RIGHT'),
@@ -1026,8 +1013,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
 
   Widget _buildAdvice(String text) {
     return Text(text.trim(),
-        style: const TextStyle(
-            fontSize: 12, height: 1.6, color: _C.navy));
+        style: TextStyle(
+            fontSize: 12, height: 1.6, color: AppColors.primary));
   }
 
   // ── Shared table helpers ───────────────────────────────────────────────────
@@ -1036,9 +1023,9 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(label,
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 10, fontWeight: FontWeight.w800,
-              color: _C.navy, letterSpacing: 0.3)),
+              color: AppColors.primary, letterSpacing: 0.3)),
     );
   }
 
@@ -1054,11 +1041,11 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     }
 
     return Table(
-      border: TableBorder.all(color: _C.navyA18, width: 0.8),
+      border: TableBorder.all(color: AppColors.primaryA18, width: 0.8),
       columnWidths: colWidths,
       children: [
         TableRow(
-          decoration: BoxDecoration(color: _C.navy),
+          decoration: BoxDecoration(color: AppColors.primary),
           children: headers.asMap().map((i, h) => MapEntry(i,
             _th(h, align: i == 0 ? TextAlign.left : TextAlign.center),
           )).values.toList(),
@@ -1071,7 +1058,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                 child: Text(emptyLabel,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontSize: 10, color: _C.navyA50)),
+                        fontSize: 10, color: AppColors.primaryA50)),
               ),
             ),
             ...List.generate(headers.length - 1,
@@ -1103,23 +1090,23 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
 
   Widget _thSub(String text) => TableCell(
     child: Container(
-      color: _C.navyA08,
+      color: AppColors.primaryA08,
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
       child: Text(text,
           textAlign: TextAlign.center,
           style: TextStyle(
-              fontSize: 8, fontWeight: FontWeight.w700, color: _C.navyA62)),
+              fontSize: 8, fontWeight: FontWeight.w700, color: AppColors.primaryA62)),
     ),
   );
 
   Widget _rowLabel(String text, {TextAlign align = TextAlign.center}) => TableCell(
     child: Container(
-      color: _C.navyA06,
+      color: AppColors.primaryA06,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
       child: Text(text,
           textAlign: align,
-          style: const TextStyle(
-              fontSize: 9, fontWeight: FontWeight.w800, color: _C.navy)),
+          style: TextStyle(
+              fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.primary)),
     ),
   );
 
@@ -1128,7 +1115,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
       child: Text(text,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 10, color: _C.navy)),
+          style: TextStyle(fontSize: 10, color: AppColors.primary)),
     ),
   );
 
@@ -1173,9 +1160,9 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.navyA18),
-        boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 8, offset: const Offset(0, 2))],
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.primaryA18),
+        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -1186,14 +1173,14 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFFEEF3FB),
-              border: Border(bottom: BorderSide(color: _C.navyA12)),
+              border: Border(bottom: BorderSide(color: AppColors.primaryA12)),
             ),
             child: Row(
               children: [
                 Container(
                   width: 40, height: 40,
                   decoration: BoxDecoration(
-                    color: _C.navy,
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.business_rounded, color: Colors.white, size: 20),
@@ -1204,19 +1191,19 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(partner.hospitalName,
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w800, color: _C.navy)),
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary)),
                       if (partner.locationLine.isNotEmpty)
                         Text(partner.locationLine,
-                            style: TextStyle(fontSize: 11, color: _C.navyA62)),
+                            style: TextStyle(fontSize: 11, color: AppColors.primaryA62)),
                     ],
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _C.navy,
-                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1240,7 +1227,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Center(
                       child: Text('No examination records at this hospital',
-                          style: TextStyle(fontSize: 13, color: _C.navyA50)),
+                          style: TextStyle(fontSize: 13, color: AppColors.primaryA50)),
                     ),
                   )
                 : Column(
@@ -1265,8 +1252,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: _C.navy,
-                  borderRadius: BorderRadius.circular(20),
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1284,14 +1271,14 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                 child: Container(
                   height: 2,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [_C.navyA24, _C.navyA06]),
+                    gradient: LinearGradient(colors: [AppColors.primaryA24, AppColors.primaryA06]),
                     borderRadius: BorderRadius.circular(1),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
               Text('${exams.length} exam${exams.length > 1 ? 's' : ''}',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _C.navyA50)),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryA50)),
             ],
           ),
         ),
@@ -1305,8 +1292,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     final isPrimary   = exam.isPrimary;
     final expandKey   = '${partnerIdx}_${exam.id}';
     final isExpanded  = _partnerExpanded.contains(expandKey);
-    final headerBg    = isPrimary ? _C.navyA08 : const Color(0xFFF3F4F6);
-    final headerFg    = isPrimary ? _C.navy : _C.grey;
+    final headerBg    = isPrimary ? AppColors.primaryA08 : const Color(0xFFF3F4F6);
+    final headerFg    = isPrimary ? AppColors.primary : Color(0xFF6B7280);
     final label       = isPrimary ? 'Primary Exam' : 'Secondary Exam';
     final icon        = isPrimary ? Icons.assignment_outlined : Icons.remove_red_eye_outlined;
 
@@ -1314,8 +1301,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _C.navyA12),
-        boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 6, offset: const Offset(0, 2))],
+        border: Border.all(color: AppColors.primaryA12),
+        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 6, offset: const Offset(0, 2))],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -1334,15 +1321,15 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _C.navyA12),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
+                    border: Border.all(color: AppColors.primaryA12),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.access_time_rounded, size: 11, color: _C.navyA62),
+                      Icon(Icons.access_time_rounded, size: 11, color: AppColors.primaryA62),
                       const SizedBox(width: 3),
                       Text(_fmtTime(exam.examinedAt),
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _C.navyA62)),
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primaryA62)),
                     ],
                   ),
                 ),
@@ -1360,13 +1347,13 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                     padding: const EdgeInsets.only(bottom: 10),
                     child: Row(
                       children: [
-                        Icon(Icons.person_outline_rounded, size: 13, color: _C.navyA50),
+                        Icon(Icons.person_outline_rounded, size: 13, color: AppColors.primaryA50),
                         const SizedBox(width: 4),
                         Text('Examined by: ',
-                            style: TextStyle(fontSize: 12, color: _C.navyA50)),
+                            style: TextStyle(fontSize: 12, color: AppColors.primaryA50)),
                         Text('Dr. ${exam.doctorName}',
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w700, color: _C.navy)),
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
                       ],
                     ),
                   ),
@@ -1381,27 +1368,27 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                     decoration: BoxDecoration(
-                      color: isExpanded ? _C.navyA08 : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: isExpanded ? _C.navyA24 : _C.navyA18),
+                      color: isExpanded ? AppColors.primaryA08 : Colors.white,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      border: Border.all(color: isExpanded ? AppColors.primaryA24 : AppColors.primaryA18),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           isExpanded ? Icons.visibility_off_outlined : Icons.description_outlined,
-                          size: 14, color: _C.navy,
+                          size: 14, color: AppColors.primary,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           isExpanded ? 'Hide Clinical Data' : 'View Clinical Data',
-                          style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w700, color: _C.navy),
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
                         ),
                         const SizedBox(width: 4),
                         Icon(
                           isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                          size: 16, color: _C.navy,
+                          size: 16, color: AppColors.primary,
                         ),
                       ],
                     ),

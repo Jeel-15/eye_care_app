@@ -1,9 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
+import '../widgets/app_animations.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../services/auth_service.dart';
 import '../services/permission_service.dart';
+import '../utils/app_nav_label.dart';
+import '../utils/medicines_tab.dart';
 import '../widgets/app_drawer.dart';
 import 'dashboard_screen.dart';
 import 'login_screen.dart';
@@ -21,10 +26,6 @@ import 'roles_screen.dart';
 import 'doctor_dashboard_screen.dart';
 import '../utils/app_route.dart';
 
-// ── Pre-computed alpha variants ───────────────────────────────────────────────
-const _white94 = Color(0xF0FFFFFF);   // nav bar frosted-glass background
-const _black10 = Color(0x1A000000);   // nav bar drop shadow
-const _navyA12 = Color(0x1F1B4F72);  // active nav item pill
 
 class HomeScreen extends StatefulWidget {
   final UserInfo user;
@@ -178,53 +179,45 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _onDrawerNavigate(String label) {
     switch (label) {
-      case 'Dashboard':
+      case NavLabel.dashboard:
         _goTo(0);
-      case 'Patients':
+      case NavLabel.patients:
         _goTo(1);
-      case 'Share History':
+      case NavLabel.shareHistory:
         Navigator.push(
           context,
           appRoute(ShareHistoryScreen(user: widget.user, hospital: widget.hospital)),
         );
-      case 'Queue Dashboard':
+      case NavLabel.queueDashboard:
         _goTo(4);
-      case 'Reports':
+      case NavLabel.reports:
         _goTo(3);
-      case 'Medicines':
-        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: 4)));
-      case 'Medicine Groups':
-        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: 5)));
-      case 'Medicine Types':
-        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: 1)));
-      case 'Medicine Categories':
-        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: 2)));
-      case 'Route of Admin.':
-        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: 3)));
-      case 'Dosages':
-        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: 0)));
-      case 'My Profile':
+      case NavLabel.medicines:
+        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: MedicinesTab.medicines)));
+      case NavLabel.medicineGroups:
+        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: MedicinesTab.groups)));
+      case NavLabel.medicineTypes:
+        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: MedicinesTab.types)));
+      case NavLabel.medicineCategories:
+        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: MedicinesTab.categories)));
+      case NavLabel.routeOfAdmin:
+        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: MedicinesTab.routeAdmin)));
+      case NavLabel.dosages:
+        Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: MedicinesTab.dosages)));
+      case NavLabel.myProfile:
         Navigator.push(context, appRoute(ProfileScreen(user: widget.user, hospital: widget.hospital)));
-      case 'Settings':
+      case NavLabel.settings:
         Navigator.push(context, appRoute(SettingsScreen(user: widget.user, hospital: widget.hospital)));
-      case 'Masters':
+      case NavLabel.masters:
         Navigator.push(context, appRoute(MastersScreen(user: widget.user, hospital: widget.hospital)));
-      case 'Users':
+      case NavLabel.users:
         Navigator.push(context, appRoute(UsersScreen(user: widget.user, hospital: widget.hospital)));
-      case 'FOC Requests':
+      case NavLabel.focRequests:
         Navigator.push(context, appRoute(FocScreen(user: widget.user, hospital: widget.hospital)));
-      case 'Roles & Permissions':
+      case NavLabel.rolesAndPerms:
         Navigator.push(context, appRoute(RolesScreen(user: widget.user, hospital: widget.hospital)));
       default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$label — Coming Soon'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFF1B4F72),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        showAppSnackBar(context, '$label — Coming Soon', duration: const Duration(seconds: 2));
     }
   }
 
@@ -238,14 +231,20 @@ class _HomeScreenState extends State<HomeScreen>
       child: Scaffold(
       key: _scaffoldKey,
       extendBody: true,
-      backgroundColor: const Color(0xFFEBF5FB),
+      backgroundColor: AppColors.background,
       drawer: AppDrawer(
         user: widget.user,
         hospital: widget.hospital,
         onLogout: _logout,
         onNavigate: _onDrawerNavigate,
       ),
-      body: Stack(
+      body: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          padding: MediaQuery.of(context).padding.copyWith(
+            bottom: MediaQuery.of(context).padding.bottom + 92,
+          ),
+        ),
+        child: Stack(
         children: List.generate(5, (i) {
           if (!_visitedPages.contains(i)) return const SizedBox.shrink();
           final page = _builtPages.putIfAbsent(i, () => _buildPage(i));
@@ -270,22 +269,23 @@ class _HomeScreenState extends State<HomeScreen>
             },
           );
         }),
+        ),
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppRadius.xxl),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Container(
                 height: 68,
                 decoration: BoxDecoration(
-                  color: _white94,
-                  borderRadius: BorderRadius.circular(28),
+                  color: AppColors.navBarBg,
+                  borderRadius: BorderRadius.circular(AppRadius.xxl),
                   boxShadow: [
                     BoxShadow(
-                      color: _black10,
+                      color: AppColors.black10,
                       blurRadius: 24,
                       offset: const Offset(0, 4),
                     ),
@@ -344,7 +344,6 @@ class _NavItemState extends State<_NavItem> {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF1B4F72);
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -366,13 +365,13 @@ class _NavItemState extends State<_NavItem> {
                 curve: Curves.easeOutBack,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: widget.active ? _navyA12 : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
+                  color: widget.active ? AppColors.primaryA12 : Colors.transparent,
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
                 ),
                 child: Icon(
                   widget.icon,
                   size: 22,
-                  color: widget.active ? primary : const Color(0xFF94A3B8),
+                  color: widget.active ? AppColors.primary : AppColors.textDisabled,
                 ),
               ),
             ),
@@ -382,7 +381,7 @@ class _NavItemState extends State<_NavItem> {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: widget.active ? FontWeight.w700 : FontWeight.w500,
-                color: widget.active ? primary : const Color(0xFF94A3B8),
+                color: widget.active ? AppColors.primary : AppColors.textDisabled,
               ),
             ),
           ],

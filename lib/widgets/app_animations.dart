@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -175,16 +177,16 @@ void showAppSnackBar(
   Duration duration = const Duration(seconds: 3),
 }) {
   final color = isError
-      ? Colors.red.shade700
+      ? AppColors.red
       : isSuccess
-          ? Colors.green.shade600
-          : Colors.orange.shade700;
+          ? AppColors.green
+          : AppColors.orange;
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message),
       backgroundColor: color,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
       duration: duration,
     ),
   );

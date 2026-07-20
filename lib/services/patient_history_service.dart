@@ -1,24 +1,16 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/patient_history_models.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
-class PatientHistoryService {
+class PatientHistoryService with AuthenticatedService {
   PatientHistoryService._();
   static final PatientHistoryService instance = PatientHistoryService._();
 
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
 
   Future<ExamHistoryData> fetchHistory(int patientId) async {
     final uri = Uri.parse(
@@ -27,7 +19,7 @@ class PatientHistoryService {
 
     try {
       final resp = await http
-          .get(uri, headers: await _headers)
+          .get(uri, headers: await headers)
           .timeout(AppConfig.requestTimeout);
 
       if (resp.statusCode == 503) {

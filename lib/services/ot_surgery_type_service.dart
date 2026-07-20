@@ -1,7 +1,7 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
 class OtTypeOption {
   final int id;
@@ -37,33 +37,18 @@ class OtSurgeryTypeItem {
       );
 }
 
-class OtSurgeryTypeService {
+class OtSurgeryTypeService with AuthenticatedService {
   OtSurgeryTypeService._();
   static final OtSurgeryTypeService instance = OtSurgeryTypeService._();
 
   String get _base => AppConfig.hospitalApiUrl;
 
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-  }
-
-  Map<String, dynamic> _parse(http.Response res) {
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Request failed (${res.statusCode})');
-    }
-    return body;
-  }
+  Map<String, dynamic> _parse(http.Response res) => parseApiResponse(res);
 
   Future<List<OtSurgeryTypeItem>> fetchAll() async {
     final res = await http
         .get(Uri.parse('$_base/masters/ot-surgery-types'),
-            headers: await _headers)
+            headers: await headers)
         .timeout(AppConfig.requestTimeout);
     final body = _parse(res);
     return (body['data'] as List? ?? [])
@@ -74,7 +59,7 @@ class OtSurgeryTypeService {
   Future<List<OtTypeOption>> fetchOtTypes() async {
     final res = await http
         .get(Uri.parse('$_base/masters/ot-types-list'),
-            headers: await _headers)
+            headers: await headers)
         .timeout(AppConfig.requestTimeout);
     final body = _parse(res);
     return (body['data'] as List? ?? [])
@@ -86,7 +71,7 @@ class OtSurgeryTypeService {
     final res = await http
         .post(
           Uri.parse('$_base/masters/ot-surgery-types'),
-          headers: await _headers,
+          headers: await headers,
           body: jsonEncode({
             'ot_type_id': otTypeId,
             'surgery_name': surgeryName,
@@ -102,7 +87,7 @@ class OtSurgeryTypeService {
     final res = await http
         .put(
           Uri.parse('$_base/masters/ot-surgery-types/$id'),
-          headers: await _headers,
+          headers: await headers,
           body: jsonEncode({
             'ot_type_id': otTypeId,
             'surgery_name': surgeryName,
@@ -116,7 +101,7 @@ class OtSurgeryTypeService {
   Future<void> delete(int id) async {
     final res = await http
         .delete(Uri.parse('$_base/masters/ot-surgery-types/$id'),
-            headers: await _headers)
+            headers: await headers)
         .timeout(AppConfig.requestTimeout);
     _parse(res);
   }

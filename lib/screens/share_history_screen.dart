@@ -1,25 +1,15 @@
 import 'package:flutter/material.dart';
-import '../utils/app_route.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
+import '../widgets/app_animations.dart';
+import '../widgets/app_empty_state.dart';
+import '../widgets/app_error_state.dart';
 import '../models/auth_models.dart';
+import '../models/patient_models.dart';
 import '../models/share_history_models.dart';
 import '../services/share_history_service.dart';
-
-// ── Color cache ───────────────────────────────────────────────────────────────
-
-abstract final class _C {
-  static const navy    = Color(0xFF1B4F72);
-  static const teal    = Color(0xFF0D9488);
-  static const green   = Color(0xFF16A34A);
-  static const red     = Color(0xFFDC2626);
-  static const purple  = Color(0xFF5B21B6);
-  static const bg      = Color(0xFFEBF5FB);
-
-  static final navyA06 = navy.withValues(alpha: 0.06);
-  static final navyA08 = navy.withValues(alpha: 0.08);
-  static final navyA10 = navy.withValues(alpha: 0.10);
-  static final navyA22 = navy.withValues(alpha: 0.22);
-  static final grey10  = Colors.grey.withValues(alpha: 0.10);
-}
+import '../utils/app_route.dart';
+import 'patient_history_screen.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -58,9 +48,9 @@ class _ShareHistoryScreenState extends State<ShareHistoryScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _C.bg,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: _C.navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -85,7 +75,7 @@ class _ShareHistoryScreenState extends State<ShareHistoryScreen>
       body: TabBarView(
         controller: _tabCtrl,
         children: [
-          _PatientHistoryTab(hospital: widget.hospital),
+          _PatientHistoryTab(hospital: widget.hospital, user: widget.user),
           _HospitalHistoryTab(hospital: widget.hospital),
           _RequestsTab(hospital: widget.hospital),
         ],
@@ -100,7 +90,8 @@ class _ShareHistoryScreenState extends State<ShareHistoryScreen>
 
 class _PatientHistoryTab extends StatefulWidget {
   final HospitalInfo hospital;
-  const _PatientHistoryTab({required this.hospital});
+  final UserInfo user;
+  const _PatientHistoryTab({required this.hospital, required this.user});
 
   @override
   State<_PatientHistoryTab> createState() => _PatientHistoryTabState();
@@ -181,7 +172,7 @@ class _PatientHistoryTabState extends State<_PatientHistoryTab>
     super.build(context);
     return RefreshIndicator(
       onRefresh: () => _search(page: _page),
-      color: _C.navy,
+      color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(14),
@@ -200,14 +191,14 @@ class _PatientHistoryTabState extends State<_PatientHistoryTab>
           ),
           const SizedBox(height: 14),
           if (_loading)
-            const Center(child: Padding(
+            Center(child: Padding(
               padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(color: _C.navy),
+              child: CircularProgressIndicator(color: AppColors.primary),
             ))
           else if (_error != null)
-            _ErrorCard(message: _error!, onRetry: () => _search(page: _page))
+            AppErrorState(message: _error!, onRetry: () => _search(page: _page))
           else if (_searched && _patients.isEmpty)
-            _EmptyState(message: 'No history found.')
+            const AppEmptyState(message: 'No history found.')
           else ...[
             ..._patients.map((p) => _HistoryPatientCard(
               patient: p,
@@ -228,12 +219,28 @@ class _PatientHistoryTabState extends State<_PatientHistoryTab>
 
   void _onView(HistoryPatient p) {
     if (p.isOwn) {
-      _showSnack('Own patient history — coming soon.');
+      final patient = Patient(
+        id:          p.id,
+        patientCode: p.patientCode,
+        firstName:   p.firstName,
+        lastName:    p.lastName,
+        fullName:    p.fullName,
+        age:         p.age,
+        contactNo:   p.contactNo,
+      );
+      Navigator.push(
+        context,
+        appRoute(PatientHistoryScreen(
+          user:     widget.user,
+          hospital: widget.hospital,
+          patient:  patient,
+        )),
+      );
     } else {
       Navigator.push(
         context,
         appRoute(_PartnerPatientsScreen(
-          hospital: widget.hospital,
+          hospital:        widget.hospital,
           partnerTenantId: p.tenantId,
           partnerName:     p.tenantName ?? 'Partner Hospital',
         )),
@@ -241,14 +248,6 @@ class _PatientHistoryTabState extends State<_PatientHistoryTab>
     }
   }
 
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: _C.navy,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ));
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -336,7 +335,7 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
     super.build(context);
     return RefreshIndicator(
       onRefresh: () => _load(page: _page),
-      color: _C.navy,
+      color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(14),
@@ -346,14 +345,14 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 children: [
-                  Icon(Icons.apartment_rounded, size: 16, color: _C.navy),
+                  Icon(Icons.apartment_rounded, size: 16, color: AppColors.primary),
                   const SizedBox(width: 6),
                   Text(
                     'Total: ${_meta!.total} hospitals',
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 13,
-                      color: _C.navy,
+                      color: AppColors.primary,
                     ),
                   ),
                 ],
@@ -373,14 +372,14 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
           ),
           const SizedBox(height: 14),
           if (_loading)
-            const Center(child: Padding(
+            Center(child: Padding(
               padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(color: _C.navy),
+              child: CircularProgressIndicator(color: AppColors.primary),
             ))
           else if (_error != null)
-            _ErrorCard(message: _error!, onRetry: () => _load(page: _page))
+            AppErrorState(message: _error!, onRetry: () => _load(page: _page))
           else if (_hospitals.isEmpty)
-            _EmptyState(message: 'No hospitals found.')
+            const AppEmptyState(message: 'No hospitals found.')
           else ...[
             ..._hospitals.map((h) => _HospitalCard(
               hospital: h,
@@ -416,10 +415,10 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
     if (!ok) return;
     try {
       await ShareHistoryService.instance.sendRequest(h.id);
-      _showSnack('Request sent to ${h.name}.');
+      showAppSnackBar(context, 'Request sent to ${h.name}.', isSuccess: true);
       _load(page: _page);
     } catch (e) {
-      _showSnack(e.toString().replaceFirst('Exception: ', ''));
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
@@ -428,10 +427,10 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
     if (!ok) return;
     try {
       await ShareHistoryService.instance.acceptRequest(reqId);
-      _showSnack('Connected with ${h.name}.');
+      showAppSnackBar(context, 'Connected with ${h.name}.', isSuccess: true);
       _load(page: _page);
     } catch (e) {
-      _showSnack(e.toString().replaceFirst('Exception: ', ''));
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
@@ -440,10 +439,10 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
     if (!ok) return;
     try {
       await ShareHistoryService.instance.removeRequest(reqId);
-      _showSnack('Removed.');
+      showAppSnackBar(context, 'Removed.', isSuccess: true);
       _load(page: _page);
     } catch (e) {
-      _showSnack(e.toString().replaceFirst('Exception: ', ''));
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
@@ -452,12 +451,12 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text('Confirm', style: TextStyle(fontWeight: FontWeight.w900, color: _C.navy)),
+        title: Text('Confirm', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.primary)),
         content: Text(msg),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: _C.navy, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Yes'),
           ),
@@ -466,14 +465,6 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
     ) ?? false;
   }
 
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: _C.navy,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ));
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -520,17 +511,17 @@ class _RequestsTabState extends State<_RequestsTab>
     super.build(context);
 
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: _C.navy));
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (_error != null) {
-      return _ErrorCard(message: _error!, onRetry: _load);
+      return AppErrorState(message: _error!, onRetry: _load);
     }
 
     final data = _data!;
 
     return RefreshIndicator(
       onRefresh: _load,
-      color: _C.navy,
+      color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.all(14),
         children: [
@@ -562,7 +553,7 @@ class _RequestsTabState extends State<_RequestsTab>
           ),
           const SizedBox(height: 10),
           if (data.incoming.isEmpty)
-            _EmptyState(message: 'No incoming requests.', small: true)
+            const AppEmptyState(message: 'No incoming requests.')
           else
             ...data.incoming.map((req) => _IncomingRequestCard(
               request: req,
@@ -575,7 +566,7 @@ class _RequestsTabState extends State<_RequestsTab>
           _SectionHeader(title: 'Sent Requests'),
           const SizedBox(height: 10),
           if (data.sent.isEmpty)
-            _EmptyState(message: 'No sent requests.', small: true)
+            const AppEmptyState(message: 'No sent requests.')
           else
             ...data.sent.map((req) => _SentRequestCard(
               request: req,
@@ -599,10 +590,10 @@ class _RequestsTabState extends State<_RequestsTab>
   Future<void> _acceptRequest(IncomingRequest req) async {
     try {
       await ShareHistoryService.instance.acceptRequest(req.id);
-      _showSnack('Connected with ${req.fromTenant.name}.');
+      showAppSnackBar(context, 'Connected with ${req.fromTenant.name}.', isSuccess: true);
       _load();
     } catch (e) {
-      _showSnack(e.toString().replaceFirst('Exception: ', ''));
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
@@ -611,12 +602,12 @@ class _RequestsTabState extends State<_RequestsTab>
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text('Remove', style: TextStyle(fontWeight: FontWeight.w900, color: _C.navy)),
+        title: Text('Remove', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.primary)),
         content: const Text('Are you sure you want to remove this request?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: _C.red, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.waitRed, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Remove'),
           ),
@@ -626,21 +617,13 @@ class _RequestsTabState extends State<_RequestsTab>
     if (!ok) return;
     try {
       await ShareHistoryService.instance.removeRequest(reqId);
-      _showSnack('Removed.');
+      showAppSnackBar(context, 'Removed.', isSuccess: true);
       _load();
     } catch (e) {
-      _showSnack(e.toString().replaceFirst('Exception: ', ''));
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: _C.navy,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ));
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -716,9 +699,9 @@ class _PartnerPatientsScreenState extends State<_PartnerPatientsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _C.bg,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: _C.navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         title: Column(
@@ -758,14 +741,14 @@ class _PartnerPatientsScreenState extends State<_PartnerPatientsScreen> {
           ),
           const SizedBox(height: 14),
           if (_loading)
-            const Center(child: Padding(
+            Center(child: Padding(
               padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(color: _C.navy),
+              child: CircularProgressIndicator(color: AppColors.primary),
             ))
           else if (_error != null)
-            _ErrorCard(message: _error!, onRetry: () => _load(page: _page))
+            AppErrorState(message: _error!, onRetry: () => _load(page: _page))
           else if (_patients.isEmpty)
-            _EmptyState(message: 'No patient records found.')
+            const AppEmptyState(message: 'No patient records found.')
           else ...[
             ..._patients.map((p) => _HistoryPatientCard(patient: p, onView: null)),
             if (_meta != null && _meta!.lastPage > 1)
@@ -806,29 +789,29 @@ class _FilterCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.navyA10),
-        boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 8, offset: const Offset(0, 2))],
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.primaryA10),
+        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
             onTap: onToggle,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  Icon(Icons.filter_list_rounded, size: 20, color: _C.navy),
+                  Icon(Icons.filter_list_rounded, size: 20, color: AppColors.primary),
                   const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text('Filters', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: _C.navy)),
+                  Expanded(
+                    child: Text('Filters', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.primary)),
                   ),
                   AnimatedRotation(
                     turns: isOpen ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
-                    child: Icon(Icons.expand_more_rounded, size: 22, color: _C.navyA22),
+                    child: Icon(Icons.expand_more_rounded, size: 22, color: AppColors.primaryA22),
                   ),
                 ],
               ),
@@ -863,8 +846,8 @@ class _FilterCard extends StatelessWidget {
                         OutlinedButton(
                           onPressed: onClear,
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: _C.navy,
-                            side: BorderSide(color: _C.navyA22),
+                            foregroundColor: AppColors.primary,
+                            side: BorderSide(color: AppColors.primaryA22),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           ),
@@ -876,7 +859,7 @@ class _FilterCard extends StatelessWidget {
                         icon: const Icon(Icons.search_rounded, size: 16),
                         label: const Text('Filter'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _C.navy,
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -917,7 +900,7 @@ class _FilterField extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: _C.navy, letterSpacing: 0.8),
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.primary, letterSpacing: 0.8),
         ),
         const SizedBox(height: 4),
         TextField(
@@ -928,7 +911,7 @@ class _FilterField extends StatelessWidget {
             hintText: hint,
             hintStyle: TextStyle(fontSize: 12, color: Colors.grey[400]),
             filled: true,
-            fillColor: _C.navyA06,
+            fillColor: AppColors.primaryA06,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
@@ -955,7 +938,7 @@ class _DateFilterField extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: _C.navy, letterSpacing: 0.8),
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.primary, letterSpacing: 0.8),
         ),
         const SizedBox(height: 4),
         TextField(
@@ -970,7 +953,7 @@ class _DateFilterField extends StatelessWidget {
               lastDate: DateTime.now(),
               builder: (ctx, child) => Theme(
                 data: Theme.of(ctx).copyWith(
-                  colorScheme: const ColorScheme.light(primary: _C.navy),
+                  colorScheme: ColorScheme.light(primary: AppColors.primary),
                 ),
                 child: child!,
               ),
@@ -989,7 +972,7 @@ class _DateFilterField extends StatelessWidget {
                     onPressed: () => controller.clear(),
                   ),
             filled: true,
-            fillColor: _C.navyA06,
+            fillColor: AppColors.primaryA06,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
@@ -1018,9 +1001,9 @@ class _HistoryPatientCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.navyA10),
-        boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 8, offset: const Offset(0, 2))],
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.primaryA10),
+        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -1036,7 +1019,7 @@ class _HistoryPatientCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: _C.navy,
+                    color: AppColors.primary,
                     fontFamily: 'monospace',
                   ),
                 ),
@@ -1045,7 +1028,7 @@ class _HistoryPatientCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               p.fullName,
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: _C.navy),
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppColors.primary),
             ),
             const SizedBox(height: 4),
             Row(
@@ -1084,8 +1067,8 @@ class _HistoryPatientCard extends StatelessWidget {
                   icon: const Icon(Icons.arrow_forward_rounded, size: 15),
                   label: const Text('View', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
                   style: TextButton.styleFrom(
-                    foregroundColor: _C.navy,
-                    backgroundColor: _C.navyA08,
+                    foregroundColor: AppColors.primary,
+                    backgroundColor: AppColors.primaryA08,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   ),
@@ -1125,9 +1108,9 @@ class _HospitalCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.navyA10),
-        boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 8, offset: const Offset(0, 2))],
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.primaryA10),
+        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -1139,15 +1122,15 @@ class _HospitalCard extends StatelessWidget {
                 Container(
                   width: 44,
                   height: 44,
-                  decoration: BoxDecoration(color: _C.navyA08, borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.apartment_rounded, color: _C.navy, size: 20),
+                  decoration: BoxDecoration(color: AppColors.primaryA08, borderRadius: BorderRadius.circular(10)),
+                  child: Icon(Icons.apartment_rounded, color: AppColors.primary, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(h.name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: _C.navy)),
+                      Text(h.name, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: AppColors.primary)),
                       if ((h.city ?? '').isNotEmpty)
                         Text(
                           [h.city, h.district, h.state].where((s) => (s ?? '').isNotEmpty).join(' · '),
@@ -1167,8 +1150,8 @@ class _HospitalCard extends StatelessWidget {
                   icon: const Icon(Icons.visibility_outlined, size: 15),
                   label: const Text('View', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: _C.navy,
-                    side: BorderSide(color: _C.navyA22),
+                    foregroundColor: AppColors.primary,
+                    side: BorderSide(color: AppColors.primaryA22),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
@@ -1189,7 +1172,7 @@ class _HospitalCard extends StatelessWidget {
         ElevatedButton(
           onPressed: onSendRequest,
           style: ElevatedButton.styleFrom(
-            backgroundColor: _C.navy, foregroundColor: Colors.white, elevation: 0,
+            backgroundColor: AppColors.primary, foregroundColor: Colors.white, elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           ),
@@ -1202,7 +1185,7 @@ class _HospitalCard extends StatelessWidget {
         OutlinedButton(
           onPressed: () => onRemoveRequest(req.id),
           style: OutlinedButton.styleFrom(
-            foregroundColor: _C.red, side: BorderSide(color: _C.red),
+            foregroundColor: AppColors.waitRed, side: BorderSide(color: AppColors.waitRed),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
@@ -1228,7 +1211,7 @@ class _HospitalCard extends StatelessWidget {
       ElevatedButton(
         onPressed: () => onAcceptRequest(req.id),
         style: ElevatedButton.styleFrom(
-          backgroundColor: _C.green, foregroundColor: Colors.white, elevation: 0,
+          backgroundColor: AppColors.waitGreen, foregroundColor: Colors.white, elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
@@ -1238,7 +1221,7 @@ class _HospitalCard extends StatelessWidget {
       OutlinedButton(
         onPressed: () => onRemoveRequest(req.id),
         style: OutlinedButton.styleFrom(
-          foregroundColor: _C.red, side: BorderSide(color: _C.red),
+          foregroundColor: AppColors.waitRed, side: BorderSide(color: AppColors.waitRed),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         ),
@@ -1296,11 +1279,11 @@ class _HospitalDetailSheetState extends State<_HospitalDetailSheet> {
         children: [
           Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
           const SizedBox(height: 16),
-          Text(widget.hospitalName, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: _C.navy)),
+          Text(widget.hospitalName, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.primary)),
           if (_loading)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: CircularProgressIndicator(color: _C.navy)),
+              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
             )
           else if (_error != null)
             Padding(
@@ -1335,8 +1318,8 @@ class _HospitalDetailSheetState extends State<_HospitalDetailSheet> {
             child: OutlinedButton(
               onPressed: () => Navigator.pop(context),
               style: OutlinedButton.styleFrom(
-                foregroundColor: _C.navy,
-                side: BorderSide(color: _C.navyA22),
+                foregroundColor: AppColors.primary,
+                side: BorderSide(color: AppColors.primaryA22),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -1360,7 +1343,7 @@ class _DetailStat extends StatelessWidget {
   Widget build(BuildContext context) => Expanded(
     child: Column(
       children: [
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: _C.navy)),
+        Text(value, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: AppColors.primary)),
         Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
       ],
     ),
@@ -1383,7 +1366,7 @@ class _ConnectedCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF0FDFA),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _C.teal, width: 1.5),
+        border: Border.all(color: const Color(0xFF0D9488), width: 1.5),
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -1394,7 +1377,7 @@ class _ConnectedCard extends StatelessWidget {
               Container(
                 width: 46,
                 height: 46,
-                decoration: BoxDecoration(color: _C.teal, borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: const Color(0xFF0D9488), borderRadius: BorderRadius.circular(AppRadius.md)),
                 child: const Icon(Icons.apartment_rounded, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 12),
@@ -1416,7 +1399,7 @@ class _ConnectedCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onViewHistory,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _C.teal, foregroundColor: Colors.white, elevation: 0,
+                backgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white, elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 padding: const EdgeInsets.symmetric(vertical: 10),
               ),
@@ -1444,8 +1427,8 @@ class _IncomingRequestCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border(left: BorderSide(color: _C.navy, width: 4)),
-        boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 8, offset: const Offset(0, 2))],
+        border: Border(left: BorderSide(color: AppColors.primary, width: 4)),
+        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -1456,15 +1439,15 @@ class _IncomingRequestCard extends StatelessWidget {
               Container(
                 width: 42,
                 height: 42,
-                decoration: BoxDecoration(color: _C.navyA10, borderRadius: BorderRadius.circular(11)),
-                child: const Icon(Icons.move_to_inbox_rounded, color: _C.navy, size: 20),
+                decoration: BoxDecoration(color: AppColors.primaryA10, borderRadius: BorderRadius.circular(11)),
+                child: Icon(Icons.move_to_inbox_rounded, color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(f.name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: _C.navy)),
+                    Text(f.name, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: AppColors.primary)),
                     Text(
                       [f.city, f.state].where((s) => (s ?? '').isNotEmpty).join(', '),
                       style: TextStyle(fontSize: 11, color: Colors.grey[500]),
@@ -1483,7 +1466,7 @@ class _IncomingRequestCard extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: onAccept,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _C.green, foregroundColor: Colors.white, elevation: 0,
+                    backgroundColor: AppColors.waitGreen, foregroundColor: Colors.white, elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -1495,7 +1478,7 @@ class _IncomingRequestCard extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: onRemove,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: _C.red, side: BorderSide(color: _C.red),
+                    foregroundColor: AppColors.waitRed, side: BorderSide(color: AppColors.waitRed),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -1525,8 +1508,8 @@ class _SentRequestCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _C.navyA10),
-        boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 6, offset: const Offset(0, 2))],
+        border: Border.all(color: AppColors.primaryA10),
+        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 6, offset: const Offset(0, 2))],
       ),
       padding: const EdgeInsets.all(14),
       child: Row(
@@ -1534,15 +1517,15 @@ class _SentRequestCard extends StatelessWidget {
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(color: _C.navyA08, borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.apartment_rounded, color: _C.navy, size: 18),
+            decoration: BoxDecoration(color: AppColors.primaryA08, borderRadius: BorderRadius.circular(10)),
+            child: Icon(Icons.apartment_rounded, color: AppColors.primary, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(t.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: _C.navy)),
+                Text(t.name, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.primary)),
                 Text(
                   [t.city, t.state].where((s) => (s ?? '').isNotEmpty).join(', '),
                   style: TextStyle(fontSize: 10, color: Colors.grey[500]),
@@ -1564,8 +1547,8 @@ class _SentRequestCard extends StatelessWidget {
                       onPressed: onViewHistory,
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
-                        backgroundColor: _C.teal,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        backgroundColor: const Color(0xFF0D9488),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         minimumSize: Size.zero,
                       ),
@@ -1574,14 +1557,14 @@ class _SentRequestCard extends StatelessWidget {
                   if (onViewHistory != null) const SizedBox(width: 6),
                   InkWell(
                     onTap: onRemove,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        border: Border.all(color: _C.red),
-                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.waitRed),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
-                      child: Icon(Icons.delete_outline_rounded, size: 14, color: _C.red),
+                      child: Icon(Icons.delete_outline_rounded, size: 14, color: AppColors.waitRed),
                     ),
                   ),
                 ],
@@ -1613,7 +1596,7 @@ class _HospBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: isOwn ? ownBg : partBg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Text(
         isOwn ? 'OWN' : (name ?? 'Partner'),
@@ -1642,12 +1625,12 @@ class _ReqStatusBadge extends StatelessWidget {
     } else if (req!.direction == 'sent') {
       label = '⏰ Requested'; bg = const Color(0xFFFEF3C7); text = const Color(0xFF92400E);
     } else {
-      label = '🔔 Incoming'; bg = const Color(0xFFEDE9FE); text = _C.purple;
+      label = '🔔 Incoming'; bg = const Color(0xFFEDE9FE); text = const Color(0xFF5B21B6);
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(AppRadius.xl)),
       child: Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: text)),
     );
   }
@@ -1670,7 +1653,7 @@ class _SentStatusBadge extends StatelessWidget {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(AppRadius.xl)),
       child: Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: text)),
     );
   }
@@ -1686,12 +1669,12 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: _C.navy)),
+      Text(title, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppColors.primary)),
       if (badge != null) ...[
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(color: _C.red, borderRadius: BorderRadius.circular(20)),
+          decoration: BoxDecoration(color: AppColors.waitRed, borderRadius: BorderRadius.circular(AppRadius.xl)),
           child: Text(badge!, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white)),
         ),
       ],
@@ -1723,7 +1706,7 @@ class _SimplePagination extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _C.navyA10),
+        border: Border.all(color: AppColors.primaryA10),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1756,62 +1739,14 @@ class _PagBtn extends StatelessWidget {
       width: 30,
       height: 30,
       decoration: BoxDecoration(
-        color: enabled ? _C.navyA10 : _C.grey10,
-        borderRadius: BorderRadius.circular(8),
+        color: enabled ? AppColors.primaryA10 : Colors.grey.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
-      child: Icon(icon, size: 18, color: enabled ? _C.navy : Colors.grey[400]),
+      child: Icon(icon, size: 18, color: enabled ? AppColors.primary : Colors.grey[400]),
     ),
   );
 }
 
-class _EmptyState extends StatelessWidget {
-  final String message;
-  final bool small;
-
-  const _EmptyState({required this.message, this.small = false});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.symmetric(vertical: small ? 20 : 50),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.inbox_rounded, size: small ? 36 : 56, color: _C.navyA22),
-        const SizedBox(height: 12),
-        Text(
-          message,
-          style: TextStyle(fontSize: small ? 13 : 15, fontWeight: FontWeight.w600, color: _C.navyA22),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    ),
-  );
-}
-
-class _ErrorCard extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorCard({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.symmetric(vertical: 10),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: const Color(0xFFFEF2F2),
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: const Color(0xFFFCA5A5)),
-    ),
-    child: Column(
-      children: [
-        Text(message, style: const TextStyle(color: Color(0xFFDC2626), fontSize: 13)),
-        const SizedBox(height: 10),
-        TextButton(onPressed: onRetry, child: const Text('Retry')),
-      ],
-    ),
-  );
-}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

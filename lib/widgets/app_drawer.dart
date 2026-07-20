@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../services/permission_service.dart';
+import '../utils/app_nav_label.dart';
 
 class AppDrawer extends StatelessWidget {
   final UserInfo user;
@@ -17,9 +20,6 @@ class AppDrawer extends StatelessWidget {
     this.onNavigate,
   });
 
-  static const _navy = Color(0xFF1B4F72);
-  static const _textSub = Color(0xFF64748B);
-  static const _bgColor = Color(0xFFF3F4F7);
 
   @override
   Widget build(BuildContext context) {
@@ -28,62 +28,62 @@ class AppDrawer extends StatelessWidget {
 
     final opdItems = [
       if (p.can(Perm.opdPatientView)) ...[
-        const _Item(Icons.people_outline_rounded, 'Patients'),
-        const _Item(Icons.share_outlined, 'Share History'),
+        const _Item(Icons.people_outline_rounded, NavLabel.patients),
+        const _Item(Icons.share_outlined, NavLabel.shareHistory),
       ],
       if (p.can(Perm.opdFocCreate) || p.can(Perm.opdFocAccept))
-        const _Item(Icons.receipt_long_rounded, 'FOC Requests'),
+        const _Item(Icons.receipt_long_rounded, NavLabel.focRequests),
     ];
 
     final clinicalItems = [
       if (p.can(Perm.opdExamPrimary) || p.can(Perm.opdExamSecondary))
-        const _Item(Icons.queue_rounded, 'Queue Dashboard'),
+        const _Item(Icons.queue_rounded, NavLabel.queueDashboard),
     ];
 
     final otItems = [
       if (p.can(Perm.otBookingCreate) || p.can(Perm.otPatientList))
-        const _Item(Icons.event_note_rounded, 'OT Bookings'),
+        const _Item(Icons.event_note_rounded, NavLabel.otBookings),
       if (p.can(Perm.otPaymentRecord))
-        const _Item(Icons.account_balance_wallet_rounded, 'Accountant / Billing'),
+        const _Item(Icons.account_balance_wallet_rounded, NavLabel.accountantBilling),
       if (p.can(Perm.otWardEntry))
-        const _Item(Icons.bed_rounded, 'Ward Management'),
+        const _Item(Icons.bed_rounded, NavLabel.wardManagement),
       if (p.can(Perm.otSurgeryRecord))
-        const _Item(Icons.local_hospital_rounded, 'Doctor Dashboard'),
+        const _Item(Icons.local_hospital_rounded, NavLabel.doctorDashboard),
       if (p.can(Perm.otLensRecord) || p.can(Perm.otLensImplant) || p.can(Perm.otPatientList))
-        const _Item(Icons.handyman_rounded, 'Assistant Dashboard'),
+        const _Item(Icons.handyman_rounded, NavLabel.assistantDashboard),
       if (p.can(Perm.otBillingManage))
-        const _Item(Icons.receipt_long_rounded, 'Discharge & Invoices'),
+        const _Item(Icons.receipt_long_rounded, NavLabel.dischargeInvoices),
     ];
 
     final reportsItems = [
       if (!isDoctor && p.can(Perm.reportsView))
-        const _Item(Icons.bar_chart_rounded, 'Reports'),
+        const _Item(Icons.bar_chart_rounded, NavLabel.reports),
     ];
 
     final medicineItems = [
       if (p.can(Perm.masterMedicines)) ...[
-        const _Item(Icons.local_pharmacy_rounded, 'Medicines'),
-        const _Item(Icons.label_rounded, 'Medicine Types'),
-        const _Item(Icons.folder_rounded, 'Medicine Categories'),
-        const _Item(Icons.alt_route_rounded, 'Route of Admin.'),
-        const _Item(Icons.science_rounded, 'Dosages'),
+        const _Item(Icons.local_pharmacy_rounded, NavLabel.medicines),
+        const _Item(Icons.label_rounded, NavLabel.medicineTypes),
+        const _Item(Icons.folder_rounded, NavLabel.medicineCategories),
+        const _Item(Icons.alt_route_rounded, NavLabel.routeOfAdmin),
+        const _Item(Icons.science_rounded, NavLabel.dosages),
       ],
     ];
 
     final configItems = [
-      if (!isDoctor && (p.can(Perm.masterCaseTypes) || p.can(Perm.masterEyeExam) || p.can(Perm.masterLocations)))
-        const _Item(Icons.tune_rounded, 'Masters'),
+      if (p.can(Perm.masterCaseTypes) || p.can(Perm.masterEyeExam) || p.can(Perm.masterLocations))
+        const _Item(Icons.tune_rounded, NavLabel.masters),
       if (!isDoctor && p.can(Perm.settingsHospital))
-        const _Item(Icons.settings_outlined, 'Settings'),
+        const _Item(Icons.settings_outlined, NavLabel.settings),
       if (!isDoctor && p.can(Perm.masterRoles))
-        const _Item(Icons.admin_panel_settings_rounded, 'Roles & Permissions'),
+        const _Item(Icons.admin_panel_settings_rounded, NavLabel.rolesAndPerms),
       if (!isDoctor && (p.can(Perm.masterDoctors) || p.can(Perm.masterReceptions) || p.can(Perm.masterOtStaff)))
-        const _Item(Icons.manage_accounts_rounded, 'Users'),
+        const _Item(Icons.manage_accounts_rounded, NavLabel.users),
     ];
 
     return Drawer(
       width: 296,
-      backgroundColor: _bgColor,
+      backgroundColor: AppColors.drawerBackground,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topRight: Radius.circular(24),
@@ -141,7 +141,7 @@ class AppDrawer extends StatelessWidget {
                   const SizedBox(height: 10),
                   _FullAccordion(
                     icon: Icons.analytics_rounded,
-                    label: 'Reports',
+                    label: NavLabel.reports,
                     items: reportsItems,
                     onNavigate: (l) => _go(context, l),
                   ),
@@ -151,7 +151,7 @@ class AppDrawer extends StatelessWidget {
                   const SizedBox(height: 10),
                   _FullAccordion(
                     icon: Icons.medication_rounded,
-                    label: 'Medicines',
+                    label: NavLabel.medicines,
                     items: medicineItems,
                     onNavigate: (l) => _go(context, l),
                   ),
@@ -185,8 +185,8 @@ class AppDrawer extends StatelessWidget {
         SnackBar(
           content: Text('$label — Coming Soon'),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: _navy,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: AppColors.primary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -200,7 +200,7 @@ class AppDrawer extends StatelessWidget {
         ? hospital.name.trim().split(RegExp(r'\s+')).map((w) => w[0]).take(2).join().toUpperCase()
         : '?';
     return Container(
-      color: _navy,
+      color: AppColors.primary,
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -269,26 +269,26 @@ class AppDrawer extends StatelessWidget {
       child: InkWell(
         onTap: () {
           Navigator.pop(context);
-          onNavigate?.call('Dashboard');
+          onNavigate?.call(NavLabel.dashboard);
         },
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
             decoration: BoxDecoration(
-              color: _navy.withValues(alpha: 0.10),
+              color: AppColors.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.grid_view_rounded, color: _navy, size: 20),
+                Icon(Icons.grid_view_rounded, color: AppColors.primary, size: 20),
                 SizedBox(width: 12),
                 Text(
                   'Dashboard',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
-                    color: _navy,
+                    color: AppColors.primary,
                   ),
                 ),
               ],
@@ -302,6 +302,8 @@ class AppDrawer extends StatelessWidget {
   // ── Footer ────────────────────────────────────────────────────────────────
 
   Widget _buildFooter(BuildContext context) {
+    final isAdmin = user.role?.slug == 'hospital_admin';
+
     // Compute user initials for the profile row avatar
     final nameParts = user.name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
     final words     = nameParts.where((p) => !(p.length <= 4 && p.endsWith('.'))).toList();
@@ -320,83 +322,84 @@ class AppDrawer extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
             children: [
-              // My Profile row
-              Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: _navy.withValues(alpha: 0.07)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _navy.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.pop(context);
-                    onNavigate?.call('My Profile');
-                  },
-                  borderRadius: BorderRadius.circular(14),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                    child: Row(
-                      children: [
-                        // Avatar with initials
-                        Container(
-                          width: 36, height: 36,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: _navy.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: _navy.withValues(alpha: 0.10)),
-                          ),
-                          child: Text(
-                            initials,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 13,
-                              color: _navy,
+              // My Profile row — hidden for hospital admin (all info is in Settings)
+              if (!isAdmin)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.07)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      onNavigate?.call(NavLabel.myProfile);
+                    },
+                    borderRadius: BorderRadius.circular(14),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                      child: Row(
+                        children: [
+                          // Avatar with initials
+                          Container(
+                            width: 36, height: 36,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.10)),
+                            ),
+                            child: Text(
+                              initials,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                color: AppColors.primary,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user.name,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: _navy,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (user.role != null)
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Text(
-                                  user.role!.name,
+                                  user.name,
                                   style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: _textSub.withValues(alpha: 0.80),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                            ],
+                                if (user.role != null)
+                                  Text(
+                                    user.role!.name,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondary.withValues(alpha: 0.80),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Icon(Icons.arrow_forward_ios_rounded,
-                            size: 12,
-                            color: _textSub.withValues(alpha: 0.40)),
-                      ],
+                          Icon(Icons.arrow_forward_ios_rounded,
+                              size: 12,
+                              color: AppColors.textSecondary.withValues(alpha: 0.40)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -414,8 +417,8 @@ class AppDrawer extends StatelessWidget {
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: _navy,
-                    side: BorderSide(color: _navy.withValues(alpha: 0.15)),
+                    foregroundColor: AppColors.primary,
+                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.15)),
                     backgroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -430,7 +433,7 @@ class AppDrawer extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 9.5,
                   fontWeight: FontWeight.w700,
-                  color: _textSub.withValues(alpha: 0.55),
+                  color: AppColors.textSecondary.withValues(alpha: 0.55),
                   letterSpacing: 2,
                 ),
               ),
@@ -446,13 +449,13 @@ class AppDrawer extends StatelessWidget {
 
 BoxDecoration _clusterDeco() => BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppRadius.xl),
       border: Border.all(
-        color: const Color(0xFF1B4F72).withValues(alpha: 0.08),
+        color: AppColors.primaryA08,
       ),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFF1B4F72).withValues(alpha: 0.05),
+          color: AppColors.primaryA05,
           blurRadius: 12,
           offset: const Offset(0, 4),
         ),
@@ -487,8 +490,6 @@ class _SmallAccordion extends StatefulWidget {
 class _SmallAccordionState extends State<_SmallAccordion> {
   bool _open = false;
 
-  static const _navy = Color(0xFF1B4F72);
-  static const _textSub = Color(0xFF64748B);
 
   @override
   Widget build(BuildContext context) {
@@ -508,11 +509,11 @@ class _SmallAccordionState extends State<_SmallAccordion> {
                 children: [
                   Text(
                     widget.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 12,
                       letterSpacing: 1.5,
-                      color: _navy,
+                      color: AppColors.primary,
                     ),
                   ),
                   AnimatedRotation(
@@ -547,7 +548,7 @@ class _SmallAccordionState extends State<_SmallAccordion> {
                                   style: const TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: _textSub,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ),
@@ -592,8 +593,6 @@ class _FullAccordion extends StatefulWidget {
 class _FullAccordionState extends State<_FullAccordion> {
   bool _open = false;
 
-  static const _navy = Color(0xFF1B4F72);
-  static const _textSub = Color(0xFF64748B);
 
   @override
   Widget build(BuildContext context) {
@@ -612,7 +611,7 @@ class _FullAccordionState extends State<_FullAccordion> {
                   Icon(
                     widget.icon,
                     size: 22,
-                    color: _textSub.withValues(alpha: 0.75),
+                    color: AppColors.textSecondary.withValues(alpha: 0.75),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -626,26 +625,26 @@ class _FullAccordionState extends State<_FullAccordion> {
                                   fontSize: 10,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 1.2,
-                                  color: _textSub.withValues(alpha: 0.65),
+                                  color: AppColors.textSecondary.withValues(alpha: 0.65),
                                 ),
                               ),
                               const SizedBox(height: 1),
                               Text(
                                 widget.label,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w900,
-                                  color: _navy,
+                                  color: AppColors.primary,
                                 ),
                               ),
                             ],
                           )
                         : Text(
                             widget.label.toUpperCase(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
-                              color: _navy,
+                              color: AppColors.primary,
                             ),
                           ),
                   ),
@@ -669,7 +668,7 @@ class _FullAccordionState extends State<_FullAccordion> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                    color: const Color(0xFF1B4F72).withValues(alpha: 0.07),
+                    color: AppColors.primaryA07,
                   ),
                 ),
                 color: const Color(0xFFFAFAFC),
@@ -709,7 +708,7 @@ class _FullAccordionState extends State<_FullAccordion> {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: _textSub,
+                color: AppColors.textSecondary,
               ),
             ),
           ],

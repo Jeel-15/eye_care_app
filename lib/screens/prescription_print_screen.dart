@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
+import '../constants/app_colors.dart';
 import '../models/auth_models.dart';
 import '../models/patient_history_models.dart';
 import '../services/prescription_service.dart';
@@ -18,11 +19,9 @@ class PrescriptionPrintScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const navy = Color(0xFF1B4F72);
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Prescription',

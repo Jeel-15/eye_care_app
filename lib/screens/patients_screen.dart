@@ -15,53 +15,9 @@ import 'patient_form_screen.dart';
 import 'patient_history_screen.dart';
 import 'primary_exam_screen.dart';
 import 'secondary_exam_screen.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 
-// Pre-computed color constants — avoids `.withValues()` allocations on every build
-abstract final class _C {
-  static const navy       = Color(0xFF1B4F72);
-  static const teal       = Color(0xFF1ABC9C);
-  static const tealDark   = Color(0xFF0E9E82);
-  static const orange     = Color(0xFFE67E22);
-  static const purple     = Color(0xFF8E44AD);
-  static const red        = Color(0xFFDC3545);
-  static const green      = Color(0xFF27AE60);
-
-  static final navyA05 = navy.withValues(alpha: 0.05);
-  static final navyA06 = navy.withValues(alpha: 0.06);
-  static final navyA07 = navy.withValues(alpha: 0.07);
-  static final navyA08 = navy.withValues(alpha: 0.08);
-  static final navyA10 = navy.withValues(alpha: 0.10);
-  static final navyA12 = navy.withValues(alpha: 0.12);
-  static final navyA13 = navy.withValues(alpha: 0.13);
-  static final navyA14 = navy.withValues(alpha: 0.14);
-  static final navyA15 = navy.withValues(alpha: 0.15);
-  static final navyA18 = navy.withValues(alpha: 0.18);
-  static final navyA20 = navy.withValues(alpha: 0.20);
-  static final navyA22 = navy.withValues(alpha: 0.22);
-  static final navyA25 = navy.withValues(alpha: 0.25);
-  static final navyA28 = navy.withValues(alpha: 0.28);
-  static final navyA35 = navy.withValues(alpha: 0.35);
-  static final navyA40 = navy.withValues(alpha: 0.40);
-  static final navyA45 = navy.withValues(alpha: 0.45);
-  static final navyA50 = navy.withValues(alpha: 0.50);
-  static final navyA55 = navy.withValues(alpha: 0.55);
-  static final navyA58 = navy.withValues(alpha: 0.58);
-  static final navyA60 = navy.withValues(alpha: 0.60);
-  static final navyA70 = navy.withValues(alpha: 0.70);
-  static final tealA06 = teal.withValues(alpha: 0.06);
-  static final tealA10 = teal.withValues(alpha: 0.10);
-  static final tealA12 = teal.withValues(alpha: 0.12);
-  static final tealA13 = teal.withValues(alpha: 0.13);
-  static final orangeA12 = orange.withValues(alpha: 0.12);
-  static final orangeA13 = orange.withValues(alpha: 0.13);
-  static final purpleA12 = purple.withValues(alpha: 0.12);
-  static final redA70    = red.withValues(alpha: 0.70);
-  static final greenA12  = green.withValues(alpha: 0.12);
-  static final greyA10   = Colors.grey.withValues(alpha: 0.10);
-  static final navyA04   = navy.withValues(alpha: 0.04);
-  static final orangeA14 = orange.withValues(alpha: 0.14);
-  static final blue12    = Color(0xFF006497).withValues(alpha: 0.12);
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Outer shell — owns only the AppBar + TabBar + FAB
@@ -86,9 +42,6 @@ class PatientsScreen extends StatefulWidget {
 
 class _PatientsScreenState extends State<PatientsScreen>
     with SingleTickerProviderStateMixin {
-  static const _navy = Color(0xFF1B4F72);
-  static const _teal = Color(0xFF1ABC9C);
-
   late final TabController _tabController;
   final _todayPageKey = GlobalKey<_PatientTabPageState>();
   final _allPageKey = GlobalKey<_PatientTabPageState>();
@@ -131,13 +84,12 @@ class _PatientsScreenState extends State<PatientsScreen>
           ),
         ],
       ),
-      floatingActionButton: _buildFab(context),
     );
   }
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: _navy,
+      backgroundColor: AppColors.primary,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.menu_rounded, color: Colors.white),
@@ -166,63 +118,12 @@ class _PatientsScreenState extends State<PatientsScreen>
         controller: _tabController,
         labelColor: Colors.white,
         unselectedLabelColor: Colors.white54,
-        indicatorColor: _teal,
+        indicatorColor: AppColors.teal,
         indicatorWeight: 3,
         labelStyle:
             const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
         tabs: const [Tab(text: 'Today'), Tab(text: 'All Patients')],
       ),
-    );
-  }
-
-  Widget? _buildFab(BuildContext context) {
-    final p = PermissionService.instance;
-    final canWalkin = p.can(Perm.opdPatientRegister);
-    final canPhone  = p.can(Perm.opdPatientRegisterPhone);
-
-    if (!canWalkin && !canPhone) return null;
-
-    if (canWalkin && canPhone) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton.small(
-            heroTag: 'fab_phone',
-            onPressed: () => _openAdd(context, PatientFormMode.addPhone),
-            backgroundColor: const Color(0xFF8E44AD),
-            tooltip: 'Phone Appointment',
-            child: const Icon(Icons.phone_in_talk_rounded,
-                color: Colors.white, size: 20),
-          ),
-          const SizedBox(height: 8),
-          FloatingActionButton(
-            heroTag: 'fab_walkin',
-            onPressed: () => _openAdd(context, PatientFormMode.addWalkIn),
-            backgroundColor: _teal,
-            tooltip: 'Walk-in Patient',
-            child: const Icon(Icons.person_add_alt_1_rounded,
-                color: Colors.white),
-          ),
-        ],
-      );
-    }
-
-    if (canPhone) {
-      return FloatingActionButton(
-        heroTag: 'fab_phone',
-        onPressed: () => _openAdd(context, PatientFormMode.addPhone),
-        backgroundColor: const Color(0xFF8E44AD),
-        tooltip: 'Phone Appointment',
-        child: const Icon(Icons.phone_in_talk_rounded, color: Colors.white),
-      );
-    }
-
-    return FloatingActionButton(
-      heroTag: 'fab_walkin',
-      onPressed: () => _openAdd(context, PatientFormMode.addWalkIn),
-      backgroundColor: _teal,
-      tooltip: 'Walk-in Patient',
-      child: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
     );
   }
 
@@ -264,8 +165,6 @@ class _PatientTabPage extends StatefulWidget {
 
 class _PatientTabPageState extends State<_PatientTabPage>
     with AutomaticKeepAliveClientMixin {
-  static const _navy = Color(0xFF1B4F72);
-
   @override
   bool get wantKeepAlive => true;
 
@@ -409,15 +308,12 @@ class _PatientTabPageState extends State<_PatientTabPage>
     try {
       await PatientService.instance.deletePatient(p.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Patient deleted.'),
-            backgroundColor: Color(0xFF27AE60)));
+        showAppSnackBar(context, 'Patient deleted.', isSuccess: true);
         _goToPage(_currentPage);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString()), backgroundColor: Colors.red));
+        showAppSnackBar(context, e.toString(), isError: true);
       }
     }
   }
@@ -484,7 +380,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
     return Stack(
       children: [
         RefreshIndicator(
-          color: _navy,
+          color: AppColors.primary,
           onRefresh: () => _goToPage(1),
           child: CustomScrollView(
             controller: _scrollCtrl,
@@ -500,12 +396,12 @@ class _PatientTabPageState extends State<_PatientTabPage>
           ),
         ),
         if (_refreshing)
-          const Positioned(
+          Positioned(
             top: 0, left: 0, right: 0,
             child: LinearProgressIndicator(
               minHeight: 2,
               backgroundColor: Colors.transparent,
-              color: _navy,
+              color: AppColors.primary,
             ),
           ),
       ],
@@ -580,7 +476,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-              color: _C.navyA12),
+              color: AppColors.primaryA12),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -590,10 +486,10 @@ class _PatientTabPageState extends State<_PatientTabPage>
               children: [
                 Text(
                   '$total patient${total == 1 ? '' : 's'}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1B4F72),
+                    color: AppColors.primary,
                   ),
                 ),
                 if (total > 0) ...[
@@ -601,7 +497,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
                     '  ·  $from–$to',
                     style: TextStyle(
                       fontSize: 12,
-                      color: _C.navyA45,
+                      color: AppColors.primaryA45,
                     ),
                   ),
                 ],
@@ -612,7 +508,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: _C.navyA50,
+                      color: AppColors.primaryA50,
                     ),
                   ),
               ],
@@ -689,8 +585,8 @@ class _PatientTabPageState extends State<_PatientTabPage>
                 child: _StatCard(
                   label: 'Total',
                   value: s?.total ?? 0,
-                  color: _navy,
-                  iconBg: _C.navyA12,
+                  color: AppColors.primary,
+                  iconBg: AppColors.primaryA12,
                   icon: Icons.groups_rounded,
                 ),
               ),
@@ -700,7 +596,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
                   label: 'Waiting',
                   value: s?.waiting ?? 0,
                   color: const Color(0xFFE67E22),
-                  iconBg: _C.orangeA12,
+                  iconBg: AppColors.orangeA12,
                   icon: Icons.hourglass_top_rounded,
                 ),
               ),
@@ -714,7 +610,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
                   label: 'Primary',
                   value: s?.primaryDone ?? 0,
                   color: const Color(0xFF006497),
-                  iconBg: _C.blue12,
+                  iconBg: AppColors.blueA12,
                   icon: Icons.assignment_turned_in_outlined,
                 ),
               ),
@@ -724,7 +620,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
                   label: 'Completed',
                   value: s?.completed ?? 0,
                   color: const Color(0xFF27AE60),
-                  iconBg: _C.greenA12,
+                  iconBg: AppColors.greenA12,
                   icon: Icons.task_alt_rounded,
                 ),
               ),
@@ -745,14 +641,14 @@ class _PatientTabPageState extends State<_PatientTabPage>
           hintText: 'Search by name, MRD or contact...',
           hintStyle: TextStyle(
               fontSize: 13,
-              color: _C.navyA45),
+              color: AppColors.primaryA45),
           prefixIcon: Icon(Icons.search_rounded,
-              color: _C.navyA55,
+              color: AppColors.primaryA55,
               size: 20),
           suffixIcon: _searchCtrl.text.isNotEmpty
               ? IconButton(
                   icon: Icon(Icons.close_rounded,
-                      color: _C.navyA55,
+                      color: AppColors.primaryA55,
                       size: 18),
                   onPressed: () {
                     _searchCtrl.clear();
@@ -765,18 +661,18 @@ class _PatientTabPageState extends State<_PatientTabPage>
           contentPadding:
               const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.md),
             borderSide: BorderSide(
-                color: _C.navyA18),
+                color: AppColors.primaryA18),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.md),
             borderSide: BorderSide(
-                color: _C.navyA18),
+                color: AppColors.primaryA18),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _navy, width: 1.5),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            borderSide: BorderSide(color: AppColors.primary, width: 1.5),
           ),
         ),
       ),
@@ -797,19 +693,19 @@ class _PatientTabPageState extends State<_PatientTabPage>
           children: [
             Icon(Icons.inbox_rounded,
                 size: 64,
-                color: _C.navyA22),
+                color: AppColors.primaryA22),
             const SizedBox(height: 14),
             Text('No patients found',
                 style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: _C.navyA70)),
+                    color: AppColors.primaryA70)),
             const SizedBox(height: 6),
             Text(msg,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 13,
-                    color: _C.navyA45)),
+                    color: AppColors.primaryA45)),
           ],
         ),
       ),
@@ -834,7 +730,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
               onPressed: () => _goToPage(_currentPage),
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(backgroundColor: _navy),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             ),
           ],
         ),
@@ -867,12 +763,12 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
         border: Border.all(
-            color: _C.navyA12),
+            color: AppColors.primaryA12),
         boxShadow: [
           BoxShadow(
-            color: _C.navyA06,
+            color: AppColors.primaryA06,
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -904,7 +800,7 @@ class _StatCard extends StatelessWidget {
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.6,
-                      color: _C.navyA55)),
+                      color: AppColors.primaryA55)),
             ],
           ),
         ],
@@ -942,27 +838,27 @@ class _PatientCard extends StatelessWidget {
   // Static decorations — allocated once, shared across all card instances.
   static final _cardDeco = BoxDecoration(
     color: Colors.white,
-    borderRadius: BorderRadius.circular(16),
-    border: Border.all(color: _C.navyA10),
+    borderRadius: BorderRadius.circular(AppRadius.lg),
+    border: Border.all(color: AppColors.primaryA10),
   );
   static final _avatarDeco =
-      BoxDecoration(color: _C.navy, borderRadius: BorderRadius.circular(10));
+      BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(10));
   static final _mrdDeco =
-      BoxDecoration(color: _C.navyA07, borderRadius: BorderRadius.circular(6));
+      BoxDecoration(color: AppColors.primaryA07, borderRadius: BorderRadius.circular(6));
   static final _typeDeco = BoxDecoration(
-    border: Border.all(color: _C.navyA28),
-    borderRadius: BorderRadius.circular(20),
+    border: Border.all(color: AppColors.primaryA28),
+    borderRadius: BorderRadius.circular(AppRadius.xl),
   );
   static final _completedDeco =
-      BoxDecoration(color: _C.tealA13, borderRadius: BorderRadius.circular(20));
+      BoxDecoration(color: AppColors.tealA13, borderRadius: BorderRadius.circular(AppRadius.xl));
   static final _primaryDoneDeco =
-      BoxDecoration(color: _C.navyA13, borderRadius: BorderRadius.circular(20));
+      BoxDecoration(color: AppColors.primaryA13, borderRadius: BorderRadius.circular(AppRadius.xl));
   static final _waitingDeco =
-      BoxDecoration(color: _C.orangeA13, borderRadius: BorderRadius.circular(20));
+      BoxDecoration(color: AppColors.orangeA13, borderRadius: BorderRadius.circular(AppRadius.xl));
   static final _vDiv = Container(
     width: 1,
     height: 22,
-    color: _C.navyA10,
+    color: AppColors.primaryA10,
     margin: const EdgeInsets.symmetric(horizontal: 2),
   );
 
@@ -988,14 +884,14 @@ class _PatientCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(p.fullName,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
-                              color: _C.navy)),
+                              color: AppColors.primary)),
                       const SizedBox(height: 3),
                       Text(
                         _subtitle(p),
-                        style: TextStyle(fontSize: 12, color: _C.navyA58),
+                        style: TextStyle(fontSize: 12, color: AppColors.primaryA58),
                       ),
                     ],
                   ),
@@ -1012,11 +908,11 @@ class _PatientCard extends StatelessWidget {
               children: [
                 if (p.doctor != null) ...[
                   Icon(Icons.person_outline_rounded,
-                      size: 13, color: _C.navyA50),
+                      size: 13, color: AppColors.primaryA50),
                   const SizedBox(width: 3),
                   Flexible(
                     child: Text(p.doctor!.name,
-                        style: TextStyle(fontSize: 12, color: _C.navyA60),
+                        style: TextStyle(fontSize: 12, color: AppColors.primaryA60),
                         overflow: TextOverflow.ellipsis),
                   ),
                   const SizedBox(width: 8),
@@ -1027,26 +923,27 @@ class _PatientCard extends StatelessWidget {
                 const Spacer(),
                 if (p.caseFee != null)
                   Text('₹${_fmt(p.caseFee!)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
-                          color: _C.navy)),
+                          color: AppColors.primary)),
               ],
             ),
 
             const SizedBox(height: 10),
-            Container(height: 1, color: _C.navyA08),
+            Container(height: 1, color: AppColors.primaryA08),
             const SizedBox(height: 8),
 
             // ── Actions ─────────────────────────────────────────
             Builder(builder: (context) {
-              final perm        = PermissionService.instance;
+              final perm          = PermissionService.instance;
               final showPrimary   = perm.can(Perm.opdExamPrimary);
               final showSecondary = perm.can(Perm.opdExamSecondary);
               final showHistory   = perm.can(Perm.opdExamHistory);
               final showPrint     = perm.can(Perm.opdBillPrint);
               final showEdit      = perm.can(Perm.opdPatientEdit);
               final showDelete    = perm.can(Perm.opdPatientDelete);
+              final showCheckIn   = perm.can(Perm.opdPatientRegister);
 
               // Secondary exam widget — same logic, referenced twice below.
               Widget secondaryWidget() => p.unlockTimeMs != null
@@ -1057,15 +954,15 @@ class _PatientCard extends StatelessWidget {
                       onExpired: _ActionBtn(
                         icon: Icons.remove_red_eye_outlined,
                         bg: p.secondaryDoneAt != null
-                            ? _C.tealA10
+                            ? AppColors.tealA10
                             : p.primaryDoneAt == null
-                                ? _C.greyA10
-                                : _C.purpleA12,
+                                ? AppColors.greyA10
+                                : AppColors.purpleA12,
                         fg: p.secondaryDoneAt != null
-                            ? _C.tealDark
+                            ? AppColors.tealDark
                             : p.primaryDoneAt == null
                                 ? Colors.grey
-                                : _C.purple,
+                                : AppColors.purple,
                         onTap: (p.secondaryDoneAt != null || p.primaryDoneAt == null)
                             ? null
                             : onSecondaryExam,
@@ -1075,15 +972,15 @@ class _PatientCard extends StatelessWidget {
                   : _ActionBtn(
                       icon: Icons.remove_red_eye_outlined,
                       bg: p.secondaryDoneAt != null
-                          ? _C.tealA10
+                          ? AppColors.tealA10
                           : p.primaryDoneAt == null
-                              ? _C.greyA10
-                              : _C.purpleA12,
+                              ? AppColors.greyA10
+                              : AppColors.purpleA12,
                       fg: p.secondaryDoneAt != null
-                          ? _C.tealDark
+                          ? AppColors.tealDark
                           : p.primaryDoneAt == null
                               ? Colors.grey
-                              : _C.purple,
+                              : AppColors.purple,
                       onTap: (p.secondaryDoneAt != null || p.primaryDoneAt == null)
                           ? null
                           : onSecondaryExam,
@@ -1095,8 +992,8 @@ class _PatientCard extends StatelessWidget {
                 children: [
                   _ActionBtn(
                     icon: Icons.info_outline_rounded,
-                    bg: _C.tealA12,
-                    fg: _C.tealDark,
+                    bg: AppColors.tealA12,
+                    fg: AppColors.tealDark,
                     onTap: onView,
                     tooltip: 'View',
                   ),
@@ -1104,8 +1001,8 @@ class _PatientCard extends StatelessWidget {
                   if (showPrimary)
                     _ActionBtn(
                       icon: Icons.assignment_outlined,
-                      bg: p.primaryDoneAt != null ? _C.tealA10 : _C.navyA10,
-                      fg: p.primaryDoneAt != null ? _C.tealDark : _C.navy,
+                      bg: p.primaryDoneAt != null ? AppColors.tealA10 : AppColors.primaryA10,
+                      fg: p.primaryDoneAt != null ? AppColors.tealDark : AppColors.primary,
                       onTap: p.primaryDoneAt != null ? null : onPrimaryExam,
                       tooltip: 'Primary Exam',
                     ),
@@ -1114,7 +1011,7 @@ class _PatientCard extends StatelessWidget {
                     _ActionBtn(
                       icon: Icons.history_rounded,
                       bg: Colors.transparent,
-                      fg: _C.navyA50,
+                      fg: AppColors.primaryA50,
                       onTap: onHistory,
                       tooltip: 'History',
                     ),
@@ -1122,7 +1019,7 @@ class _PatientCard extends StatelessWidget {
                     _ActionBtn(
                       icon: Icons.print_outlined,
                       bg: Colors.transparent,
-                      fg: _C.navyA50,
+                      fg: AppColors.primaryA50,
                       onTap: onPrint,
                       tooltip: 'Print',
                     ),
@@ -1130,7 +1027,7 @@ class _PatientCard extends StatelessWidget {
                     _ActionBtn(
                       icon: Icons.edit_outlined,
                       bg: Colors.transparent,
-                      fg: _C.navyA50,
+                      fg: AppColors.primaryA50,
                       onTap: onEdit,
                       tooltip: 'Edit',
                     ),
@@ -1138,16 +1035,16 @@ class _PatientCard extends StatelessWidget {
                     _ActionBtn(
                       icon: Icons.delete_outline_rounded,
                       bg: Colors.transparent,
-                      fg: _C.redA70,
+                      fg: AppColors.redA70,
                       onTap: onDelete,
                       tooltip: 'Delete',
                     ),
-                  if (p.type == 'phone' && p.caseId == null) ...[
+                  if (showCheckIn && p.type == 'phone' && p.caseId == null) ...[
                     _vDiv,
                     _ActionBtn(
                       icon: Icons.how_to_reg_rounded,
-                      bg: _C.greenA12,
-                      fg: _C.green,
+                      bg: AppColors.greenA12,
+                      fg: AppColors.green,
                       onTap: onCheckIn,
                       tooltip: 'Check-in',
                     ),
@@ -1185,19 +1082,19 @@ class _PatientCard extends StatelessWidget {
           'Completed',
           Icons.check_circle_outline_rounded,
           _completedDeco,
-          _C.tealDark,
+          AppColors.tealDark,
         ),
       PatientStatus.primaryDone => (
           'Primary Done',
           Icons.assignment_turned_in_outlined,
           _primaryDoneDeco,
-          _C.navy,
+          AppColors.primary,
         ),
       PatientStatus.waiting => (
           'Waiting',
           Icons.hourglass_top_rounded,
           _waitingDeco,
-          _C.orange,
+          AppColors.orange,
         ),
     };
     return Container(
@@ -1220,11 +1117,11 @@ class _PatientCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: _mrdDeco,
         child: Text(code,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'monospace',
-                color: _C.navy)),
+                color: AppColors.primary)),
       );
 
   Widget _typeBadge(String type) => Container(
@@ -1233,7 +1130,7 @@ class _PatientCard extends StatelessWidget {
         child: Text(
           type == 'walkin' ? 'Walk-in' : 'Phone',
           style:
-              TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _C.navyA70),
+              TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primaryA70),
         ),
       );
 
@@ -1315,7 +1212,7 @@ class _ActionBtn extends StatelessWidget {
         height: 34,
         margin: const EdgeInsets.symmetric(horizontal: 1),
         decoration:
-            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(AppRadius.sm)),
         child: Icon(icon, size: 18, color: effectiveFg),
       ),
     );
@@ -1335,8 +1232,8 @@ class _DilationBtn extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 1),
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: _C.orangeA14,
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.orangeA14,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       alignment: Alignment.center,
       child: Row(
@@ -1367,8 +1264,8 @@ class _PagArrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = enabled
-        ? const Color(0xFF1B4F72)
-        : _C.navyA22;
+        ? AppColors.primary
+        : AppColors.primaryA22;
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: Container(
@@ -1376,11 +1273,11 @@ class _PagArrow extends StatelessWidget {
         height: 30,
         decoration: BoxDecoration(
           color: enabled
-              ? _C.navyA07
+              ? AppColors.primaryA07
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
           border: Border.all(
-              color: _C.navyA15),
+              color: AppColors.primaryA15),
         ),
         child: Icon(icon, size: 18, color: color),
       ),
@@ -1407,13 +1304,13 @@ class _PagNum extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 2),
         decoration: BoxDecoration(
           color: active
-              ? const Color(0xFF1B4F72)
+              ? AppColors.primary
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
           border: Border.all(
               color: active
-                  ? const Color(0xFF1B4F72)
-                  : _C.navyA18),
+                  ? AppColors.primary
+                  : AppColors.primaryA18),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -1421,7 +1318,7 @@ class _PagNum extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: active ? Colors.white : const Color(0xFF1B4F72),
+            color: active ? Colors.white : AppColors.primary,
           ),
         ),
       ),
@@ -1443,7 +1340,7 @@ class _PagDot extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           letterSpacing: 1,
-          color: _C.navyA35,
+          color: AppColors.primaryA35,
         ),
       ),
     );
@@ -1461,9 +1358,6 @@ class _PatientDetailSheet extends StatelessWidget {
     required this.onEdit,
   });
 
-  static const _navy = Color(0xFF1B4F72);
-  static const _teal = Color(0xFF1ABC9C);
-
   @override
   Widget build(BuildContext context) {
     final p = patient;
@@ -1475,7 +1369,7 @@ class _PatientDetailSheet extends StatelessWidget {
       builder: (ctx, ctrl) => Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         ),
         child: Column(
           children: [
@@ -1520,7 +1414,7 @@ class _PatientDetailSheet extends StatelessWidget {
                               icon: const Icon(Icons.edit_outlined, size: 16),
                               label: const Text('Edit Patient'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: _navy,
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
@@ -1536,7 +1430,7 @@ class _PatientDetailSheet extends StatelessWidget {
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               side: BorderSide(
-                                  color: _C.navyA35),
+                                  color: AppColors.primaryA35),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10)),
                             ),
@@ -1563,7 +1457,7 @@ class _PatientDetailSheet extends StatelessWidget {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-              color: _navy, borderRadius: BorderRadius.circular(14)),
+              color: AppColors.primary, borderRadius: BorderRadius.circular(14)),
           alignment: Alignment.center,
           child: Text(
             p.firstName.isNotEmpty ? p.firstName[0].toUpperCase() : '?',
@@ -1579,14 +1473,14 @@ class _PatientDetailSheet extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(p.fullName,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: _navy)),
+                      color: AppColors.primary)),
               const SizedBox(height: 4),
               Row(children: [
                 _chip(p.patientCode,
-                    bg: _C.navyA08, fg: _navy),
+                    bg: AppColors.primaryA08, fg: AppColors.primary),
                 const SizedBox(width: 6),
                 _statusChip(p.status),
               ]),
@@ -1596,17 +1490,17 @@ class _PatientDetailSheet extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                      color: _C.navyA07,
-                      borderRadius: BorderRadius.circular(20)),
+                      color: AppColors.primaryA07,
+                      borderRadius: BorderRadius.circular(AppRadius.xl)),
                   child: Text(
                     [
                       if (p.age != null) '${p.age}y',
                       if (p.gender != null) p.genderDisplay,
                     ].join(' · '),
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _navy),
+                        color: AppColors.primary),
                   ),
                 ),
               ],
@@ -1621,8 +1515,8 @@ class _PatientDetailSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-          color: _C.navyA05,
-          borderRadius: BorderRadius.circular(12)),
+          color: AppColors.primaryA05,
+          borderRadius: BorderRadius.circular(AppRadius.md)),
       child: Row(
         children: [
           _apptItem(Icons.calendar_today_outlined, 'Appointment',
@@ -1645,29 +1539,29 @@ class _PatientDetailSheet extends StatelessWidget {
       Expanded(
         child: Column(
           children: [
-            Icon(icon, size: 14, color: _C.navyA55),
+            Icon(icon, size: 14, color: AppColors.primaryA55),
             const SizedBox(height: 3),
             Text(label,
                 style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
-                    color: _C.navyA55)),
+                    color: AppColors.primaryA55)),
             const SizedBox(height: 2),
             Text(value,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: _navy)),
+                    color: AppColors.primary)),
           ],
         ),
       );
 
   Widget _apptDiv() => Container(
-      width: 1, height: 36, color: _C.navyA12);
+      width: 1, height: 36, color: AppColors.primaryA12);
 
   Widget _personalCard(Patient p) => _infoCard(
-        bg: _C.navyA06,
+        bg: AppColors.primaryA06,
         title: 'Personal',
         items: [
           _InfoRow(Icons.work_outline_rounded, 'Occupation',
@@ -1680,7 +1574,7 @@ class _PatientDetailSheet extends StatelessWidget {
       );
 
   Widget _contactCard(Patient p) => _infoCard(
-        bg: _C.tealA06,
+        bg: AppColors.tealA06,
         title: 'Contact',
         items: [
           _InfoRow(Icons.phone_outlined, 'Phone', p.contactNo ?? '—'),
@@ -1697,7 +1591,7 @@ class _PatientDetailSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-          color: bg, borderRadius: BorderRadius.circular(12)),
+          color: bg, borderRadius: BorderRadius.circular(AppRadius.md)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1706,7 +1600,7 @@ class _PatientDetailSheet extends StatelessWidget {
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.2,
-                  color: _C.navyA60)),
+                  color: AppColors.primaryA60)),
           const SizedBox(height: 8),
           ...items.map((r) => Padding(
                 padding: const EdgeInsets.only(bottom: 7),
@@ -1715,7 +1609,7 @@ class _PatientDetailSheet extends StatelessWidget {
                   children: [
                     Icon(r.icon,
                         size: 13,
-                        color: _C.navyA55),
+                        color: AppColors.primaryA55),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Column(
@@ -1724,12 +1618,12 @@ class _PatientDetailSheet extends StatelessWidget {
                           Text(r.label,
                               style: TextStyle(
                                   fontSize: 9,
-                                  color: _C.navyA50)),
+                                  color: AppColors.primaryA50)),
                           Text(r.value,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: _navy)),
+                                  color: AppColors.primary)),
                         ],
                       ),
                     ),
@@ -1744,9 +1638,9 @@ class _PatientDetailSheet extends StatelessWidget {
   Widget _examCard(Patient p) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _C.navyA04,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _C.navyA10),
+          color: AppColors.primaryA04,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.primaryA10),
         ),
         child: Row(
           children: [
@@ -1756,7 +1650,7 @@ class _PatientDetailSheet extends StatelessWidget {
             Container(
                 width: 1,
                 height: 60,
-                color: _C.navyA12),
+                color: AppColors.primaryA12),
             Expanded(
                 child: _examStatus('SECONDARY',
                     Icons.remove_red_eye_outlined, p.secondaryDoneAt)),
@@ -1772,7 +1666,7 @@ class _PatientDetailSheet extends StatelessWidget {
         children: [
           Icon(
             done ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
-            color: done ? _teal : Colors.grey.shade400,
+            color: done ? AppColors.teal : Colors.grey.shade400,
             size: 28,
           ),
           const SizedBox(height: 4),
@@ -1781,14 +1675,14 @@ class _PatientDetailSheet extends StatelessWidget {
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1,
-                  color: _C.navyA60)),
+                  color: AppColors.primaryA60)),
           const SizedBox(height: 2),
           Text(done ? _fmtDate(doneAt) : 'Pending',
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: done ? _teal : Colors.grey.shade400)),
+                  color: done ? AppColors.teal : Colors.grey.shade400)),
         ],
       ),
     );
@@ -1809,17 +1703,17 @@ class _PatientDetailSheet extends StatelessWidget {
     final (label, bg, fg) = switch (status) {
       PatientStatus.completed => (
           'Completed',
-          _C.tealA13,
+          AppColors.tealA13,
           const Color(0xFF0E9E82),
         ),
       PatientStatus.primaryDone => (
           'Primary Done',
-          _C.navyA13,
-          const Color(0xFF1B4F72),
+          AppColors.primaryA13,
+          AppColors.primary,
         ),
       PatientStatus.waiting => (
           'Waiting',
-          _C.orangeA13,
+          AppColors.orangeA13,
           const Color(0xFFE67E22),
         ),
     };

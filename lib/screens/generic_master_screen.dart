@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 import '../services/simple_master_service.dart';
+import '../widgets/widgets.dart';
 
 class GenericMasterScreen extends StatefulWidget {
   final String title;
@@ -26,10 +29,6 @@ class GenericMasterScreen extends StatefulWidget {
 }
 
 class _GenericMasterScreenState extends State<GenericMasterScreen> {
-  static const _navy   = Color(0xFF1B4F72);
-  static const _red    = Color(0xFFDC3545);
-  static const _bg     = Color(0xFFEAF2F8);
-
   List<SimpleMasterItem> _all = [];
   bool _loading = false;
   String? _error;
@@ -84,7 +83,8 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg)),
         title: const Text('Delete?', style: TextStyle(fontWeight: FontWeight.w800)),
         content: Text('Delete "${item.value}"? This cannot be undone.'),
         actions: [
@@ -94,7 +94,9 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: _red, fontWeight: FontWeight.w700)),
+            child: const Text('Delete',
+                style: TextStyle(
+                    color: AppColors.red, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -105,6 +107,7 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
       await _load();
     } catch (e) {
       if (mounted) _snack(e.toString().replaceFirst('Exception: ', ''), error: true);
+      _load();
     }
   }
 
@@ -137,12 +140,7 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
   }
 
   void _snack(String msg, {bool error = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: error ? _red : _navy,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ));
+    showAppSnackBar(context, msg, isError: error);
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -150,12 +148,13 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.backgroundAlt,
       appBar: AppBar(
-        backgroundColor: _navy,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Colors.white, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -191,20 +190,20 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
         height: 44,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _navy.withValues(alpha: 0.12)),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.primaryA12),
           boxShadow: [
-            BoxShadow(color: _navy.withValues(alpha: 0.05), blurRadius: 8)
+            BoxShadow(color: AppColors.primaryA05, blurRadius: 8)
           ],
         ),
         child: TextField(
           onChanged: (v) => setState(() => _query = v.trim()),
-          style: const TextStyle(fontSize: 13.5, color: Color(0xFF1A3A52)),
+          style: const TextStyle(fontSize: 13.5, color: AppColors.darkNavy),
           decoration: InputDecoration(
             hintText: 'Search ${widget.title.toLowerCase()}...',
-            hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-            prefixIcon:
-                const Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 20),
+            hintStyle: const TextStyle(color: AppColors.textDisabled, fontSize: 13),
+            prefixIcon: const Icon(Icons.search_rounded,
+                color: AppColors.textDisabled, size: 20),
             border: InputBorder.none,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -216,7 +215,8 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: _navy));
+      return Center(
+          child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (_error != null) {
       return Center(
@@ -226,18 +226,19 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.error_outline_rounded,
-                  size: 48, color: _red.withValues(alpha: 0.6)),
+                  size: 48, color: AppColors.red.withValues(alpha: 0.6)),
               const SizedBox(height: 12),
               Text(_error!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF64748B))),
+                  style: const TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _load,
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: _navy, foregroundColor: Colors.white),
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white),
               ),
             ],
           ),
@@ -253,8 +254,7 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
           Center(
             child: Column(
               children: [
-                Icon(widget.icon,
-                    size: 56, color: _navy.withValues(alpha: 0.15)),
+                Icon(widget.icon, size: 56, color: AppColors.primaryA15),
                 const SizedBox(height: 12),
                 Text(
                   _query.isNotEmpty
@@ -262,7 +262,7 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
                       : 'No ${widget.title.toLowerCase()} yet.\nTap + to add one.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                      color: Color(0xFF94A3B8),
+                      color: AppColors.textDisabled,
                       fontSize: 14,
                       fontWeight: FontWeight.w500),
                 ),
@@ -274,7 +274,7 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
     }
 
     return RefreshIndicator(
-      color: _navy,
+      color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -324,11 +324,10 @@ class _ItemRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-              color: const Color(0xFF1B4F72).withValues(alpha: 0.08)),
+          border: Border.all(color: AppColors.primaryA08),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF1B4F72).withValues(alpha: 0.05),
+              color: AppColors.primaryA05,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -343,7 +342,7 @@ class _ItemRow extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: accentColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Text(
                 '${index + 1}',
@@ -362,7 +361,7 @@ class _ItemRow extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1A3A52),
+                  color: AppColors.darkNavy,
                 ),
               ),
             ),
@@ -378,7 +377,7 @@ class _ItemRow extends StatelessWidget {
                         : Icons.star_border_rounded,
                     size: 22,
                     color: item.isFavourite
-                        ? const Color(0xFFE67E22)
+                        ? AppColors.orange
                         : const Color(0xFFCBD5E1),
                   ),
                 ),
@@ -388,18 +387,18 @@ class _ItemRow extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8),
                 child: Icon(Icons.lock_outline_rounded,
-                    size: 18, color: Color(0xFF94A3B8)),
+                    size: 18, color: AppColors.textDisabled),
               )
             else ...[
               _Btn(
                 icon: Icons.edit_outlined,
-                color: const Color(0xFFE67E22),
+                color: AppColors.orange,
                 onTap: onEdit,
               ),
               const SizedBox(width: 2),
               _Btn(
                 icon: Icons.delete_outline_rounded,
-                color: const Color(0xFFDC3545),
+                color: AppColors.red,
                 onTap: onDelete,
               ),
             ],
@@ -420,7 +419,7 @@ class _Btn extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadius.sm),
       child: Padding(
         padding: const EdgeInsets.all(6),
         child: Icon(icon, size: 18, color: color),
@@ -453,8 +452,6 @@ class _MasterSheet extends StatefulWidget {
 }
 
 class _MasterSheetState extends State<_MasterSheet> {
-  static const _navy = Color(0xFF1B4F72);
-
   late final TextEditingController _ctrl;
   late bool _fav;
   bool _saving = false;
@@ -486,12 +483,11 @@ class _MasterSheetState extends State<_MasterSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: const Color(0xFFDC3545),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          isError: true,
+        );
       }
     }
   }
@@ -510,7 +506,7 @@ class _MasterSheetState extends State<_MasterSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: _navy.withValues(alpha: 0.18),
+              color: AppColors.primaryA18,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -535,13 +531,13 @@ class _MasterSheetState extends State<_MasterSheet> {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A3A52),
+                      color: AppColors.darkNavy,
                     ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded,
-                      size: 20, color: Color(0xFF94A3B8)),
+                      size: 20, color: AppColors.textDisabled),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -558,13 +554,13 @@ class _MasterSheetState extends State<_MasterSheet> {
                 labelText: 'Value',
                 errorText: _fieldError,
                 filled: true,
-                fillColor: const Color(0xFFF0F6FB),
+                fillColor: AppColors.surfaceFill,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide(color: widget.accentColor, width: 1.5),
                 ),
               ),
@@ -581,21 +577,20 @@ class _MasterSheetState extends State<_MasterSheet> {
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1A3A52)),
+                      color: AppColors.darkNavy),
                 ),
                 subtitle: Text(
                   _fav ? 'Appears at top of list' : 'Standard order',
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                  style: const TextStyle(
+                      fontSize: 11, color: AppColors.textSecondary),
                 ),
                 secondary: Icon(
                   _fav ? Icons.star_rounded : Icons.star_border_rounded,
-                  color: _fav
-                      ? const Color(0xFFE67E22)
-                      : const Color(0xFF94A3B8),
+                  color: _fav ? AppColors.orange : AppColors.textDisabled,
                 ),
                 value: _fav,
-                activeThumbColor: _navy,
-                activeTrackColor: _navy.withValues(alpha: 0.35),
+                activeThumbColor: AppColors.primary,
+                activeTrackColor: AppColors.primaryA35,
                 onChanged: (v) => setState(() => _fav = v),
               ),
             ),
@@ -610,7 +605,7 @@ class _MasterSheetState extends State<_MasterSheet> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     child: const Text('Cancel'),
                   ),
@@ -621,11 +616,11 @@ class _MasterSheetState extends State<_MasterSheet> {
                   child: ElevatedButton(
                     onPressed: _saving ? null : _save,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _navy,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     child: _saving
                         ? const SizedBox(

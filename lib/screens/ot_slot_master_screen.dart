@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
+import '../widgets/app_animations.dart';
 import '../services/ot_slot_service.dart';
 
 class OtSlotMasterScreen extends StatefulWidget {
@@ -14,10 +17,6 @@ class OtSlotMasterScreen extends StatefulWidget {
 }
 
 class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
-  static const _navy = Color(0xFF1B4F72);
-  static const _red  = Color(0xFFDC3545);
-  static const _bg   = Color(0xFFEAF2F8);
-
   List<OtSlotItem> _all = [];
   bool _loading = false;
   String? _error;
@@ -56,7 +55,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
         title: const Text('Delete?',
             style: TextStyle(fontWeight: FontWeight.w800)),
         content: Text('Delete "${item.slotName}"? This cannot be undone.'),
@@ -68,7 +67,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete',
-                style: TextStyle(color: _red, fontWeight: FontWeight.w700)),
+                style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -79,8 +78,9 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
       await _load();
     } catch (e) {
       if (mounted) {
-        _snack(e.toString().replaceFirst('Exception: ', ''), error: true);
+        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
       }
+      _load();
     }
   }
 
@@ -107,14 +107,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
     );
   }
 
-  void _snack(String msg, {bool error = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: error ? _red : _navy,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ));
-  }
+
 
   // Formats "HH:MM:SS" or "HH:MM" → "HH:MM" (strips seconds if present)
   static String _fmt(String? t) {
@@ -127,9 +120,9 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.backgroundAlt,
       appBar: AppBar(
-        backgroundColor: _navy,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -169,18 +162,18 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
         height: 44,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _navy.withValues(alpha: 0.12)),
-          boxShadow: [BoxShadow(color: _navy.withValues(alpha: 0.05), blurRadius: 8)],
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 8)],
         ),
         child: TextField(
           onChanged: (v) => setState(() => _query = v.trim()),
-          style: const TextStyle(fontSize: 13.5, color: Color(0xFF1A3A52)),
+          style: const TextStyle(fontSize: 13.5, color: AppColors.darkNavy),
           decoration: const InputDecoration(
             hintText: 'Search OT slots...',
-            hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+            hintStyle: TextStyle(color: AppColors.textDisabled, fontSize: 13),
             prefixIcon: Icon(Icons.search_rounded,
-                color: Color(0xFF94A3B8), size: 20),
+                color: AppColors.textDisabled, size: 20),
             border: InputBorder.none,
             contentPadding:
                 EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -192,7 +185,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: _navy));
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (_error != null) {
       return Center(
@@ -202,18 +195,18 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.error_outline_rounded,
-                  size: 48, color: _red.withValues(alpha: 0.6)),
+                  size: 48, color: AppColors.red.withValues(alpha: 0.6)),
               const SizedBox(height: 12),
               Text(_error!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF64748B))),
+                  style: const TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _load,
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: _navy, foregroundColor: Colors.white),
+                    backgroundColor: AppColors.primary, foregroundColor: Colors.white),
               ),
             ],
           ),
@@ -228,7 +221,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
         Center(
           child: Column(children: [
             Icon(Icons.schedule_rounded,
-                size: 56, color: _navy.withValues(alpha: 0.15)),
+                size: 56, color: AppColors.primary.withValues(alpha: 0.15)),
             const SizedBox(height: 12),
             Text(
               _query.isNotEmpty
@@ -236,7 +229,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
                   : 'No OT slots yet.\nTap + to add one.',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  color: Color(0xFF94A3B8),
+                  color: AppColors.textDisabled,
                   fontSize: 14,
                   fontWeight: FontWeight.w500),
             ),
@@ -246,7 +239,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
     }
 
     return RefreshIndicator(
-      color: _navy,
+      color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -262,9 +255,9 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _navy.withValues(alpha: 0.08)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
                 boxShadow: [BoxShadow(
-                  color: _navy.withValues(alpha: 0.05),
+                  color: AppColors.primary.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )],
@@ -277,7 +270,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: widget.accentColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: Text('${i + 1}',
                         style: TextStyle(
@@ -293,7 +286,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A3A52),
+                          color: AppColors.darkNavy,
                         )),
                   ),
                   // Time range badge
@@ -303,7 +296,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: widget.accentColor.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -327,22 +320,22 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
                   // Edit
                   InkWell(
                     onTap: () => _openSheet(item: item),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
                       child: Icon(Icons.edit_outlined,
-                          size: 18, color: Color(0xFFE67E22)),
+                          size: 18, color: AppColors.orange),
                     ),
                   ),
                   const SizedBox(width: 2),
                   // Delete
                   InkWell(
                     onTap: () => _delete(item),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
                       child: Icon(Icons.delete_outline_rounded,
-                          size: 18, color: _red),
+                          size: 18, color: AppColors.red),
                     ),
                   ),
                 ],
@@ -374,13 +367,13 @@ class _OtSlotSheet extends StatefulWidget {
 }
 
 class _OtSlotSheetState extends State<_OtSlotSheet> {
-  static const _navy = Color(0xFF1B4F72);
-
   late final TextEditingController _nameCtrl;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
   bool _saving = false;
   String? _nameError;
+  String? _startError;
+  String? _endError;
 
   @override
   void initState() {
@@ -433,8 +426,10 @@ class _OtSlotSheetState extends State<_OtSlotSheet> {
       setState(() {
         if (isStart) {
           _startTime = picked;
+          _startError = null;
         } else {
           _endTime = picked;
+          _endError = null;
         }
       });
     }
@@ -442,10 +437,18 @@ class _OtSlotSheetState extends State<_OtSlotSheet> {
 
   Future<void> _save() async {
     final name = _nameCtrl.text.trim();
+    final startMin = _startTime != null ? _startTime!.hour * 60 + _startTime!.minute : null;
+    final endMin   = _endTime   != null ? _endTime!.hour   * 60 + _endTime!.minute   : null;
     setState(() {
-      _nameError = name.isEmpty ? 'Slot name is required' : null;
+      _nameError  = name.isEmpty ? 'Slot name is required' : null;
+      _startError = _startTime == null ? 'Start time required' : null;
+      _endError   = _endTime == null
+          ? 'End time required'
+          : (endMin != null && startMin != null && endMin <= startMin)
+              ? 'End time must be after start time'
+              : null;
     });
-    if (_nameError != null) return;
+    if (_nameError != null || _startError != null || _endError != null) return;
 
     setState(() => _saving = true);
     try {
@@ -458,12 +461,7 @@ class _OtSlotSheetState extends State<_OtSlotSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: const Color(0xFFDC3545),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
       }
     }
   }
@@ -481,7 +479,7 @@ class _OtSlotSheetState extends State<_OtSlotSheet> {
             margin: const EdgeInsets.only(top: 10, bottom: 4),
             width: 40, height: 4,
             decoration: BoxDecoration(
-              color: _navy.withValues(alpha: 0.18),
+              color: AppColors.primary.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -506,13 +504,13 @@ class _OtSlotSheetState extends State<_OtSlotSheet> {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A3A52),
+                      color: AppColors.darkNavy,
                     ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded,
-                      size: 20, color: Color(0xFF94A3B8)),
+                      size: 20, color: AppColors.textDisabled),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -529,13 +527,13 @@ class _OtSlotSheetState extends State<_OtSlotSheet> {
                 labelText: 'Slot Name *',
                 errorText: _nameError,
                 filled: true,
-                fillColor: const Color(0xFFF0F6FB),
+                fillColor: AppColors.surfaceFill,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide:
                       BorderSide(color: widget.accentColor, width: 1.5),
                 ),
@@ -548,21 +546,23 @@ class _OtSlotSheetState extends State<_OtSlotSheet> {
             child: Row(
               children: [
                 Expanded(child: _TimePicker(
-                  label: 'Start Time',
+                  label: 'Start Time *',
                   value: _displayTime(_startTime),
                   accentColor: widget.accentColor,
                   hasValue: _startTime != null,
+                  errorText: _startError,
                   onTap: () => _pickTime(true),
-                  onClear: () => setState(() => _startTime = null),
+                  onClear: () => setState(() { _startTime = null; _startError = null; }),
                 )),
                 const SizedBox(width: 12),
                 Expanded(child: _TimePicker(
-                  label: 'End Time',
+                  label: 'End Time *',
                   value: _displayTime(_endTime),
                   accentColor: widget.accentColor,
                   hasValue: _endTime != null,
+                  errorText: _endError,
                   onTap: () => _pickTime(false),
-                  onClear: () => setState(() => _endTime = null),
+                  onClear: () => setState(() { _endTime = null; _endError = null; }),
                 )),
               ],
             ),
@@ -578,7 +578,7 @@ class _OtSlotSheetState extends State<_OtSlotSheet> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     child: const Text('Cancel'),
                   ),
@@ -589,11 +589,11 @@ class _OtSlotSheetState extends State<_OtSlotSheet> {
                   child: ElevatedButton(
                     onPressed: _saving ? null : _save,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _navy,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     child: _saving
                         ? const SizedBox(
@@ -621,6 +621,7 @@ class _TimePicker extends StatelessWidget {
   final String value;
   final Color accentColor;
   final bool hasValue;
+  final String? errorText;
   final VoidCallback onTap;
   final VoidCallback onClear;
 
@@ -631,17 +632,21 @@ class _TimePicker extends StatelessWidget {
     required this.hasValue,
     required this.onTap,
     required this.onClear,
+    this.errorText,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+      GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF0F6FB),
-          borderRadius: BorderRadius.circular(12),
+          color: AppColors.surfaceFill,
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
             color: hasValue
                 ? accentColor.withValues(alpha: 0.4)
@@ -653,7 +658,7 @@ class _TimePicker extends StatelessWidget {
           children: [
             Icon(Icons.access_time_rounded,
                 size: 16,
-                color: hasValue ? accentColor : const Color(0xFF94A3B8)),
+                color: hasValue ? accentColor : AppColors.textDisabled),
             const SizedBox(width: 6),
             Expanded(
               child: Column(
@@ -662,7 +667,7 @@ class _TimePicker extends StatelessWidget {
                   Text(label,
                       style: const TextStyle(
                           fontSize: 10,
-                          color: Color(0xFF94A3B8),
+                          color: AppColors.textDisabled,
                           fontWeight: FontWeight.w500)),
                   Text(value,
                       style: TextStyle(
@@ -670,7 +675,7 @@ class _TimePicker extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         color: hasValue
                             ? accentColor
-                            : const Color(0xFF94A3B8),
+                            : AppColors.textDisabled,
                       )),
                 ],
               ),
@@ -684,6 +689,16 @@ class _TimePicker extends StatelessWidget {
           ],
         ),
       ),
+      ),
+      if (errorText != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 4, left: 4),
+          child: Text(
+            errorText!,
+            style: const TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
     );
   }
 }

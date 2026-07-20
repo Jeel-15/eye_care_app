@@ -1,22 +1,14 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/patient_models.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 import 'cache_service.dart';
 
-class PatientService {
+class PatientService with AuthenticatedService {
   PatientService._();
   static final PatientService instance = PatientService._();
 
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
 
   // ── Patients List ────────────────────────────────────────────────────────
 
@@ -51,12 +43,13 @@ class PatientService {
       'all': showAll ? '1' : '0',
       if (search.isNotEmpty) 'search': search,
       'page': page.toString(),
+      'per_page': '20',
     };
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/patients')
         .replace(queryParameters: params);
 
     final resp = await http
-        .get(uri, headers: await _headers)
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
     if (resp.statusCode != 200) {
@@ -86,7 +79,7 @@ class PatientService {
   Future<String> fetchNextMrd() async {
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/patients/next-mrd');
     final resp = await http
-        .get(uri, headers: await _headers)
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
     if (resp.statusCode != 200) {
@@ -103,7 +96,7 @@ class PatientService {
         .replace(queryParameters: {'contact': contact});
 
     final resp = await http
-        .get(uri, headers: await _headers)
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
     if (resp.statusCode != 200) return [];
@@ -121,7 +114,7 @@ class PatientService {
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/patients');
     final resp = await http
         .post(uri,
-            headers: await _headers,
+            headers: await headers,
             body: jsonEncode(data))
         .timeout(AppConfig.requestTimeout);
 
@@ -139,7 +132,7 @@ class PatientService {
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/patients/phone');
     final resp = await http
         .post(uri,
-            headers: await _headers,
+            headers: await headers,
             body: jsonEncode(data))
         .timeout(AppConfig.requestTimeout);
 
@@ -157,7 +150,7 @@ class PatientService {
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/patients/$id');
     final resp = await http
         .put(uri,
-            headers: await _headers,
+            headers: await headers,
             body: jsonEncode(data))
         .timeout(AppConfig.requestTimeout);
 
@@ -174,7 +167,7 @@ class PatientService {
   Future<void> deletePatient(int id) async {
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/patients/$id');
     final resp = await http
-        .delete(uri, headers: await _headers)
+        .delete(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
     if (resp.statusCode != 200) {
@@ -189,7 +182,7 @@ class PatientService {
         Uri.parse('${AppConfig.hospitalApiUrl}/patients/$patientId/checkin');
     final resp = await http
         .post(uri,
-            headers: await _headers,
+            headers: await headers,
             body: jsonEncode(data))
         .timeout(AppConfig.requestTimeout);
 

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../constants/app_colors.dart';
+import '../utils/phone_rules.dart';
+import '../constants/app_radius.dart';
+import '../widgets/app_animations.dart';
 import '../services/referrer_service.dart';
+import '../services/masters_service.dart';
 
 class ReferrerMasterScreen extends StatefulWidget {
   final Color accentColor;
@@ -15,10 +20,6 @@ class ReferrerMasterScreen extends StatefulWidget {
 }
 
 class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
-  static const _navy = Color(0xFF1B4F72);
-  static const _red  = Color(0xFFDC3545);
-  static const _bg   = Color(0xFFEAF2F8);
-
   List<ReferrerItem> _all = [];
   bool _loading = false;
   String? _error;
@@ -58,7 +59,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
         title: const Text('Delete?',
             style: TextStyle(fontWeight: FontWeight.w800)),
         content: Text('Delete "${item.name}"? This cannot be undone.'),
@@ -70,7 +71,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete',
-                style: TextStyle(color: _red, fontWeight: FontWeight.w700)),
+                style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -78,11 +79,13 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
     if (ok != true || !mounted) return;
     try {
       await ReferrerService.instance.delete(item.id);
+      MastersService.instance.clearCache();
       await _load();
     } catch (e) {
       if (mounted) {
-        _snack(e.toString().replaceFirst('Exception: ', ''), error: true);
+        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
       }
+      _load();
     }
   }
 
@@ -103,27 +106,21 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
           } else {
             await ReferrerService.instance.update(item.id, name, contact);
           }
+          MastersService.instance.clearCache();
           await _load();
         },
       ),
     );
   }
 
-  void _snack(String msg, {bool error = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: error ? _red : _navy,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ));
-  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.backgroundAlt,
       appBar: AppBar(
-        backgroundColor: _navy,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -163,9 +160,9 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
         height: 44,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _navy.withValues(alpha: 0.12)),
-          boxShadow: [BoxShadow(color: _navy.withValues(alpha: 0.05), blurRadius: 8)],
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 8)],
         ),
         child: TextField(
           onChanged: (v) => setState(() => _query = v.trim()),
@@ -186,7 +183,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: _navy));
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (_error != null) {
       return Center(
@@ -196,7 +193,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.error_outline_rounded,
-                  size: 48, color: _red.withValues(alpha: 0.6)),
+                  size: 48, color: AppColors.red.withValues(alpha: 0.6)),
               const SizedBox(height: 12),
               Text(_error!,
                   textAlign: TextAlign.center,
@@ -207,7 +204,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: _navy, foregroundColor: Colors.white),
+                    backgroundColor: AppColors.primary, foregroundColor: Colors.white),
               ),
             ],
           ),
@@ -222,7 +219,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
         Center(
           child: Column(children: [
             Icon(Icons.people_alt_rounded,
-                size: 56, color: _navy.withValues(alpha: 0.15)),
+                size: 56, color: AppColors.primary.withValues(alpha: 0.15)),
             const SizedBox(height: 12),
             Text(
               _query.isNotEmpty
@@ -240,7 +237,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
     }
 
     return RefreshIndicator(
-      color: _navy,
+      color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -257,9 +254,9 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _navy.withValues(alpha: 0.08)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
                 boxShadow: [BoxShadow(
-                  color: _navy.withValues(alpha: 0.05),
+                  color: AppColors.primary.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )],
@@ -272,7 +269,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: widget.accentColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: Text('${i + 1}',
                         style: TextStyle(
@@ -298,7 +295,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: widget.accentColor.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -323,7 +320,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
                   // Edit
                   InkWell(
                     onTap: () => _openSheet(item: item),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
                       child: Icon(Icons.edit_outlined,
@@ -334,11 +331,11 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
                   // Delete
                   InkWell(
                     onTap: () => _delete(item),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
                       child: Icon(Icons.delete_outline_rounded,
-                          size: 18, color: _red),
+                          size: 18, color: AppColors.red),
                     ),
                   ),
                 ],
@@ -369,12 +366,11 @@ class _ReferrerSheet extends StatefulWidget {
 }
 
 class _ReferrerSheetState extends State<_ReferrerSheet> {
-  static const _navy = Color(0xFF1B4F72);
-
   late final TextEditingController _nameCtrl;
   late final TextEditingController _contactCtrl;
   bool _saving = false;
   String? _nameError;
+  String? _contactError;
 
   @override
   void initState() {
@@ -395,9 +391,10 @@ class _ReferrerSheetState extends State<_ReferrerSheet> {
     final contact = _contactCtrl.text.trim();
 
     setState(() {
-      _nameError = name.isEmpty ? 'Referrer name is required' : null;
+      _nameError    = name.isEmpty ? 'Referrer name is required' : null;
+      _contactError = PhoneRules.nullable(contact.isEmpty ? null : contact);
     });
-    if (_nameError != null) return;
+    if (_nameError != null || _contactError != null) return;
 
     setState(() => _saving = true);
     try {
@@ -406,12 +403,7 @@ class _ReferrerSheetState extends State<_ReferrerSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: const Color(0xFFDC3545),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
       }
     }
   }
@@ -429,7 +421,7 @@ class _ReferrerSheetState extends State<_ReferrerSheet> {
             margin: const EdgeInsets.only(top: 10, bottom: 4),
             width: 40, height: 4,
             decoration: BoxDecoration(
-              color: _navy.withValues(alpha: 0.18),
+              color: AppColors.primary.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -479,11 +471,11 @@ class _ReferrerSheetState extends State<_ReferrerSheet> {
                 filled: true,
                 fillColor: const Color(0xFFF0F6FB),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide:
                       BorderSide(color: widget.accentColor, width: 1.5),
                 ),
@@ -497,22 +489,28 @@ class _ReferrerSheetState extends State<_ReferrerSheet> {
               controller: _contactCtrl,
               keyboardType: TextInputType.phone,
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[\d\s\+\-\(\)]')),
+                FilteringTextInputFormatter.allow(RegExp(r'[\d\+]')),
+                LengthLimitingTextInputFormatter(16),
               ],
+              onChanged: (_) => setState(() => _contactError = null),
               decoration: InputDecoration(
                 labelText: 'Contact (optional)',
-                hintText: 'e.g. 9876543210',
+                hintText: 'e.g. +919876543210',
+                errorText: _contactError,
                 prefixIcon: const Icon(Icons.phone_rounded, size: 18),
                 filled: true,
                 fillColor: const Color(0xFFF0F6FB),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: widget.accentColor, width: 1.5),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: BorderSide(color: widget.accentColor, width: 1.5),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(color: Colors.red, width: 1.5),
                 ),
               ),
             ),
@@ -528,7 +526,7 @@ class _ReferrerSheetState extends State<_ReferrerSheet> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     child: const Text('Cancel'),
                   ),
@@ -539,11 +537,11 @@ class _ReferrerSheetState extends State<_ReferrerSheet> {
                   child: ElevatedButton(
                     onPressed: _saving ? null : _save,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _navy,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     child: _saving
                         ? const SizedBox(

@@ -5,6 +5,9 @@ import '../models/auth_models.dart';
 import '../models/patient_models.dart';
 import '../services/masters_service.dart';
 import '../services/patient_service.dart';
+import '../constants/app_colors.dart';
+import '../utils/phone_rules.dart';
+import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
 
 enum PatientFormMode { addWalkIn, addPhone, edit }
@@ -29,9 +32,6 @@ class PatientFormScreen extends StatefulWidget {
 
 class _PatientFormScreenState extends State<PatientFormScreen>
     with SingleTickerProviderStateMixin {
-  static const _navy = Color(0xFF1B4F72);
-  static const _blue = Color(0xFF2980B9);
-
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
@@ -172,7 +172,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
 
   void _onContactChanged(String val) {
     _contactDebounce?.cancel();
-    if (val.length != 10) {
+    if (!PhoneRules.hasEnoughDigits(val)) {
       setState(() {
         _suggestions = [];
         _showSuggestions = false;
@@ -218,14 +218,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
     });
 
     if (s.type == 'shared') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Shared patient selected — please verify city/location.'),
-          backgroundColor: Color(0xFFF39C12),
-          duration: Duration(seconds: 3),
-        ),
-      );
+      showAppSnackBar(context, 'Shared patient selected — please verify city/location.');
     }
   }
 
@@ -241,7 +234,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: _navy),
+          colorScheme: ColorScheme.light(primary: AppColors.primary),
         ),
         child: child!,
       ),
@@ -264,17 +257,17 @@ class _PatientFormScreenState extends State<PatientFormScreen>
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
         titlePadding: EdgeInsets.zero,
         title: Container(
           padding: const EdgeInsets.fromLTRB(20, 18, 16, 14),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [_navy, _blue],
+              colors: [AppColors.primary, AppColors.blueLight],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
           ),
           child: Row(
             children: [
@@ -314,7 +307,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
               child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: _navy),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: const Text('Add',
                 style: TextStyle(color: Colors.white)),
           ),
@@ -361,7 +354,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: _navy, width: 1.5),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -448,8 +441,8 @@ class _PatientFormScreenState extends State<PatientFormScreen>
           _buildAppBar(),
           Expanded(
             child: _mastersLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: _navy))
+                ? Center(
+                    child: CircularProgressIndicator(color: AppColors.primary))
                 : _mastersError != null
                     ? _buildMastersError()
                     : FadeTransition(
@@ -488,9 +481,9 @@ class _PatientFormScreenState extends State<PatientFormScreen>
     };
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_navy, _blue],
+          colors: [AppColors.primary, AppColors.blueLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -513,7 +506,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
                 height: 44,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: Icon(icon, color: Colors.white, size: 22),
               ),
@@ -559,7 +552,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
               onPressed: _loadMasters,
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(backgroundColor: _navy),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             ),
           ],
         ),
@@ -599,7 +592,8 @@ class _PatientFormScreenState extends State<PatientFormScreen>
             _whatsappCtrl,
             'WhatsApp No (same if blank)',
             inputType: TextInputType.phone,
-            maxLength: 10,
+            maxLength: 16,
+            validator: PhoneRules.nullable,
           ),
 
           // ── Name row ────────────────────────────────────────────────
@@ -656,18 +650,18 @@ class _PatientFormScreenState extends State<PatientFormScreen>
           // ── City + District + State ──────────────────────────────────
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text('City *',
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: _navy)),
+                        color: AppColors.primary)),
               ),
               TextButton.icon(
                 onPressed: _addCity,
-                icon: const Icon(Icons.add_rounded, size: 14, color: _navy),
-                label: const Text('Add',
-                    style: TextStyle(fontSize: 12, color: _navy)),
+                icon: Icon(Icons.add_rounded, size: 14, color: AppColors.primary),
+                label: Text('Add',
+                    style: TextStyle(fontSize: 12, color: AppColors.primary)),
                 style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 2),
@@ -723,7 +717,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                flex: 1,
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -771,10 +765,10 @@ class _PatientFormScreenState extends State<PatientFormScreen>
     return Padding(
       padding: const EdgeInsets.only(top: 14, bottom: 5),
       child: Text(text,
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: _navy)),
+              color: AppColors.primary)),
     );
   }
 
@@ -783,27 +777,27 @@ class _PatientFormScreenState extends State<PatientFormScreen>
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(
-          fontSize: 13, color: _navy.withValues(alpha: 0.4)),
+          fontSize: 13, color: AppColors.primary.withValues(alpha: 0.4)),
       prefixIcon: prefix != null
-          ? Icon(prefix, size: 18, color: _navy.withValues(alpha: 0.5))
+          ? Icon(prefix, size: 18, color: AppColors.primary.withValues(alpha: 0.5))
           : null,
       filled: true,
       fillColor: readOnly
-          ? _navy.withValues(alpha: 0.04)
+          ? AppColors.primary.withValues(alpha: 0.04)
           : Colors.white,
       contentPadding:
           const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
-        borderSide: BorderSide(color: _navy.withValues(alpha: 0.18)),
+        borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.18)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
-        borderSide: BorderSide(color: _navy.withValues(alpha: 0.18)),
+        borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.18)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
-        borderSide: const BorderSide(color: _navy, width: 1.5),
+        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
@@ -833,8 +827,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
       keyboardType: inputType,
       readOnly: readOnly,
       maxLength: maxLength,
-      inputFormatters: inputType == TextInputType.number ||
-              inputType == TextInputType.phone
+      inputFormatters: inputType == TextInputType.number
           ? [FilteringTextInputFormatter.digitsOnly]
           : null,
       decoration: _inputDeco(hintOverride ?? hint,
@@ -858,7 +851,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
       controller: ctrl,
       readOnly: true,
       style: TextStyle(
-          color: _navy.withValues(alpha: 0.65), fontWeight: FontWeight.w500),
+          color: AppColors.primary.withValues(alpha: 0.65), fontWeight: FontWeight.w500),
       decoration: _inputDeco(hint, prefix: icon, readOnly: true),
     );
   }
@@ -882,17 +875,12 @@ class _PatientFormScreenState extends State<PatientFormScreen>
     return TextFormField(
       controller: _contactCtrl,
       keyboardType: TextInputType.phone,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      maxLength: 10,
+      inputFormatters: [LengthLimitingTextInputFormatter(16)],
       onChanged: _onContactChanged,
-      decoration: _inputDeco('10-digit contact number',
+      decoration: _inputDeco('Contact number (e.g. +91XXXXXXXXXX)',
               prefix: Icons.phone_outlined)
           .copyWith(counterText: ''),
-      validator: (v) {
-        if (v == null || v.trim().isEmpty) return 'Contact number required';
-        if (v.trim().length != 10) return 'Enter a valid 10-digit number';
-        return null;
-      },
+      validator: PhoneRules.required,
     );
   }
 
@@ -902,10 +890,10 @@ class _PatientFormScreenState extends State<PatientFormScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _navy.withValues(alpha: 0.18)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
-              color: _navy.withValues(alpha: 0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 3))
         ],
@@ -925,10 +913,10 @@ class _PatientFormScreenState extends State<PatientFormScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(s.fullName,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
-                                color: _navy)),
+                                color: AppColors.primary)),
                         if (s.age != null || s.gender != null)
                           Text(
                               [
@@ -938,7 +926,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
                               ].join(' · '),
                               style: TextStyle(
                                   fontSize: 11,
-                                  color: _navy.withValues(alpha: 0.55))),
+                                  color: AppColors.primary.withValues(alpha: 0.55))),
                       ],
                     ),
                   ),
@@ -949,7 +937,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
                       color: isLocal
                           ? const Color(0xFFD1FAE5)
                           : const Color(0xFFFFF3CD),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                       border: Border.all(
                         color: isLocal
                             ? const Color(0xFF10B981)
@@ -988,10 +976,10 @@ class _PatientFormScreenState extends State<PatientFormScreen>
       onChanged: onChanged,
       validator: validator,
       decoration: _inputDeco(hint),
-      style: const TextStyle(
-          color: _navy, fontSize: 13, fontWeight: FontWeight.w500),
+      style: TextStyle(
+          color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.w500),
       icon:
-          Icon(Icons.expand_more_rounded, color: _navy.withValues(alpha: 0.6)),
+          Icon(Icons.expand_more_rounded, color: AppColors.primary.withValues(alpha: 0.6)),
       dropdownColor: Colors.white,
       isExpanded: true,
     );
@@ -1164,11 +1152,11 @@ class _PatientFormScreenState extends State<PatientFormScreen>
       child: ElevatedButton(
         onPressed: (_submitting || _submitSuccess) ? null : _submit,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _submitSuccess ? Colors.green.shade600 : _navy,
+          backgroundColor: _submitSuccess ? Colors.green.shade600 : AppColors.primary,
           foregroundColor: Colors.white,
           disabledBackgroundColor: _submitSuccess
               ? Colors.green.shade600
-              : _navy.withValues(alpha: 0.5),
+              : AppColors.primary.withValues(alpha: 0.5),
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(40)),

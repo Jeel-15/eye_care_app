@@ -4,33 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/auth_models.dart';
 import '../services/user_service.dart';
+import '../constants/app_colors.dart';
+import '../utils/phone_rules.dart';
+import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
 
-// ── Pre-computed alpha variants ───────────────────────────────────────────────
-const _navy    = Color(0xFF1B4F72);
-const _textSub = Color(0xFF64748B);
-// white / black
-const _white15  = Color(0x26FFFFFF);
-const _black60  = Color(0x99000000);
-// navy alphas
-const _navyA75  = Color(0xBF1B4F72);
-const _navyA60  = Color(0x991B4F72);
-const _navyA50  = Color(0x801B4F72);
-const _navyA30  = Color(0x4D1B4F72);
-const _navyA12  = Color(0x1F1B4F72);
-const _navyA10  = Color(0x1A1B4F72);
-const _navyA08  = Color(0x141B4F72);
-const _navyA07  = Color(0x121B4F72);
-const _navyA06  = Color(0x0F1B4F72);
-const _navyA05  = Color(0x0D1B4F72);
-// textSub alphas
-const _textSubA80 = Color(0xCC64748B);
-const _textSubA75 = Color(0xBF64748B);
-const _textSubA55 = Color(0x8C64748B);
-const _textSubA50 = Color(0x8064748B);
-const _textSubA45 = Color(0x7364748B);
-const _textSubA40 = Color(0x6664748B);
-const _textSubA10 = Color(0x1A64748B);
 
 class UserFormScreen extends StatefulWidget {
   final UserInfo user;
@@ -49,8 +27,6 @@ class UserFormScreen extends StatefulWidget {
 }
 
 class _UserFormScreenState extends State<UserFormScreen> {
-  static const _bg      = Color(0xFFEAF2F8);
-
   bool get _isEdit => widget.editUser != null;
 
   final _formKey = GlobalKey<FormState>();
@@ -171,14 +147,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
     final file = File(picked.path);
     final size = await file.length();
     if (size > 20 * 1024 && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Image must be under 20 KB. Please choose a smaller/more compressed image.'),
-          backgroundColor: Colors.orange.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      showAppSnackBar(context, 'Image must be under 20 KB. Please choose a smaller/more compressed image.');
       return;
     }
 
@@ -298,9 +267,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.backgroundAlt,
       appBar: AppBar(
-        backgroundColor: _navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         title: Text(
@@ -319,11 +288,11 @@ class _UserFormScreenState extends State<UserFormScreen> {
                 onPressed: (_saving || _saveSuccess) ? null : _save,
                 style: TextButton.styleFrom(
                   backgroundColor: _saveSuccess
-                      ? Colors.green.shade600.withValues(alpha: 0.9)
-                      : _white15,
+                      ? AppColors.green.withValues(alpha: 0.9)
+                      : const Color(0x26FFFFFF),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 ),
@@ -354,7 +323,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
   Widget _buildBody() {
     if (_loadingForm) {
-      return const Center(child: CircularProgressIndicator(color: _navy));
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
 
     if (_formError != null) {
@@ -368,7 +337,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
               const SizedBox(height: 16),
               Text(_formError!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: _textSub, fontSize: 14)),
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () {
@@ -378,7 +347,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _navy, foregroundColor: Colors.white,
+                  backgroundColor: AppColors.primary, foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
               ),
@@ -420,11 +389,11 @@ class _UserFormScreenState extends State<UserFormScreen> {
               child: ElevatedButton(
                 onPressed: (_saving || _saveSuccess) ? null : _save,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _saveSuccess ? Colors.green.shade600 : _navy,
+                  backgroundColor: _saveSuccess ? AppColors.green : AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(AppRadius.lg)),
                   elevation: 0,
                 ),
                 child: AnimatedSwitcher(
@@ -487,15 +456,11 @@ class _UserFormScreenState extends State<UserFormScreen> {
         _fieldLabel('Contact Number'),
         _styledField(
           controller:   _contactCtrl,
-          hint:         '10-digit mobile number',
+          hint:         'Contact number (e.g. +91XXXXXXXXXX)',
           keyboardType: TextInputType.phone,
-          maxLength:    10,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          validator: (v) {
-            if (v == null || v.isEmpty) return null;
-            if (v.length != 10) return 'Contact must be exactly 10 digits';
-            return null;
-          },
+          maxLength:    16,
+          inputFormatters: [],
+          validator:    PhoneRules.nullable,
         ),
       ],
     );
@@ -517,8 +482,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
               color: const Color(0xFFF4F7FB),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _navyA12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.primaryA12),
             ),
             child: Row(
               children: [
@@ -535,10 +500,10 @@ class _UserFormScreenState extends State<UserFormScreen> {
                   Expanded(
                     child: Text(
                       _selectedRole!.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
-                        color: _navy,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -548,13 +513,13 @@ class _UserFormScreenState extends State<UserFormScreen> {
                       'Select a role',
                       style: TextStyle(
                         fontSize: 14,
-                        color: _textSubA55,
+                        color: AppColors.textSecondary.withValues(alpha: 0.55),
                       ),
                     ),
                   ),
                 ],
                 Icon(Icons.expand_more_rounded,
-                    size: 20, color: _textSubA40),
+                    size: 20, color: AppColors.textSecondary.withValues(alpha: 0.40)),
               ],
             ),
           ),
@@ -632,7 +597,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
               icon: Icon(
                 _showPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                 size: 18,
-                color: _textSubA50,
+                color: AppColors.textSecondary.withValues(alpha: 0.50),
               ),
               onPressed: () => setState(() => _showPassword = !_showPassword),
             ),
@@ -656,7 +621,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
               icon: Icon(
                 _showConfirm ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                 size: 18,
-                color: _textSubA50,
+                color: AppColors.textSecondary.withValues(alpha: 0.50),
               ),
               onPressed: () => setState(() => _showConfirm = !_showConfirm),
             ),
@@ -769,28 +734,28 @@ class _UserFormScreenState extends State<UserFormScreen> {
         Container(
           decoration: BoxDecoration(
             color: const Color(0xFFF4F7FB),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _navyA10),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: AppColors.primaryA10),
           ),
           child: SwitchListTile(
-            title: const Text(
+            title: Text(
               'FOC Permission',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
-                color: _navy,
+                color: AppColors.primary,
               ),
             ),
             subtitle: Text(
               'Allow this doctor to mark visits as free of charge',
               style: TextStyle(
                 fontSize: 11,
-                color: _textSubA75,
+                color: AppColors.textSecondary.withValues(alpha: 0.75),
               ),
             ),
             value:      _focPerm,
             onChanged:  (v) => setState(() => _focPerm = v),
-            activeThumbColor: _navy,
+            activeThumbColor: AppColors.primary,
             dense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           ),
@@ -867,7 +832,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: _textSubA80,
+            color: AppColors.textSecondary.withValues(alpha: 0.80),
             letterSpacing: 0.2,
           ),
         ),
@@ -876,26 +841,26 @@ class _UserFormScreenState extends State<UserFormScreen> {
   InputDecoration _fieldDeco({String? hint, Widget? suffix}) => InputDecoration(
         hintText:        hint,
         hintStyle:       TextStyle(
-          color: _textSubA40,
+          color: AppColors.textSecondary.withValues(alpha: 0.40),
           fontSize: 13,
         ),
         filled:          true,
         fillColor:       const Color(0xFFF4F7FB),
         contentPadding:  const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border:          OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:   BorderSide(color: _navyA12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide:   BorderSide(color: AppColors.primaryA12),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:   BorderSide(color: _navyA12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide:   BorderSide(color: AppColors.primaryA12),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:   BorderSide(color: _navyA50, width: 1.5),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide:   BorderSide(color: AppColors.primaryA50, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide:   const BorderSide(color: Colors.red),
         ),
         suffixIcon:      suffix,
@@ -917,7 +882,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
         inputFormatters:     inputFormatters,
         validator:           validator,
         textCapitalization:  textCapitalization,
-        style: const TextStyle(fontSize: 14, color: _navy, fontWeight: FontWeight.w600),
+        style: TextStyle(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.w600),
         decoration: _fieldDeco(hint: hint).copyWith(
           counterText: '',
         ),
@@ -928,7 +893,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
       final clean = hex.replaceFirst('#', '');
       return Color(int.parse('FF$clean', radix: 16));
     } catch (_) {
-      return _navy;
+      return AppColors.primary;
     }
   }
 }
@@ -947,11 +912,11 @@ class _SectionCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _navyA07),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: AppColors.primaryA07),
         boxShadow: [
           BoxShadow(
-            color: _navyA05,
+            color: AppColors.primaryA05,
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -991,10 +956,10 @@ class _SectionHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: _navyA08,
+              color: AppColors.primaryA08,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 16, color: _navy),
+            child: Icon(icon, size: 16, color: AppColors.primary),
           ),
           const SizedBox(width: 10),
           Text(
@@ -1003,7 +968,7 @@ class _SectionHeader extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.2,
-              color: _navyA75,
+              color: AppColors.primaryA75,
             ),
           ),
           if (badgeText != null) ...[
@@ -1012,7 +977,7 @@ class _SectionHeader extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
                 color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(color: Colors.blue.shade200),
               ),
               child: Text(
@@ -1026,7 +991,7 @@ class _SectionHeader extends StatelessWidget {
             ),
           ],
           const Spacer(),
-          Divider(color: _textSubA10),
+          Divider(color: AppColors.textSecondary.withValues(alpha: 0.10)),
         ],
       ),
     );
@@ -1048,7 +1013,7 @@ class _StatusOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color  = isActive ? Colors.green.shade600 : Colors.grey.shade500;
+    final color  = isActive ? AppColors.green : Colors.grey.shade500;
     final bgColor = isActive ? Colors.green.shade50 : Colors.grey.shade50;
 
     return GestureDetector(
@@ -1058,7 +1023,7 @@ class _StatusOption extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color:        selected ? bgColor : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
             color:  selected ? color : Colors.grey.shade200,
             width:  selected ? 2 : 1,
@@ -1111,10 +1076,10 @@ class _DoctorTypeOption extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
-          color:        selected ? _navyA07 : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color:        selected ? AppColors.primaryA07 : Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: selected ? _navyA50 : Colors.grey.shade200,
+            color: selected ? AppColors.primaryA50 : Colors.grey.shade200,
             width: selected ? 1.8 : 1,
           ),
         ),
@@ -1123,7 +1088,7 @@ class _DoctorTypeOption extends StatelessWidget {
             Icon(
               selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
               size: 16,
-              color: selected ? _navy : Colors.grey.shade400,
+              color: selected ? AppColors.primary : Colors.grey.shade400,
             ),
             const SizedBox(height: 4),
             Text(
@@ -1131,7 +1096,7 @@ class _DoctorTypeOption extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 12,
-                color: selected ? _navy : Colors.grey.shade600,
+                color: selected ? AppColors.primary : Colors.grey.shade600,
               ),
             ),
             Text(
@@ -1139,7 +1104,7 @@ class _DoctorTypeOption extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 color: selected
-                    ? _navyA60
+                    ? AppColors.primaryA60
                     : Colors.grey.shade500,
               ),
             ),
@@ -1178,7 +1143,7 @@ class _ImageUploadCard extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: _textSubA80,
+            color: AppColors.textSecondary.withValues(alpha: 0.80),
           ),
         ),
         const SizedBox(height: 6),
@@ -1188,11 +1153,11 @@ class _ImageUploadCard extends StatelessWidget {
             height: 100,
             decoration: BoxDecoration(
               color: const Color(0xFFF4F7FB),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(
                 color: _hasImage
-                    ? _navyA30
-                    : _navyA12,
+                    ? AppColors.primaryA30
+                    : AppColors.primaryA12,
                 style: _hasImage ? BorderStyle.solid : BorderStyle.none,
               ),
             ),
@@ -1231,8 +1196,8 @@ class _ImageUploadCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: _black60,
-                borderRadius: BorderRadius.circular(8),
+                color: const Color(0x99000000),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: const Text('NEW',
                   style: TextStyle(
@@ -1256,13 +1221,13 @@ class _ImageUploadCard extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(Icons.add_photo_alternate_rounded,
-            size: 28, color: _navyA30),
+            size: 28, color: AppColors.primaryA30),
         const SizedBox(height: 6),
         Text(
           'Tap to upload',
           style: TextStyle(
             fontSize: 11,
-            color: _textSubA55,
+            color: AppColors.textSecondary.withValues(alpha: 0.55),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -1319,7 +1284,7 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
     try {
       return Color(int.parse('FF${hex.replaceFirst('#', '')}', radix: 16));
     } catch (_) {
-      return _navy;
+      return AppColors.primary;
     }
   }
 
@@ -1349,12 +1314,12 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
               child: Row(
                 children: [
-                  const Text(
+                  Text(
                     'Select Role',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 17,
-                      color: _navy,
+                      color: AppColors.primary,
                     ),
                   ),
                   const Spacer(),
@@ -1375,11 +1340,11 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
                 decoration: InputDecoration(
                   hintText: 'Search roles...',
                   hintStyle: TextStyle(
-                    color: _textSubA45,
+                    color: AppColors.textSecondary.withValues(alpha: 0.45),
                     fontSize: 13,
                   ),
                   prefixIcon: Icon(Icons.search_rounded,
-                      size: 18, color: _textSubA45),
+                      size: 18, color: AppColors.textSecondary.withValues(alpha: 0.45)),
                   filled:     true,
                   fillColor:  const Color(0xFFF4F7FB),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -1404,8 +1369,8 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
                   return ListTile(
                     onTap: () => widget.onSelect(role),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    tileColor: isSelected ? _navyA06 : null,
+                        borderRadius: BorderRadius.circular(AppRadius.md)),
+                    tileColor: isSelected ? AppColors.primaryA06 : null,
                     leading: Container(
                       width: 36,
                       height: 36,
@@ -1429,7 +1394,7 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
                       role.name,
                       style: TextStyle(
                         fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                        color: isSelected ? _navy : Colors.black87,
+                        color: isSelected ? AppColors.primary : Colors.black87,
                         fontSize: 14,
                       ),
                     ),
@@ -1442,7 +1407,7 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
                       ],
                     ),
                     trailing: isSelected
-                        ? Icon(Icons.check_circle_rounded, color: _navy, size: 20)
+                        ? Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20)
                         : null,
                   );
                 },
@@ -1459,7 +1424,7 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
           color:        bgColor,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
         child: Text(
           text,

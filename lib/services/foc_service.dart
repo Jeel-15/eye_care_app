@@ -1,31 +1,23 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/foc_models.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
-class FocService {
+class FocService with AuthenticatedService {
   FocService._();
   static final FocService instance = FocService._();
 
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
 
   Future<FocListResult> fetchFocs({String? status, int page = 1}) async {
-    final params = <String, String>{'page': page.toString()};
+    final params = <String, String>{'page': page.toString(), 'per_page': '20'};
     if (status != null) params['status'] = status;
 
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/foc')
         .replace(queryParameters: params);
 
     final resp = await http
-        .get(uri, headers: await _headers)
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
     if (resp.statusCode != 200) {
@@ -43,7 +35,7 @@ class FocService {
     final resp = await http
         .post(
           Uri.parse('${AppConfig.hospitalApiUrl}/foc'),
-          headers: await _headers,
+          headers: await headers,
           body: jsonEncode({
             'patient_id': patientId,
             'foc_fee': focFee,
@@ -65,7 +57,7 @@ class FocService {
     final resp = await http
         .post(
           Uri.parse('${AppConfig.hospitalApiUrl}/foc/$id/accept'),
-          headers: await _headers,
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
@@ -80,7 +72,7 @@ class FocService {
     final resp = await http
         .post(
           Uri.parse('${AppConfig.hospitalApiUrl}/foc/$id/reject'),
-          headers: await _headers,
+          headers: await headers,
           body: jsonEncode({'rejected_reason': rejectedReason}),
         )
         .timeout(AppConfig.requestTimeout);

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../widgets/app_empty_state.dart';
+import '../constants/app_radius.dart';
 import '../services/location_service.dart';
 
 class LocationMasterScreen extends StatefulWidget {
@@ -6,7 +9,7 @@ class LocationMasterScreen extends StatefulWidget {
 
   const LocationMasterScreen({
     super.key,
-    this.accentColor = const Color(0xFF27AE60),
+    this.accentColor = AppColors.green,
   });
 
   @override
@@ -14,10 +17,6 @@ class LocationMasterScreen extends StatefulWidget {
 }
 
 class _LocationMasterScreenState extends State<LocationMasterScreen> {
-  static const _navy = Color(0xFF1B4F72);
-  static const _red  = Color(0xFFDC3545);
-  static const _bg   = Color(0xFFEAF2F8);
-
   List<LocationItem> _all = [];
   bool _loading = false;
   String? _error;
@@ -58,9 +57,9 @@ class _LocationMasterScreenState extends State<LocationMasterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.backgroundAlt,
       appBar: AppBar(
-        backgroundColor: _navy,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -104,18 +103,18 @@ class _LocationMasterScreenState extends State<LocationMasterScreen> {
         height: 44,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _navy.withValues(alpha: 0.12)),
-          boxShadow: [BoxShadow(color: _navy.withValues(alpha: 0.05), blurRadius: 8)],
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.primaryA12),
+          boxShadow: [BoxShadow(color: AppColors.primaryA05, blurRadius: 8)],
         ),
         child: TextField(
           onChanged: (v) => setState(() => _query = v.trim()),
-          style: const TextStyle(fontSize: 13.5, color: Color(0xFF1A3A52)),
+          style: const TextStyle(fontSize: 13.5, color: AppColors.darkNavy),
           decoration: const InputDecoration(
             hintText: 'Search city, district, or state...',
-            hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+            hintStyle: TextStyle(color: AppColors.textDisabled, fontSize: 13),
             prefixIcon: Icon(Icons.search_rounded,
-                color: Color(0xFF94A3B8), size: 20),
+                color: AppColors.textDisabled, size: 20),
             border: InputBorder.none,
             contentPadding:
                 EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -139,7 +138,7 @@ class _LocationMasterScreenState extends State<LocationMasterScreen> {
         child: Text(label,
             style: TextStyle(
               fontSize: 11.5,
-              color: _navy.withValues(alpha: 0.45),
+              color: AppColors.primaryA45,
               fontWeight: FontWeight.w500,
             )),
       ),
@@ -148,7 +147,7 @@ class _LocationMasterScreenState extends State<LocationMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: _navy));
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (_error != null) {
       return Center(
@@ -158,18 +157,18 @@ class _LocationMasterScreenState extends State<LocationMasterScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.error_outline_rounded,
-                  size: 48, color: _red.withValues(alpha: 0.6)),
+                  size: 48, color: AppColors.red.withValues(alpha: 0.6)),
               const SizedBox(height: 12),
               Text(_error!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF64748B))),
+                  style: const TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _load,
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: _navy, foregroundColor: Colors.white),
+                    backgroundColor: AppColors.primary, foregroundColor: Colors.white),
               ),
             ],
           ),
@@ -181,28 +180,17 @@ class _LocationMasterScreenState extends State<LocationMasterScreen> {
     if (items.isEmpty) {
       return ListView(children: [
         const SizedBox(height: 72),
-        Center(
-          child: Column(children: [
-            Icon(Icons.location_on_rounded,
-                size: 56, color: _navy.withValues(alpha: 0.15)),
-            const SizedBox(height: 12),
-            Text(
-              _query.isNotEmpty
-                  ? 'No results for "$_query"'
-                  : 'No locations found.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: Color(0xFF94A3B8),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500),
-            ),
-          ]),
+        AppEmptyState(
+          message: _query.isNotEmpty
+              ? 'No results for "$_query"'
+              : 'No locations found.',
+          icon: Icons.location_on_rounded,
         ),
       ]);
     }
 
     return RefreshIndicator(
-      color: _navy,
+      color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -218,9 +206,9 @@ class _LocationMasterScreenState extends State<LocationMasterScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _navy.withValues(alpha: 0.08)),
+                border: Border.all(color: AppColors.primaryA08),
                 boxShadow: [BoxShadow(
-                  color: _navy.withValues(alpha: 0.05),
+                  color: AppColors.primaryA05,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )],
@@ -247,14 +235,14 @@ class _LocationMasterScreenState extends State<LocationMasterScreen> {
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF1A3A52),
+                              color: AppColors.darkNavy,
                             )),
                         if (sub.isNotEmpty) ...[
                           const SizedBox(height: 2),
                           Text(sub,
                               style: TextStyle(
                                 fontSize: 11.5,
-                                color: _navy.withValues(alpha: 0.5),
+                                color: AppColors.primaryA50,
                                 fontWeight: FontWeight.w500,
                               )),
                         ],

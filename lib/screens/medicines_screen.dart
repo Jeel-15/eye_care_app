@@ -1,49 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../utils/app_route.dart';
-import '../widgets/skeleton.dart';
-import '../widgets/app_animations.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 import '../models/auth_models.dart';
 import '../models/medicine_models.dart';
 import '../services/medicine_service.dart';
+import '../utils/app_route.dart';
+import '../widgets/app_animations.dart';
+import '../widgets/app_empty_state.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import 'medicine_group_detail_screen.dart';
 import 'medicine_group_form_screen.dart';
-
-// ── Color constants (consistent with app palette) ─────────────────────────────
-
-abstract final class _C {
-  static const navy    = Color(0xFF1B4F72);
-  static const teal    = Color(0xFF2C6E99);
-  static const success = Color(0xFF1F9D55);
-  static const danger  = Color(0xFFD94841);
-  static const muted   = Color(0xFF6B7D93);
-  static const text    = Color(0xFF18324A);
-  static const bg      = Color(0xFFF6FAFD);
-
-  static final navyA06   = navy.withValues(alpha: 0.06);
-  static final navyA10   = navy.withValues(alpha: 0.10);
-  static final navyA12   = navy.withValues(alpha: 0.12);
-
-  static final mutedA60  = muted.withValues(alpha: 0.60);
-  static final successA12 = success.withValues(alpha: 0.12);
-}
 
 BoxDecoration _cardDeco() => BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: _C.navyA10),
-      boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 8, offset: const Offset(0, 2))],
+      border: Border.all(color: AppColors.primaryA10),
+      boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
     );
 
-void _snack(BuildContext ctx, String msg, {bool error = false}) {
-  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-    content: Text(msg),
-    behavior: SnackBarBehavior.floating,
-    backgroundColor: error ? _C.danger : _C.navy,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    duration: const Duration(seconds: 3),
-  ));
-}
+
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
@@ -103,9 +80,9 @@ class _MedicinesScreenState extends State<MedicinesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _C.bg,
+      backgroundColor: Color(0xFFF6FAFD),
       appBar: AppBar(
-        backgroundColor: _C.navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -202,14 +179,14 @@ class _MedicinesScreenState extends State<MedicinesScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(t.icon, size: 13, color: active ? _C.navy : Colors.white),
+                    Icon(t.icon, size: 13, color: active ? AppColors.primary : Colors.white),
                     const SizedBox(width: 5),
                     Text(
                       t.label,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-                        color: active ? _C.navy : Colors.white,
+                        color: active ? AppColors.primary : Colors.white,
                       ),
                     ),
                   ],
@@ -289,7 +266,7 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
       builder: (ctx) => _SingleFieldSheet(
         fieldLabel: widget.fieldLabel,
         fieldHint: widget.fieldHint,
@@ -317,7 +294,7 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: _C.danger)),
+            child: const Text('Delete', style: TextStyle(color: Color(0xFFD94841))),
           ),
         ],
       ),
@@ -327,7 +304,7 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
       await widget.onDelete(item.id);
       await _load();
     } catch (e) {
-      if (mounted) _snack(context, e.toString().replaceFirst('Exception: ', ''), error: true);
+      if (mounted) showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
@@ -336,7 +313,7 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
     super.build(context);
     return RefreshIndicator(
       onRefresh: _load,
-      color: _C.navy,
+      color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 90),
@@ -351,9 +328,9 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
           if (_loading)
             const AppSkeletonList(count: 5, itemHeight: 68)
           else if (_error != null)
-            _ErrorWidget(message: _error!, onRetry: _load)
+            AppErrorState(message: _error!, onRetry: _load)
           else if (_items.isEmpty)
-            _EmptyWidget(label: widget.title)
+            AppEmptyState(message: widget.title)
           else
             ...List.generate(_items.length, (i) {
               final item = _items[i];
@@ -369,15 +346,15 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
                         height: 32,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: _C.navyA12,
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppColors.primaryA12,
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
                         child: Text(
                           '${i + 1}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
-                            color: _C.navy,
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -388,19 +365,19 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: _C.text,
+                            color: Color(0xFF18324A),
                           ),
                         ),
                       ),
                       _IconBtn(
                         icon: Icons.edit_outlined,
-                        color: _C.navy,
+                        color: AppColors.primary,
                         onTap: () => _openSheet(item: item),
                       ),
                       const SizedBox(width: 4),
                       _IconBtn(
                         icon: Icons.delete_outline_rounded,
-                        color: _C.danger,
+                        color: Color(0xFFD94841),
                         onTap: () => _confirmDelete(item),
                       ),
                     ],
@@ -476,7 +453,7 @@ class _MedicinesTabState extends State<_MedicinesTab>
     final types   = _result?.types ?? [];
     final dosages = _result?.dosages ?? [];
     if (types.isEmpty) {
-      _snack(context, 'Load medicines list first');
+      showAppSnackBar(context, 'Load medicines list first');
       return;
     }
     showModalBottomSheet(
@@ -484,7 +461,7 @@ class _MedicinesTabState extends State<_MedicinesTab>
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
       builder: (ctx) => _MedFormSheet(
         types: types,
         dosages: dosages,
@@ -511,7 +488,7 @@ class _MedicinesTabState extends State<_MedicinesTab>
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: _C.danger)),
+            child: const Text('Delete', style: TextStyle(color: Color(0xFFD94841))),
           ),
         ],
       ),
@@ -521,7 +498,7 @@ class _MedicinesTabState extends State<_MedicinesTab>
       await MedicineService.instance.deleteMedicine(item.id);
       await _load(page: _page);
     } catch (e) {
-      if (mounted) _snack(context, e.toString().replaceFirst('Exception: ', ''), error: true);
+      if (mounted) showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
@@ -531,7 +508,7 @@ class _MedicinesTabState extends State<_MedicinesTab>
     final result = _result;
     return RefreshIndicator(
       onRefresh: _load,
-      color: _C.navy,
+      color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 90),
@@ -549,14 +526,14 @@ class _MedicinesTabState extends State<_MedicinesTab>
             child: TextField(
               controller: _searchCtrl,
               onChanged: _onSearchChanged,
-              style: const TextStyle(fontSize: 14, color: _C.text),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF18324A)),
               decoration: InputDecoration(
                 hintText: 'Search name or company…',
-                hintStyle: TextStyle(color: _C.mutedA60, fontSize: 13),
-                prefixIcon: const Icon(Icons.search_rounded, color: _C.muted, size: 20),
+                hintStyle: TextStyle(color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontSize: 13),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6B7D93), size: 20),
                 suffixIcon: _searchCtrl.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 18, color: _C.muted),
+                        icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF6B7D93)),
                         onPressed: () {
                           _searchCtrl.clear();
                           setState(() => _page = 1);
@@ -573,10 +550,10 @@ class _MedicinesTabState extends State<_MedicinesTab>
           if (_loading && result == null)
             const AppSkeletonList(count: 5, itemHeight: 68)
           else if (_error != null && result == null)
-            _ErrorWidget(message: _error!, onRetry: _load)
+            AppErrorState(message: _error!, onRetry: _load)
           else if (result != null) ...[
             if (result.items.isEmpty)
-              _EmptyWidget(label: _searchCtrl.text.isNotEmpty ? 'No results for "${_searchCtrl.text}"' : 'No medicines yet')
+              AppEmptyState(message: _searchCtrl.text.isNotEmpty ? 'No results for "${_searchCtrl.text}"' : 'No medicines yet')
             else ...[
               ...List.generate(result.items.length, (i) {
                 final m = result.items[i];
@@ -626,22 +603,22 @@ class _MedCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   item.name,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _C.text),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF18324A)),
                 ),
               ),
               if (item.price != null)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: _C.successA12, borderRadius: BorderRadius.circular(20)),
+                  decoration: BoxDecoration(color: Color(0xFF1F9D55).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.xl)),
                   child: Text(
                     '₹${item.price!.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: _C.success),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF1F9D55)),
                   ),
                 ),
               const SizedBox(width: 6),
-              _IconBtn(icon: Icons.edit_outlined, color: _C.navy, onTap: onEdit),
+              _IconBtn(icon: Icons.edit_outlined, color: AppColors.primary, onTap: onEdit),
               const SizedBox(width: 4),
-              _IconBtn(icon: Icons.delete_outline_rounded, color: _C.danger, onTap: onDelete),
+              _IconBtn(icon: Icons.delete_outline_rounded, color: Color(0xFFD94841), onTap: onDelete),
             ],
           ),
           const SizedBox(height: 6),
@@ -731,7 +708,7 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: _C.danger)),
+            child: const Text('Delete', style: TextStyle(color: Color(0xFFD94841))),
           ),
         ],
       ),
@@ -741,7 +718,7 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
       await MedicineService.instance.deleteGroup(group.id);
       await _load(page: _page);
     } catch (e) {
-      if (mounted) _snack(context, e.toString().replaceFirst('Exception: ', ''), error: true);
+      if (mounted) showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
@@ -751,7 +728,7 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
     final result = _result;
     return RefreshIndicator(
       onRefresh: _load,
-      color: _C.navy,
+      color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 90),
@@ -766,10 +743,10 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
           if (_loading && result == null)
             const AppSkeletonList(count: 5, itemHeight: 68)
           else if (_error != null && result == null)
-            _ErrorWidget(message: _error!, onRetry: _load)
+            AppErrorState(message: _error!, onRetry: _load)
           else if (result != null) ...[
             if (result.groups.isEmpty)
-              const _EmptyWidget(label: 'No medicine groups yet')
+              const AppEmptyState(message: 'No medicine groups yet')
             else ...[
               ...List.generate(result.groups.length, (i) {
                 final g = result.groups[i];
@@ -832,19 +809,19 @@ class _GroupCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(group.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _C.text)),
+                    Text(group.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF18324A))),
                     if (group.groupCode != null) ...[
                       const SizedBox(height: 2),
-                      Text(group.groupCode!, style: TextStyle(fontSize: 11, color: _C.mutedA60, fontWeight: FontWeight.w600)),
+                      Text(group.groupCode!, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontWeight: FontWeight.w600)),
                     ],
                   ],
                 ),
               ),
-              _IconBtn(icon: Icons.visibility_outlined, color: _C.teal, onTap: onView),
+              _IconBtn(icon: Icons.visibility_outlined, color: const Color(0xFF2C6E99), onTap: onView),
               const SizedBox(width: 4),
-              _IconBtn(icon: Icons.edit_outlined, color: _C.navy, onTap: onEdit),
+              _IconBtn(icon: Icons.edit_outlined, color: AppColors.primary, onTap: onEdit),
               const SizedBox(width: 4),
-              _IconBtn(icon: Icons.delete_outline_rounded, color: _C.danger, onTap: onDelete),
+              _IconBtn(icon: Icons.delete_outline_rounded, color: Color(0xFFD94841), onTap: onDelete),
             ],
           ),
           const SizedBox(height: 8),
@@ -855,23 +832,23 @@ class _GroupCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    color: _C.successA12,
-                    borderRadius: BorderRadius.circular(20),
+                    color: Color(0xFF1F9D55).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
                   ),
                   child: Text(
                     group.diagnosisValue!,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _C.success),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1F9D55)),
                   ),
                 ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: _C.navyA12,
-                  borderRadius: BorderRadius.circular(20),
+                  color: AppColors.primaryA12,
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Text(
                   '${group.itemsCount} medicine${group.itemsCount == 1 ? '' : 's'}',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _C.navy),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary),
                 ),
               ),
             ],
@@ -884,20 +861,20 @@ class _GroupCard extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 4),
               child: Row(
                 children: [
-                  const Icon(Icons.medication_outlined, size: 12, color: _C.muted),
+                  const Icon(Icons.medication_outlined, size: 12, color: Color(0xFF6B7D93)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       item.medicineName ?? '-',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _C.text),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF18324A)),
                     ),
                   ),
                   if (item.dosageText != null)
-                    Text(item.dosageText!, style: TextStyle(fontSize: 11, color: _C.mutedA60)),
+                    Text(item.dosageText!, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
                   if (item.duration != null)
                     Padding(
                       padding: const EdgeInsets.only(left: 8),
-                      child: Text(item.duration!, style: TextStyle(fontSize: 11, color: _C.mutedA60)),
+                      child: Text(item.duration!, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
                     ),
                 ],
               ),
@@ -907,7 +884,7 @@ class _GroupCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   '+${group.itemsCount - 3} more — tap View',
-                  style: TextStyle(fontSize: 11, color: _C.mutedA60, fontStyle: FontStyle.italic),
+                  style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontStyle: FontStyle.italic),
                 ),
               ),
           ],
@@ -965,7 +942,7 @@ class _SingleFieldSheetState extends State<_SingleFieldSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        _snack(context, e.toString().replaceFirst('Exception: ', ''), error: true);
+        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
       }
     }
   }
@@ -985,12 +962,12 @@ class _SingleFieldSheetState extends State<_SingleFieldSheet> {
             children: [
               Text(
                 widget.isEdit ? 'Edit ${widget.fieldLabel}' : 'Add ${widget.fieldLabel}',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _C.text),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF18324A)),
               ),
               const Spacer(),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close_rounded, color: _C.muted),
+                icon: const Icon(Icons.close_rounded, color: Color(0xFF6B7D93)),
                 visualDensity: VisualDensity.compact,
               ),
             ],
@@ -1006,7 +983,7 @@ class _SingleFieldSheetState extends State<_SingleFieldSheet> {
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: _C.navy, width: 2),
+                borderSide: BorderSide(color: AppColors.primary, width: 2),
               ),
             ),
             onSubmitted: (_) => _save(),
@@ -1017,10 +994,10 @@ class _SingleFieldSheetState extends State<_SingleFieldSheet> {
             child: ElevatedButton(
               onPressed: _saving ? null : _save,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _C.navy,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
               ),
               child: _saving
                   ? const SizedBox(
@@ -1105,7 +1082,7 @@ class _MedFormSheetState extends State<_MedFormSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        _snack(context, e.toString().replaceFirst('Exception: ', ''), error: true);
+        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
       }
     }
   }
@@ -1130,12 +1107,12 @@ class _MedFormSheetState extends State<_MedFormSheet> {
                 children: [
                   Text(
                     isEdit ? 'Edit Medicine' : 'Add Medicine',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _C.text),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF18324A)),
                   ),
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded, color: _C.muted),
+                    icon: const Icon(Icons.close_rounded, color: Color(0xFF6B7D93)),
                     visualDensity: VisualDensity.compact,
                   ),
                 ],
@@ -1190,10 +1167,10 @@ class _MedFormSheetState extends State<_MedFormSheet> {
                 child: ElevatedButton(
                   onPressed: _saving ? null : _save,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _C.navy,
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                   ),
                   child: _saving
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
@@ -1230,9 +1207,9 @@ class _SectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: _C.navy)),
+              Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.primary)),
               const SizedBox(height: 2),
-              Text(subtitle, style: TextStyle(fontSize: 11, color: _C.mutedA60)),
+              Text(subtitle, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
             ],
           ),
         ),
@@ -1240,15 +1217,15 @@ class _SectionHeader extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(right: 8, top: 2),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(color: _C.navyA12, borderRadius: BorderRadius.circular(20)),
-            child: Text('$count', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: _C.navy)),
+            decoration: BoxDecoration(color: AppColors.primaryA12, borderRadius: BorderRadius.circular(AppRadius.xl)),
+            child: Text('$count', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
           ),
         ElevatedButton.icon(
           onPressed: onAdd,
           icon: const Icon(Icons.add_rounded, size: 15),
           label: const Text('Add', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: _C.navy,
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1281,8 +1258,8 @@ class _PaginationRow extends StatelessWidget {
               icon: const Icon(Icons.arrow_back_ios_rounded, size: 13),
               label: const Text('Prev'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: _C.navy,
-                side: BorderSide(color: _C.navyA10),
+                foregroundColor: AppColors.primary,
+                side: BorderSide(color: AppColors.primaryA10),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
@@ -1290,9 +1267,9 @@ class _PaginationRow extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: loading
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: _C.navy, strokeWidth: 2))
+                ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
                 : Text('${meta.currentPage} / ${meta.lastPage}',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: _C.navy)),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary)),
           ),
           Expanded(
             child: OutlinedButton.icon(
@@ -1301,8 +1278,8 @@ class _PaginationRow extends StatelessWidget {
               label: const Text('Next'),
               iconAlignment: IconAlignment.end,
               style: OutlinedButton.styleFrom(
-                foregroundColor: _C.navy,
-                side: BorderSide(color: _C.navyA10),
+                foregroundColor: AppColors.primary,
+                side: BorderSide(color: AppColors.primaryA10),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
@@ -1323,12 +1300,12 @@ class _IconBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) => InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         child: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
           ),
           child: Icon(icon, size: 16, color: color),
         ),
@@ -1344,61 +1321,10 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: _C.muted),
+          Icon(icon, size: 11, color: Color(0xFF6B7D93)),
           const SizedBox(width: 3),
-          Text(text, style: TextStyle(fontSize: 11, color: _C.mutedA60, fontWeight: FontWeight.w600)),
+          Text(text, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontWeight: FontWeight.w600)),
         ],
-      );
-}
-
-class _ErrorWidget extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-  const _ErrorWidget({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.wifi_off_rounded, size: 48, color: _C.mutedA60),
-              const SizedBox(height: 12),
-              Text(message, textAlign: TextAlign.center, style: const TextStyle(color: _C.muted, fontSize: 13)),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Retry'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _C.navy, foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-}
-
-class _EmptyWidget extends StatelessWidget {
-  final String label;
-  const _EmptyWidget({required this.label});
-
-  @override
-  Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.inbox_outlined, size: 48, color: _C.mutedA60),
-              const SizedBox(height: 12),
-              Text(label, style: TextStyle(color: _C.mutedA60, fontSize: 14, fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
       );
 }
 
@@ -1406,7 +1332,7 @@ class _EmptyWidget extends StatelessWidget {
 
 Widget _label(String text) => Padding(
       padding: const EdgeInsets.only(bottom: 5),
-      child: Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _C.muted)),
+      child: Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF6B7D93))),
     );
 
 class _Field extends StatelessWidget {
@@ -1423,15 +1349,15 @@ class _Field extends StatelessWidget {
         controller: ctrl,
         maxLines: maxLines,
         keyboardType: keyboardType,
-        style: const TextStyle(fontSize: 13, color: _C.text),
+        style: const TextStyle(fontSize: 13, color: Color(0xFF18324A)),
         validator: validator,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(fontSize: 12, color: _C.mutedA60),
+          hintStyle: TextStyle(fontSize: 12, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: _C.navy, width: 2),
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           isDense: true,
@@ -1451,7 +1377,7 @@ class _Dropdown<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DropdownButtonFormField<T>(
         value: value,
-        hint: Text(hint, style: TextStyle(fontSize: 12, color: _C.mutedA60)),
+        hint: Text(hint, style: TextStyle(fontSize: 12, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
         items: items,
         onChanged: onChanged,
         validator: validator,
@@ -1461,11 +1387,11 @@ class _Dropdown<T> extends StatelessWidget {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: _C.navy, width: 2),
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           isDense: true,
         ),
-        style: const TextStyle(fontSize: 13, color: _C.text),
+        style: const TextStyle(fontSize: 13, color: Color(0xFF18324A)),
       );
 }

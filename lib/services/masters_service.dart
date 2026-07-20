@@ -1,8 +1,8 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/patient_models.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
 class MastersData {
   final List<CaseTypeOption> cases;
@@ -20,25 +20,17 @@ class MastersData {
   });
 }
 
-class MastersService {
+class MastersService with AuthenticatedService {
   MastersService._();
   static final MastersService instance = MastersService._();
 
   MastersData? _cache;
 
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
 
   Future<T> _fetch<T>(String path, T Function(List) parse) async {
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/$path');
     final resp = await http
-        .get(uri, headers: await _headers)
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
     if (resp.statusCode != 200) {
@@ -84,7 +76,7 @@ class MastersService {
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/masters/locations');
     final resp = await http
         .post(uri,
-            headers: await _headers,
+            headers: await headers,
             body: jsonEncode({
               'city': city,
               'district': district,

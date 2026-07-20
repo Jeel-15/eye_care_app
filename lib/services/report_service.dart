@@ -5,22 +5,13 @@ import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import '../config/app_config.dart';
 import '../models/report_models.dart';
-import '../services/auth_service.dart';
+import 'base_service.dart';
 
-class ReportService {
+class ReportService with AuthenticatedService {
   ReportService._();
   static final ReportService instance = ReportService._();
 
   String get _base => AppConfig.hospitalApiUrl;
-
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-  }
 
   Future<ReportResult> fetchReport(
     ReportFilter filter, {
@@ -28,7 +19,7 @@ class ReportService {
   }) async {
     final params = filter.toQueryParams(page: page);
     final uri = Uri.parse('$_base/reports').replace(queryParameters: params);
-    final res = await http.get(uri, headers: await _headers);
+    final res = await http.get(uri, headers: await headers);
     final body = jsonDecode(res.body) as Map<String, dynamic>;
     if (res.statusCode != 200 || body['success'] != true) {
       throw Exception(body['message'] ?? 'Failed to load reports');
@@ -38,7 +29,7 @@ class ReportService {
 
   Future<ReportFilterOptions> fetchFilterData() async {
     final uri = Uri.parse('$_base/reports/filter-data');
-    final res = await http.get(uri, headers: await _headers);
+    final res = await http.get(uri, headers: await headers);
     final body = jsonDecode(res.body) as Map<String, dynamic>;
     if (res.statusCode != 200 || body['success'] != true) {
       throw Exception(body['message'] ?? 'Failed to load filter options');
@@ -57,39 +48,38 @@ class ReportService {
     final uri = Uri.parse('$_base/reports/$endpoint').replace(queryParameters: params);
 
     final req = http.Request('GET', uri);
-    (await _headers).forEach((k, v) => req.headers[k] = v);
+    (await headers).forEach((k, v) => req.headers[k] = v);
 
     final client = http.Client();
-    final http.StreamedResponse streamedRes;
     try {
-      streamedRes = await client.send(req);
+      final streamedRes = await client.send(req).timeout(const Duration(seconds: 120));
+      if (streamedRes.statusCode != 200) {
+        throw Exception('Export failed (${streamedRes.statusCode})');
+      }
+
+      final bytes = await streamedRes.stream.toBytes();
+      final ext = format == 'excel' ? 'xlsx' : 'pdf';
+      final ts = DateTime.now().millisecondsSinceEpoch;
+
+      // Prefer external storage so the file is accessible from the file manager
+      Directory dir;
+      if (Platform.isAndroid) {
+        dir = (await getExternalStorageDirectory()) ??
+            await getApplicationDocumentsDirectory();
+      } else {
+        dir = await getApplicationDocumentsDirectory();
+      }
+
+      final filename = 'Patient_Report_$ts.$ext';
+      final file = File('${dir.path}/$filename');
+      await file.writeAsBytes(bytes);
+
+      // Open immediately with the system viewer
+      await OpenFilex.open(file.path);
+
+      return file.path;
     } finally {
       client.close();
     }
-    if (streamedRes.statusCode != 200) {
-      throw Exception('Export failed (${streamedRes.statusCode})');
-    }
-
-    final bytes = await streamedRes.stream.toBytes();
-    final ext = format == 'excel' ? 'xlsx' : 'pdf';
-    final ts = DateTime.now().millisecondsSinceEpoch;
-
-    // Prefer external storage so the file is accessible from the file manager
-    Directory dir;
-    if (Platform.isAndroid) {
-      dir = (await getExternalStorageDirectory()) ??
-          await getApplicationDocumentsDirectory();
-    } else {
-      dir = await getApplicationDocumentsDirectory();
-    }
-
-    final filename = 'Patient_Report_$ts.$ext';
-    final file = File('${dir.path}/$filename');
-    await file.writeAsBytes(bytes);
-
-    // Open immediately with the system viewer
-    await OpenFilex.open(file.path);
-
-    return file.path;
   }
 }

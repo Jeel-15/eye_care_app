@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../widgets/app_empty_state.dart';
 import '../utils/app_route.dart';
 import '../models/auth_models.dart';
 import '../models/doctor_dashboard_models.dart';
@@ -9,6 +10,8 @@ import 'patient_history_screen.dart';
 import 'primary_exam_screen.dart';
 import 'reports_screen.dart';
 import 'secondary_exam_screen.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
 
 class DoctorDashboardScreen extends StatefulWidget {
   final UserInfo user;
@@ -32,15 +35,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   String? _error;
   int? _viewingDoctorId;
   Timer? _tickTimer;
-
-  static const _navy     = Color(0xFF1B4F72);
-  static const _softBg   = Color(0xFFEBF5FB);
-  static const _cardBorder = Color(0xFFCDE5F5);
-  static const _green    = Color(0xFF16A34A);
-  static const _orange   = Color(0xFFEA580C);
-  static const _red      = Color(0xFFDC2626);
-  static const _teal     = Color(0xFF0D9488);
-  static const _textSub  = Color(0xFF64748B);
 
   @override
   void initState() {
@@ -80,15 +74,15 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _softBg,
+      backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
       body: _loading && _data == null
-          ? const Center(child: CircularProgressIndicator(color: _navy))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _error != null && _data == null
               ? _buildError()
               : RefreshIndicator(
                   onRefresh: _load,
-                  color: _navy,
+                  color: AppColors.primary,
                   child: _buildBody(),
                 ),
     );
@@ -100,7 +94,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         : widget.user.name;
 
     return AppBar(
-      backgroundColor: _navy,
+      backgroundColor: AppColors.primary,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.menu_rounded, color: Colors.white),
@@ -125,7 +119,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   Widget _buildError() {
     return Center(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Icon(Icons.error_outline_rounded, size: 48, color: _red.withValues(alpha: 0.5)),
+        Icon(Icons.error_outline_rounded, size: 48, color: AppColors.waitRed.withValues(alpha: 0.5)),
         const SizedBox(height: 12),
         const Text('Failed to load dashboard',
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
@@ -135,7 +129,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
           icon: const Icon(Icons.refresh),
           label: const Text('Retry'),
           style: ElevatedButton.styleFrom(
-              backgroundColor: _navy, foregroundColor: Colors.white),
+              backgroundColor: AppColors.primary, foregroundColor: Colors.white),
         ),
       ]),
     );
@@ -167,12 +161,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
 
   Widget _buildStatCards(DoctorDashStats stats) {
     return Row(children: [
-      _statCard('Assigned\nToday', stats.assignedToday, Icons.people_alt_rounded, _navy),
+      _statCard('Assigned\nToday', stats.assignedToday, Icons.people_alt_rounded, AppColors.primary),
       const SizedBox(width: 8),
       _statCard('Primary\nDone', stats.primaryDone, Icons.check_circle_outline_rounded,
-          const Color(0xFF2980B9)),
+          AppColors.blueLight),
       const SizedBox(width: 8),
-      _statCard('Secondary\nDone', stats.secondaryDone, Icons.check_circle_rounded, _green),
+      _statCard('Secondary\nDone', stats.secondaryDone, Icons.check_circle_rounded, AppColors.waitGreen),
       const SizedBox(width: 8),
       _reportsCard(),
     ]);
@@ -191,7 +185,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
           Text(label,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  fontSize: 9, fontWeight: FontWeight.w700, color: _textSub, height: 1.3)),
+                  fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.textSecondary, height: 1.3)),
         ]),
       ),
     );
@@ -203,13 +197,13 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         onTap: () => Navigator.push(context, appRoute(ReportsScreen(user: widget.user, hospital: widget.hospital))),
         child: _cardBox(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.bar_chart_rounded, color: _navy.withValues(alpha: 0.65), size: 20),
+            Icon(Icons.bar_chart_rounded, color: AppColors.primary.withValues(alpha: 0.65), size: 20),
             const SizedBox(height: 5),
-            Icon(Icons.arrow_forward_rounded, size: 18, color: _navy.withValues(alpha: 0.50)),
+            Icon(Icons.arrow_forward_rounded, size: 18, color: AppColors.primary.withValues(alpha: 0.50)),
             const SizedBox(height: 3),
             const Text('Reports',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: _textSub)),
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
           ]),
         ),
       ),
@@ -222,10 +216,10 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: Color(0xFFCDE5F5)),
         boxShadow: [
           BoxShadow(
-              color: _navy.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, 2)),
+              color: AppColors.primary.withValues(alpha: 0.06), blurRadius: 8, offset: Offset(0, 2)),
         ],
       ),
       child: child,
@@ -238,17 +232,17 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
       decoration: BoxDecoration(
-        color: _softBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _cardBorder),
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: Color(0xFFCDE5F5)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('DOCTORS TODAY',
+        Text('DOCTORS TODAY',
             style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
-                color: _navy)),
+                color: AppColors.primary)),
         const SizedBox(height: 10),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -273,7 +267,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
           color: isSelected ? const Color(0xFFDDEEF9) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? _navy : _cardBorder,
+            color: isSelected ? AppColors.primary : Color(0xFFCDE5F5),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -283,15 +277,15 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               width: 30, height: 30,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? _navy : const Color(0xFFEEF2F6),
-                borderRadius: BorderRadius.circular(8),
+                color: isSelected ? AppColors.primary : Color(0xFFEEF2F6),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Text(
                 doc.name.isNotEmpty ? doc.name[0].toUpperCase() : '?',
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 13,
-                  color: isSelected ? Colors.white : _textSub,
+                  color: isSelected ? Colors.white : AppColors.textSecondary,
                 ),
               ),
             ),
@@ -300,7 +294,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
-                    color: _navy, borderRadius: BorderRadius.circular(5)),
+                    color: AppColors.primary, borderRadius: BorderRadius.circular(5)),
                 child: const Text('You',
                     style: TextStyle(
                         fontSize: 8, fontWeight: FontWeight.w900, color: Colors.white)),
@@ -309,19 +303,19 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
           ]),
           const SizedBox(height: 8),
           Text(doc.name,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _navy),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis),
           const SizedBox(height: 2),
           Text('${doc.assignedToday} patients',
-              style: TextStyle(fontSize: 10, color: _textSub)),
+              style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
           const SizedBox(height: 7),
           Row(children: [
             _miniPill('P:${doc.primaryCount}',
-                doc.primaryCount > 0 ? _navy : const Color(0xFFCBD5E1)),
+                doc.primaryCount > 0 ? AppColors.primary : Color(0xFFCBD5E1)),
             const SizedBox(width: 4),
             _miniPill('S:${doc.secondaryCount}',
-                doc.secondaryCount > 0 ? _green : const Color(0xFFCBD5E1)),
+                doc.secondaryCount > 0 ? AppColors.waitGreen : const Color(0xFFCBD5E1)),
           ]),
         ]),
       ),
@@ -343,7 +337,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8E1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: const Color(0xFFFFC107)),
       ),
       child: Row(children: [
@@ -357,7 +351,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         TextButton(
           onPressed: () => _selectDoctor(null),
           style: TextButton.styleFrom(
-            foregroundColor: _navy,
+            foregroundColor: AppColors.primary,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -382,11 +376,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _cardBorder),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: Color(0xFFCDE5F5)),
         boxShadow: [
           BoxShadow(
-              color: _navy.withValues(alpha: 0.07),
+              color: AppColors.primary.withValues(alpha: 0.07),
               blurRadius: 10,
               offset: const Offset(0, 3)),
         ],
@@ -395,7 +389,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-          color: _navy,
+          color: AppColors.primary,
           child: Row(children: [
             Text(title.toUpperCase(),
                 style: const TextStyle(
@@ -408,7 +402,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
               child: Text('$count',
                   style: const TextStyle(
@@ -428,19 +422,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   }
 
   Widget _buildEmptyQueue() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 28),
-      child: Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.inbox_rounded, size: 34, color: _navy.withValues(alpha: 0.18)),
-          const SizedBox(height: 8),
-          Text('No patients',
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: _textSub.withValues(alpha: 0.55))),
-        ]),
-      ),
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 28),
+      child: AppEmptyState(message: 'No patients'),
     );
   }
 
@@ -489,27 +473,27 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: _cardBorder.withValues(alpha: 0.5)))),
+          border: Border(bottom: BorderSide(color: Color(0xFFCDE5F5).withValues(alpha: 0.5)))),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         SizedBox(
           width: 52,
           child: Text(drIndex,
-              style: const TextStyle(
-                  fontSize: 11, fontWeight: FontWeight.w800, color: _navy)),
+              style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w700, color: _navy),
+                style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
             const SizedBox(height: 2),
             Text(
               '${age != null ? '${age}y' : '-'} • ${city.isNotEmpty ? city : '-'}',
-              style: TextStyle(fontSize: 10, color: _textSub),
+              style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 6),
             Row(children: waitPills),
@@ -543,13 +527,13 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
 
     Color bg;
     if (isFire) {
-      bg = DateTime.now().second % 2 == 0 ? _red : _red.withValues(alpha: 0.55);
+      bg = DateTime.now().second % 2 == 0 ? AppColors.waitRed : AppColors.waitRed.withValues(alpha: 0.55);
     } else if (isRed) {
-      bg = _red;
+      bg = AppColors.waitRed;
     } else if (isOrange) {
-      bg = _orange;
+      bg = AppColors.waitOrange;
     } else {
-      bg = _green;
+      bg = AppColors.waitGreen;
     }
 
     final waitText = mins < 60
@@ -578,7 +562,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(color: _navy, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(AppRadius.sm)),
         child: Text(label,
             style: const TextStyle(
                 color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
@@ -591,7 +575,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(color: _teal, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: Color(0xFF0D9488), borderRadius: BorderRadius.circular(AppRadius.sm)),
         child: const Text('History',
             style: TextStyle(
                 color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
@@ -613,7 +597,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
               color: const Color(0xFFFFF3E0),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
               border: Border.all(color: const Color(0xFFFF9800)),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -688,7 +672,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         content: Text(
             '${p.patientName} is currently dilating.\nOverride and examine now?'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -700,7 +684,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               _openSecondaryExam(p);
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: _navy, foregroundColor: Colors.white),
+                backgroundColor: AppColors.primary, foregroundColor: Colors.white),
             child: const Text('Proceed'),
           ),
         ],

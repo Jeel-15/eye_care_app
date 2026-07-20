@@ -1,36 +1,27 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/medicine_models.dart';
-import '../services/auth_service.dart';
+import 'base_service.dart';
 
-class MedicineService {
+class MedicineService with AuthenticatedService {
   MedicineService._();
   static final MedicineService instance = MedicineService._();
 
   String get _base => AppConfig.hospitalApiUrl;
 
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-  }
-
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   Future<Map<String, dynamic>> _get(String path, {Map<String, String>? params}) async {
     final uri = Uri.parse('$_base/$path').replace(queryParameters: params);
-    final res = await http.get(uri, headers: await _headers);
+    final res = await http.get(uri, headers: await headers);
     return _parse(res);
   }
 
   Future<Map<String, dynamic>> _post(String path, Map<String, dynamic> body) async {
     final res = await http.post(
       Uri.parse('$_base/$path'),
-      headers: await _headers,
+      headers: await headers,
       body: jsonEncode(body),
     );
     return _parse(res);
@@ -39,14 +30,14 @@ class MedicineService {
   Future<Map<String, dynamic>> _put(String path, Map<String, dynamic> body) async {
     final res = await http.put(
       Uri.parse('$_base/$path'),
-      headers: await _headers,
+      headers: await headers,
       body: jsonEncode(body),
     );
     return _parse(res);
   }
 
   Future<void> _delete(String path) async {
-    final res = await http.delete(Uri.parse('$_base/$path'), headers: await _headers);
+    final res = await http.delete(Uri.parse('$_base/$path'), headers: await headers);
     _parse(res);
   }
 

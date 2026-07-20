@@ -157,7 +157,7 @@ class UserService {
     int? roleId,
     String? status,
   }) async {
-    final params = <String, String>{'page': page.toString()};
+    final params = <String, String>{'page': page.toString(), 'per_page': '20'};
     if (search != null && search.isNotEmpty) params['search'] = search;
     if (roleId != null) params['role_id'] = roleId.toString();
     if (status != null) params['status'] = status;

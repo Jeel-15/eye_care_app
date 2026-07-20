@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 
 /// Animated shimmer skeleton list — one controller keeps all tiles in sync.
 class AppSkeletonList extends StatefulWidget {
@@ -78,15 +79,13 @@ class _SkeletonTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const base  = Color(0xFFE2E8F0);
-    const shine = Color(0xFFF8FAFC);
     final x = -3.0 + t * 6.0;
     return Container(
       height: height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
         gradient: LinearGradient(
-          colors: const [base, shine, base],
+          colors: const [AppColors.skeletonBase, AppColors.skeletonShine, AppColors.skeletonBase],
           begin: Alignment(x, 0),
           end: Alignment(x + 1.0, 0),
         ),

@@ -1,7 +1,7 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
 class OtSlotItem {
   final int id;
@@ -24,32 +24,17 @@ class OtSlotItem {
       );
 }
 
-class OtSlotService {
+class OtSlotService with AuthenticatedService {
   OtSlotService._();
   static final OtSlotService instance = OtSlotService._();
 
   String get _base => AppConfig.hospitalApiUrl;
 
-  Future<Map<String, String>> get _headers async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-  }
-
-  Map<String, dynamic> _parse(http.Response res) {
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Request failed (${res.statusCode})');
-    }
-    return body;
-  }
+  Map<String, dynamic> _parse(http.Response res) => parseApiResponse(res);
 
   Future<List<OtSlotItem>> fetchAll() async {
     final res = await http
-        .get(Uri.parse('$_base/masters/ot-slots'), headers: await _headers)
+        .get(Uri.parse('$_base/masters/ot-slots'), headers: await headers)
         .timeout(AppConfig.requestTimeout);
     final body = _parse(res);
     return (body['data'] as List? ?? [])
@@ -62,7 +47,7 @@ class OtSlotService {
     final res = await http
         .post(
           Uri.parse('$_base/masters/ot-slots'),
-          headers: await _headers,
+          headers: await headers,
           body: jsonEncode({
             'slot_name': slotName,
             'start_time': startTime,
@@ -79,7 +64,7 @@ class OtSlotService {
     final res = await http
         .put(
           Uri.parse('$_base/masters/ot-slots/$id'),
-          headers: await _headers,
+          headers: await headers,
           body: jsonEncode({
             'slot_name': slotName,
             'start_time': startTime,
@@ -93,7 +78,7 @@ class OtSlotService {
 
   Future<void> delete(int id) async {
     final res = await http
-        .delete(Uri.parse('$_base/masters/ot-slots/$id'), headers: await _headers)
+        .delete(Uri.parse('$_base/masters/ot-slots/$id'), headers: await headers)
         .timeout(AppConfig.requestTimeout);
     _parse(res);
   }

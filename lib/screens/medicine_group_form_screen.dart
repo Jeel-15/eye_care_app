@@ -1,40 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_radius.dart';
+import '../widgets/app_animations.dart';
 import '../models/auth_models.dart';
 import '../models/medicine_models.dart';
 import '../services/medicine_service.dart';
 
-// ── Color constants ────────────────────────────────────────────────────────────
-
-abstract final class _C {
-  static const navy    = Color(0xFF1B4F72);
-  static const danger  = Color(0xFFD94841);
-  static const muted   = Color(0xFF6B7D93);
-  static const text    = Color(0xFF18324A);
-  static const bg      = Color(0xFFF6FAFD);
-
-  static final navyA06  = navy.withValues(alpha: 0.06);
-  static final navyA10  = navy.withValues(alpha: 0.10);
-  static final navyA12  = navy.withValues(alpha: 0.12);
-  static final mutedA60 = muted.withValues(alpha: 0.60);
-}
-
 BoxDecoration _cardDeco() => BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: _C.navyA10),
-      boxShadow: [BoxShadow(color: _C.navyA06, blurRadius: 8, offset: const Offset(0, 2))],
+      border: Border.all(color: AppColors.primaryA10),
+      boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
     );
 
-void _snack(BuildContext ctx, String msg, {bool error = false}) {
-  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-    content: Text(msg),
-    behavior: SnackBarBehavior.floating,
-    backgroundColor: error ? _C.danger : _C.navy,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    duration: const Duration(seconds: 3),
-  ));
-}
+
 
 // ═════════════════════════════════════════════════════════════════════════════
 // FORM SCREEN
@@ -165,7 +145,7 @@ class _MedicineGroupFormScreenState extends State<MedicineGroupFormScreen> {
 
     for (int i = 0; i < _medIds.length; i++) {
       if (_medIds[i] == null) {
-        _snack(context, 'Row ${i + 1}: Select a medicine', error: true);
+        showAppSnackBar(context, 'Row ${i + 1}: Select a medicine', isError: true);
         return;
       }
     }
@@ -195,7 +175,7 @@ class _MedicineGroupFormScreenState extends State<MedicineGroupFormScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        _snack(context, e.toString().replaceFirst('Exception: ', ''), error: true);
+        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
       }
     }
   }
@@ -206,9 +186,9 @@ class _MedicineGroupFormScreenState extends State<MedicineGroupFormScreen> {
   Widget build(BuildContext context) {
     final isEdit = widget.existing != null;
     return Scaffold(
-      backgroundColor: _C.bg,
+      backgroundColor: const Color(0xFFF6FAFD),
       appBar: AppBar(
-        backgroundColor: _C.navy,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         title: Text(
@@ -235,7 +215,7 @@ class _MedicineGroupFormScreenState extends State<MedicineGroupFormScreen> {
         ],
       ),
       body: _loadingFormData
-          ? const Center(child: CircularProgressIndicator(color: _C.navy))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _loadError != null
               ? _buildError()
               : _buildForm(),
@@ -248,17 +228,17 @@ class _MedicineGroupFormScreenState extends State<MedicineGroupFormScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.wifi_off_rounded, size: 48, color: _C.mutedA60),
+              Icon(Icons.wifi_off_rounded, size: 48, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
               const SizedBox(height: 12),
-              Text(_loadError!, textAlign: TextAlign.center, style: const TextStyle(color: _C.muted, fontSize: 13)),
+              Text(_loadError!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF6B7D93), fontSize: 13)),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _loadFormData,
                 icon: const Icon(Icons.refresh_rounded, size: 16),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _C.navy, foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  backgroundColor: AppColors.primary, foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                 ),
               ),
             ],
@@ -280,8 +260,8 @@ class _MedicineGroupFormScreenState extends State<MedicineGroupFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Group Details',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: _C.navy)),
+                Text('Group Details',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppColors.primary)),
                 const SizedBox(height: 14),
                 _lbl('Group Name *'),
                 _Field(
@@ -312,19 +292,19 @@ class _MedicineGroupFormScreenState extends State<MedicineGroupFormScreen> {
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text('Medicines',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: _C.navy)),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppColors.primary)),
                     ),
                     ElevatedButton.icon(
                       onPressed: _addRow,
                       icon: const Icon(Icons.add_rounded, size: 14),
                       label: const Text('Add Row', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _C.navy,
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
                         elevation: 0,
                       ),
                     ),
@@ -359,10 +339,10 @@ class _MedicineGroupFormScreenState extends State<MedicineGroupFormScreen> {
             child: ElevatedButton(
               onPressed: _saving ? null : _save,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _C.navy,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
               ),
               child: _saving
                   ? const SizedBox(
@@ -423,9 +403,9 @@ class _RowCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _C.navyA06,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _C.navyA12),
+        color: AppColors.primaryA06,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.primaryA12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,7 +416,7 @@ class _RowCard extends StatelessWidget {
                 width: 24, height: 24,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: _C.navy,
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -452,10 +432,10 @@ class _RowCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: _C.danger.withValues(alpha: 0.10),
+                      color: const Color(0xFFD94841).withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Icon(Icons.close_rounded, size: 15, color: _C.danger),
+                    child: Icon(Icons.close_rounded, size: 15, color: const Color(0xFFD94841)),
                   ),
                 ),
             ],
@@ -569,17 +549,17 @@ class _DiagnosisDropdown extends StatelessWidget {
         value: value,
         isExpanded: true,
         dropdownColor: Colors.white,
-        hint: Text('— None —', style: TextStyle(fontSize: 12, color: _C.mutedA60)),
+        hint: Text('— None —', style: TextStyle(fontSize: 12, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: _C.navy, width: 2),
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           isDense: true,
         ),
-        style: const TextStyle(fontSize: 13, color: _C.text),
+        style: const TextStyle(fontSize: 13, color: Color(0xFF18324A)),
         items: [
           const DropdownMenuItem<int?>(value: null, child: Text('— None —')),
           ...diagnoses.map((d) => DropdownMenuItem<int?>(value: d.id, child: Text(d.name))),
@@ -608,21 +588,21 @@ class _RowDropdown<T> extends StatelessWidget {
         value: value,
         isExpanded: true,
         dropdownColor: Colors.white,
-        hint: Text(hint, style: TextStyle(fontSize: 11, color: _C.mutedA60)),
+        hint: Text(hint, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
         decoration: InputDecoration(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: _C.navy, width: 2),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
           isDense: true,
           filled: true,
           fillColor: Colors.white,
         ),
-        style: const TextStyle(fontSize: 12, color: _C.text),
+        style: const TextStyle(fontSize: 12, color: Color(0xFF18324A)),
         items: includeNull
-            ? [DropdownMenuItem<T>(value: null, child: Text('—', style: TextStyle(color: _C.mutedA60))), ...items]
+            ? [DropdownMenuItem<T>(value: null, child: Text('—', style: TextStyle(color: Color(0xFF6B7D93).withValues(alpha: 0.60)))), ...items]
             : items,
         onChanged: onChanged,
       );
@@ -641,14 +621,14 @@ class _RowField extends StatelessWidget {
         controller: ctrl,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
-        style: const TextStyle(fontSize: 12, color: _C.text),
+        style: const TextStyle(fontSize: 12, color: Color(0xFF18324A)),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(fontSize: 11, color: _C.mutedA60),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          hintStyle: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: _C.navy, width: 2),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
           isDense: true,
@@ -669,14 +649,14 @@ class _Field extends StatelessWidget {
   Widget build(BuildContext context) => TextFormField(
         controller: ctrl,
         validator: validator,
-        style: const TextStyle(fontSize: 13, color: _C.text),
+        style: const TextStyle(fontSize: 13, color: Color(0xFF18324A)),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(fontSize: 12, color: _C.mutedA60),
+          hintStyle: TextStyle(fontSize: 12, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: _C.navy, width: 2),
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           isDense: true,
@@ -688,6 +668,6 @@ Widget _lbl(String text) => Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
         text,
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _C.mutedA60),
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
       ),
     );
