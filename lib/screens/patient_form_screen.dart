@@ -2,13 +2,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/auth_models.dart';
+import '../models/ot_appointment_models.dart';
 import '../models/patient_models.dart';
 import '../services/masters_service.dart';
 import '../services/patient_service.dart';
 import '../constants/app_colors.dart';
 import '../utils/phone_rules.dart';
 import '../constants/app_radius.dart';
+import '../utils/date_format.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
 
 enum PatientFormMode { addWalkIn, addPhone, edit }
 
@@ -17,6 +20,11 @@ class PatientFormScreen extends StatefulWidget {
   final Patient? patient;
   final UserInfo user;
   final HospitalInfo hospital;
+  // Light client-side prefill when opening "Walk-In" from an OT appointment
+  // row (receptionist "Today Added Patients" widget) — name/contact/age/
+  // gender only, no backend link to the OT appointment (that's the separate,
+  // optional TASK 5.3). See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §9.
+  final OtAppointmentItem? prefillOt;
 
   const PatientFormScreen({
     super.key,
@@ -24,6 +32,7 @@ class PatientFormScreen extends StatefulWidget {
     this.patient,
     required this.user,
     required this.hospital,
+    this.prefillOt,
   });
 
   @override
@@ -89,6 +98,8 @@ class _PatientFormScreenState extends State<PatientFormScreen>
     _loadMasters();
     if (widget.mode == PatientFormMode.edit && widget.patient != null) {
       _prefillFromPatient(widget.patient!);
+    } else if (widget.mode == PatientFormMode.addWalkIn && widget.prefillOt != null) {
+      _prefillFromOt(widget.prefillOt!);
     }
   }
 
@@ -122,6 +133,17 @@ class _PatientFormScreenState extends State<PatientFormScreen>
     _selectedReferrerId = p.referrer?.id;
     _isOldPatient = p.isOldPatient;
     _examDoneWarning = p.primaryDoneAt != null;
+  }
+
+  void _prefillFromOt(OtAppointmentItem o) {
+    _firstCtrl.text = o.patientName;
+    _middleCtrl.text = o.middleName ?? '';
+    _lastCtrl.text = o.surname;
+    _contactCtrl.text = o.mobileNo;
+    _whatsappCtrl.text = o.whatsappNo ?? '';
+    _ageCtrl.text = o.age > 0 ? o.age.toString() : '';
+    _selectedGender = o.gender.toLowerCase() == 'female' ? 'female' : 'male';
+    _occupationCtrl.text = o.occupation ?? '';
   }
 
   Future<void> _loadMasters() async {
@@ -402,6 +424,10 @@ class _PatientFormScreenState extends State<PatientFormScreen>
         data['slot_id'] = _selectedSlotId;
       }
 
+      if (widget.mode == PatientFormMode.addWalkIn && widget.prefillOt != null) {
+        data['ot_appointment_id'] = widget.prefillOt!.id;
+      }
+
       if (isEdit) {
         // case_fee is editable in edit
         data['case_fee'] =
@@ -536,27 +562,9 @@ class _PatientFormScreenState extends State<PatientFormScreen>
   }
 
   Widget _buildMastersError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.wifi_off_rounded,
-                size: 48, color: Color(0xFFDC3545)),
-            const SizedBox(height: 12),
-            Text(_mastersError ?? 'Failed to load form data.',
-                textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _loadMasters,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            ),
-          ],
-        ),
-      ),
+    return AppErrorState(
+      message: _mastersError ?? 'Failed to load form data.',
+      onRetry: _loadMasters,
     );
   }
 
@@ -801,12 +809,12 @@ class _PatientFormScreenState extends State<PatientFormScreen>
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
-        borderSide: const BorderSide(color: Color(0xFFDC3545)),
+        borderSide: const BorderSide(color: AppColors.red),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
         borderSide:
-            const BorderSide(color: Color(0xFFDC3545), width: 1.5),
+            const BorderSide(color: AppColors.red, width: 1.5),
       ),
     );
   }
@@ -1189,9 +1197,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   String _formatDate(DateTime dt, {bool iso = false}) {
-    if (iso) {
-      return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
-    }
+    if (iso) return toIsoDate(dt);
     return '${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}';
   }
 }

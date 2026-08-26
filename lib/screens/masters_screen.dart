@@ -10,8 +10,13 @@ import 'case_type_master_screen.dart';
 import 'generic_master_screen.dart';
 import 'location_master_screen.dart';
 import 'ot_charge_head_master_screen.dart';
+import 'ot_lens_inventory_master_screen.dart';
+import 'ot_lens_option_master_screen.dart';
+import 'ot_lens_power_master_screen.dart';
+import 'ot_package_master_screen.dart';
 import 'ot_slot_master_screen.dart';
 import 'ot_surgery_type_master_screen.dart';
+import 'ot_type_master_screen.dart';
 import 'referrer_master_screen.dart';
 
 
@@ -46,6 +51,9 @@ final _ot = [
   _Item(Icons.label_rounded,          'OT Types',       AppColors.green,   slug: 'ot-types'),
   _Item(Icons.cut_rounded,            'Surgery Types',  AppColors.orange, slug: 'ot-surgery-types'),
   _Item(Icons.payments_rounded,       'Charge Heads',   AppColors.teal,   slug: 'ot-charge-heads'),
+  _Item(Icons.inventory_2_rounded,    'Lens Inventory', AppColors.blue,   slug: 'ot-lens-inventory'),
+  _Item(Icons.lens_rounded,           'Lens Powers',    AppColors.purple, slug: 'ot-lens-powers'),
+  _Item(Icons.card_giftcard_rounded,  'Packages',       AppColors.tealDark, slug: 'ot-packages'),
 ];
 
 final _clinical = [
@@ -115,12 +123,15 @@ class MastersScreen extends StatelessWidget {
     // OT masters — each item gated by its own permission.
     // Lens Options has no dedicated slug: shown to anyone with any OT master perm.
     final otVisible = <_Item>[
-      if (p.isSuper || p.can(Perm.masterOtSlots) || p.can(Perm.masterOtTypes) || p.can(Perm.masterOtCharges))
+      if (p.isSuper || p.can(Perm.masterOtSlots) || p.can(Perm.masterOtTypes) || p.can(Perm.masterOtCharges) || p.can(Perm.masterOtInventory))
         _ot[0], // Lens Options
-      if (p.can(Perm.masterOtSlots))   _ot[1], // OT Slots
-      if (p.can(Perm.masterOtTypes))   _ot[2], // OT Types
-      if (p.can(Perm.masterOtTypes))   _ot[3], // Surgery Types
-      if (p.can(Perm.masterOtCharges)) _ot[4], // Charge Heads
+      if (p.can(Perm.masterOtSlots))     _ot[1], // OT Slots
+      if (p.can(Perm.masterOtTypes))     _ot[2], // OT Types
+      if (p.can(Perm.masterOtTypes))     _ot[3], // Surgery Types
+      if (p.can(Perm.masterOtCharges))   _ot[4], // Charge Heads
+      if (p.can(Perm.masterOtInventory)) _ot[5], // Lens Inventory
+      if (p.can(Perm.masterOtInventory)) _ot[6], // Lens Powers
+      if (p.can(Perm.masterOtInventory)) _ot[7], // Packages
     ];
     final showOt      = otVisible.isNotEmpty;
     final showEyeExam = p.can(Perm.masterEyeExam);
@@ -309,6 +320,11 @@ class MastersScreen extends StatelessWidget {
       'ot-slots'        => OtSlotMasterScreen(accentColor: item.color),
       'ot-charge-heads'   => OtChargeHeadMasterScreen(accentColor: item.color),
       'ot-surgery-types'  => OtSurgeryTypeMasterScreen(accentColor: item.color),
+      'lens-options'      => OtLensOptionMasterScreen(accentColor: item.color),
+      'ot-types'          => OtTypeMasterScreen(accentColor: item.color),
+      'ot-lens-inventory' => OtLensInventoryMasterScreen(accentColor: item.color),
+      'ot-lens-powers'    => OtLensPowerMasterScreen(accentColor: item.color),
+      'ot-packages'       => OtPackageMasterScreen(accentColor: item.color),
       'locations'         => LocationMasterScreen(accentColor: item.color),
       _ => GenericMasterScreen(
         title: item.label,

@@ -1,11 +1,10 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/dashboard_models.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 import 'cache_service.dart';
 
-class DashboardService {
+class DashboardService with AuthenticatedService {
   DashboardService._();
   static final instance = DashboardService._();
 
@@ -22,23 +21,18 @@ class DashboardService {
   }
 
   Future<DashboardData> fetchDashboard() async {
-    final token = await AuthService.instance.getStoredToken();
-    if (token == null) throw Exception('Not authenticated');
-
     final uri = Uri.parse('${AppConfig.hospitalApiUrl}/admin/dashboard');
-    final response = await http
-        .get(uri, headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        })
-        .timeout(AppConfig.requestTimeout);
+    final response = await http.get(uri, headers: await headers).timeout(AppConfig.requestTimeout);
+    final json = parseApiResponse(response);
+    await CacheService.instance.setJson(_cacheKey, json);
+    return DashboardData.fromJson(json);
+  }
 
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      await CacheService.instance.setJson(_cacheKey, json);
-      return DashboardData.fromJson(json);
-    }
-
-    throw Exception('Dashboard fetch failed (${response.statusCode})');
+  Future<TodayPatientsData> fetchTodayPatients({String searchContact = ''}) async {
+    final uri = Uri.parse('${AppConfig.hospitalApiUrl}/dashboard/today-patients').replace(
+      queryParameters: searchContact.isNotEmpty ? {'search_contact': searchContact} : null,
+    );
+    final response = await http.get(uri, headers: await headers).timeout(AppConfig.requestTimeout);
+    return TodayPatientsData.fromJson(parseApiResponse(response));
   }
 }

@@ -1,9 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' show Color;
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
 // ── Models ────────────────────────────────────────────────────────────────────
 
@@ -128,26 +127,9 @@ class UserListResponse {
 
 // ── Service ───────────────────────────────────────────────────────────────────
 
-class UserService {
+class UserService with AuthenticatedService {
   UserService._();
   static final UserService instance = UserService._();
-
-  Future<Map<String, String>> _authHeaders() async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-  }
-
-  Future<Map<String, String>> _bearerHeaders() async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    };
-  }
 
   // ── List ──────────────────────────────────────────────────────────────────
 
@@ -166,13 +148,10 @@ class UserService {
         .replace(queryParameters: params);
 
     final res = await http
-        .get(uri, headers: await _authHeaders())
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to load users (${res.statusCode})');
-    }
+    final body = parseApiResponse(res);
 
     final data = body['data'] as Map<String, dynamic>;
     final meta = data['meta'] as Map<String, dynamic>;
@@ -193,14 +172,11 @@ class UserService {
     final res = await http
         .get(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/users/form-data'),
-          headers: await _authHeaders(),
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to load form data');
-    }
+    final body = parseApiResponse(res);
 
     final data = body['data'] as Map<String, dynamic>;
     return UserFormData(
@@ -219,14 +195,11 @@ class UserService {
     final res = await http
         .get(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/users/$id'),
-          headers: await _authHeaders(),
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to load user');
-    }
+    final body = parseApiResponse(res);
     return HospitalUserModel.fromJson(body['data'] as Map<String, dynamic>);
   }
 
@@ -248,13 +221,11 @@ class UserService {
     File? signature,
     File? profilePhoto,
   }) async {
-    final token = await AuthService.instance.getStoredToken();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('${AppConfig.hospitalApiUrl}/config/users'),
     );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
+    request.headers.addAll(await headers);
 
     request.fields['name']                  = name;
     request.fields['email']                 = email;
@@ -279,16 +250,7 @@ class UserService {
 
     final streamed = await request.send().timeout(AppConfig.requestTimeout);
     final res      = await http.Response.fromStream(streamed);
-    final body     = jsonDecode(res.body) as Map<String, dynamic>;
-
-    if (res.statusCode >= 400) {
-      final errors = body['errors'] as Map<String, dynamic>?;
-      if (errors != null && errors.isNotEmpty) {
-        final firstVal = errors.values.first;
-        throw Exception(firstVal is List ? firstVal.first.toString() : firstVal.toString());
-      }
-      throw Exception(body['message'] ?? 'Failed to create user (${res.statusCode})');
-    }
+    final body     = parseApiResponse(res);
 
     return HospitalUserModel.fromJson(body['data'] as Map<String, dynamic>);
   }
@@ -314,13 +276,11 @@ class UserService {
     File? profilePhoto,
     bool clearProfilePhoto = false,
   }) async {
-    final token = await AuthService.instance.getStoredToken();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('${AppConfig.hospitalApiUrl}/config/users/$id'),
     );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
+    request.headers.addAll(await headers);
 
     request.fields['name']           = name;
     request.fields['email']          = email;
@@ -353,16 +313,7 @@ class UserService {
 
     final streamed = await request.send().timeout(AppConfig.requestTimeout);
     final res      = await http.Response.fromStream(streamed);
-    final body     = jsonDecode(res.body) as Map<String, dynamic>;
-
-    if (res.statusCode >= 400) {
-      final errors = body['errors'] as Map<String, dynamic>?;
-      if (errors != null && errors.isNotEmpty) {
-        final firstVal = errors.values.first;
-        throw Exception(firstVal is List ? firstVal.first.toString() : firstVal.toString());
-      }
-      throw Exception(body['message'] ?? 'Failed to update user (${res.statusCode})');
-    }
+    final body     = parseApiResponse(res);
 
     return HospitalUserModel.fromJson(body['data'] as Map<String, dynamic>);
   }
@@ -373,14 +324,11 @@ class UserService {
     final res = await http
         .delete(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/users/$id'),
-          headers: await _authHeaders(),
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to delete user (${res.statusCode})');
-    }
+    parseApiResponse(res);
   }
 
   // ── Toggle Status ─────────────────────────────────────────────────────────
@@ -389,14 +337,11 @@ class UserService {
     final res = await http
         .patch(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/users/$id/toggle-status'),
-          headers: await _bearerHeaders(),
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to toggle status');
-    }
+    final body = parseApiResponse(res);
     return (body['data'] as Map<String, dynamic>)['status'] as String;
   }
 }

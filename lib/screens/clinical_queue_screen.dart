@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_route.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
 import '../models/auth_models.dart';
 import '../models/clinical_queue_models.dart';
 import '../models/patient_models.dart';
@@ -289,34 +290,7 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
       return const AppSkeletonList();
     }
     if (_error != null && _data == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.wifi_off_rounded, size: 52, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
-              const SizedBox(height: 16),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF6B7D93), fontSize: 14),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: _load,
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Retry'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
 
     final data = _data;
@@ -423,8 +397,14 @@ class _AllDoctorsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryN   = data.totalPrimary;
-    final secondaryN = data.totalSecondary + data.totalDilation;
+    // Aggregate from data.doctors (per-doctor summaries, always unfiltered)
+    // rather than data.totalPrimary/totalSecondary/totalDilation, which are
+    // derived from primaryQueue/dilationQueue/secondaryQueue — lists that
+    // are scoped to whichever doctor is currently selected. Using those here
+    // made the "All Doctors" card show a specific doctor's counts (often 0)
+    // instead of the true grand total whenever a doctor filter was active.
+    final primaryN   = data.doctors.fold<int>(0, (sum, d) => sum + d.primaryPending);
+    final secondaryN = data.doctors.fold<int>(0, (sum, d) => sum + d.secondaryPending);
 
     return GestureDetector(
       onTap: onTap,
@@ -464,7 +444,7 @@ class _AllDoctorsCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        '${data.total} Total',
+                        '${primaryN + secondaryN} Total',
                         style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
                       ),
                     ],

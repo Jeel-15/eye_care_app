@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
 import '../models/auth_models.dart';
 import '../models/medicine_models.dart';
 import '../services/medicine_service.dart';
@@ -222,29 +223,7 @@ class _MedicineGroupFormScreenState extends State<MedicineGroupFormScreen> {
     );
   }
 
-  Widget _buildError() => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.wifi_off_rounded, size: 48, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
-              const SizedBox(height: 12),
-              Text(_loadError!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF6B7D93), fontSize: 13)),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _loadFormData,
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Retry'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary, foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+  Widget _buildError() => AppErrorState(message: _loadError!, onRetry: _loadFormData);
 
   Widget _buildForm() {
     final fd = _formData!;

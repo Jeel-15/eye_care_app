@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../utils/app_route.dart';
+import '../widgets/app_error_state.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
@@ -369,32 +370,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     }
 
     if (_error != null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Column(
-          children: [
-            Icon(Icons.wifi_off_rounded, size: 38, color: AppColors.primaryA50),
-            const SizedBox(height: 12),
-            Text('Failed to load history',
-                style: TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primaryA62)),
-            const SizedBox(height: 4),
-            Text(_error!, textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: AppColors.primaryA50)),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _loadHistory,
-              icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary, foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.xl)),
-              ),
-            ),
-          ],
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _loadHistory);
     }
 
     if (_history == null || _history!.exams.isEmpty) {

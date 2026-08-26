@@ -5,6 +5,7 @@ import '../models/auth_models.dart';
 import '../services/auth_service.dart';
 import '../services/permission_service.dart';
 import '../utils/circular_reveal_route.dart';
+import '../widgets/pulsing_pupil_loader.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 
@@ -203,41 +204,11 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
 
-          // ── Centre spinner — fades at Phase 2 start (reveal origin) ────
+          // ── Centre loader — fades at Phase 2 start (reveal origin) ────
           Center(
             child: FadeTransition(
               opacity: _spinnerFade,
-              child: SizedBox(
-                width: 64,
-                height: 64,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      strokeWidth: 4,
-                      strokeCap: StrokeCap.round,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.white,
-                      ),
-                      backgroundColor: Colors.white.withValues(alpha: 0.18),
-                    ),
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.white.withValues(alpha: 0.60),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: const PulsingPupilLoader(size: 64),
             ),
           ),
 

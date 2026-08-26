@@ -25,13 +25,21 @@ abstract class Perm {
   static const opdReportsView          = 'opd.reports.view';
   static const opdReportsExport        = 'opd.reports.export';
 
-  // ── OT — Booking ─────────────────────────────────────────────────────────
+  // ── OT — Booking (legacy pre-Round-3 flow; still gates the "OT Bookings" nav item) ──
   static const otBookingCreate         = 'ot.booking.create';
   static const otBookingModify         = 'ot.booking.modify';
   static const otBookingCancel         = 'ot.booking.cancel';
   static const otCounsellingFill       = 'ot.counselling.fill';
   static const otPatientList           = 'ot.patient.list';
   static const otPackageSet            = 'ot.package.set';
+  // OT — Appointment module (Round 3 Phase 2 — new booking/appointment flow)
+  static const otAppointmentView       = 'ot.appointment.view';
+  static const otAppointmentCreate     = 'ot.appointment.create';
+  static const otAppointmentEdit       = 'ot.appointment.edit';
+  // OT — Consent capture (Round 3 Phase 1)
+  static const otConsentCapture        = 'ot.consent.capture';
+  // OT — Doctor's "Recommend Surgery" handoff (Round 3.5)
+  static const otSurgeryRecommend      = 'ot.surgery.recommend';
 
   // ── OT — Payment ─────────────────────────────────────────────────────────
   static const otPaymentRecord         = 'ot.payment.record';
@@ -72,6 +80,9 @@ abstract class Perm {
   static const masterOtSlots           = 'master.ot_slots';
   static const masterOtTypes           = 'master.ot_types';
   static const masterOtCharges         = 'master.ot_charges';
+  // Lens Inventory / Lens Powers / Packages masters (Round 3 Phase 7) — also
+  // gates the corrected OT Lens Options route (Round 3.5)
+  static const masterOtInventory       = 'master.ot_inventory';
 
   // ── Settings ─────────────────────────────────────────────────────────────
   static const settingsHospital        = 'settings.hospital';

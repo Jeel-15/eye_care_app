@@ -6,6 +6,7 @@ import '../widgets/app_animations.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../services/auth_service.dart';
+import '../services/onboarding_service.dart';
 import '../services/permission_service.dart';
 import '../utils/app_nav_label.dart';
 import '../utils/medicines_tab.dart';
@@ -24,6 +25,13 @@ import 'users_screen.dart';
 import 'foc_screen.dart';
 import 'roles_screen.dart';
 import 'doctor_dashboard_screen.dart';
+import 'onboarding_screen.dart';
+import 'ot_appointment_list_screen.dart';
+import 'ot_counsellor_dashboard_screen.dart';
+import 'ot_accountant_dashboard_screen.dart';
+import 'ot_discharge_dashboard_screen.dart';
+import 'ot_assistant_dashboard_screen.dart';
+import 'ot_ward_queue_screen.dart';
 import '../utils/app_route.dart';
 
 
@@ -60,6 +68,21 @@ class _HomeScreenState extends State<HomeScreen>
       duration: const Duration(milliseconds: 280),
       value: i == 0 ? 1.0 : 0.0,   // page 0 starts fully visible
     ));
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOnboarding());
+  }
+
+  Future<void> _maybeShowOnboarding() async {
+    if (!await OnboardingService.instance.shouldShow()) return;
+    final slides = OnboardingService.instance.slidesForCurrentUser(roleSlug: widget.user.role?.slug);
+    if (slides == null || !mounted) return;
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (_, _, _) => OnboardingScreen(slides: slides, onDone: () => Navigator.of(context).pop()),
+        transitionsBuilder: (_, animation, _, child) => FadeTransition(opacity: animation, child: child),
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
   }
 
   @override
@@ -216,6 +239,18 @@ class _HomeScreenState extends State<HomeScreen>
         Navigator.push(context, appRoute(FocScreen(user: widget.user, hospital: widget.hospital)));
       case NavLabel.rolesAndPerms:
         Navigator.push(context, appRoute(RolesScreen(user: widget.user, hospital: widget.hospital)));
+      case NavLabel.otAppointments:
+        Navigator.push(context, appRoute(const OtAppointmentListScreen()));
+      case NavLabel.otCounsellor:
+        Navigator.push(context, appRoute(const OtCounsellorDashboardScreen()));
+      case NavLabel.wardManagement:
+        Navigator.push(context, appRoute(const OtWardQueueScreen()));
+      case NavLabel.assistantDashboard:
+        Navigator.push(context, appRoute(OtAssistantDashboardScreen(user: widget.user)));
+      case NavLabel.accountantBilling:
+        Navigator.push(context, appRoute(const OtAccountantDashboardScreen()));
+      case NavLabel.dischargeInvoices:
+        Navigator.push(context, appRoute(const OtDischargeDashboardScreen()));
       default:
         showAppSnackBar(context, '$label — Coming Soon', duration: const Duration(seconds: 2));
     }

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../utils/app_route.dart';
+import '../utils/date_format.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
 import 'package:flutter/services.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
@@ -292,28 +294,9 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
   }
 
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.wifi_off_rounded,
-                size: 48, color: AppColors.red),
-            const SizedBox(height: 12),
-            Text(_mastersError ?? 'Failed to load form data.',
-                textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _loadMasters,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            ),
-          ],
-        ),
-      ),
+    return AppErrorState(
+      message: _mastersError ?? 'Failed to load form data.',
+      onRetry: _loadMasters,
     );
   }
 
@@ -853,6 +836,5 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
   String _fmtDate(DateTime dt) =>
       '${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}';
 
-  String _fmtDateIso(DateTime dt) =>
-      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  String _fmtDateIso(DateTime dt) => toIsoDate(dt);
 }

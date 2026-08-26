@@ -11,6 +11,7 @@ import '../services/platform_dashboard_service.dart';
 import '../utils/app_decorations.dart';
 import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
 import '../widgets/app_section_header.dart';
 import '../widgets/status_badge.dart';
 import 'platform_hospital_detail_screen.dart';
@@ -78,22 +79,7 @@ class _PlatformDashboardScreenState extends State<PlatformDashboardScreen> {
               const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
             else if (_error != null)
               SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.wifi_off_rounded, size: 48, color: AppColors.primaryA20),
-                      const SizedBox(height: 12),
-                      Text(_error!, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _load,
-                        icon: const Icon(Icons.refresh_rounded, size: 16),
-                        label: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
+                child: AppErrorState(message: _error!, onRetry: _load),
               )
             else
               SliverToBoxAdapter(child: _buildContent(_data!)),

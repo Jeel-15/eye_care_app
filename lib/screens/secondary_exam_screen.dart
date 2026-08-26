@@ -7,10 +7,15 @@ import '../models/medicine_models.dart';
 import '../models/patient_models.dart';
 import '../services/exam_masters_service.dart';
 import '../services/exam_service.dart';
+import '../services/referrer_service.dart';
 import '../services/simple_master_service.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../constants/permissions.dart';
+import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/ot/recommend_surgery_sheet.dart';
 
 class _PrescRow {
   int? medicineId;
@@ -144,6 +149,9 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
   final _fundusCommentLe = TextEditingController();
   List<ExamMasterItem> _fundusDiscMasters = [];
   List<ExamMasterItem> _fundusFrMasters   = [];
+  // Pseudophakia panel's Hospital field autocompletes from the Referrers
+  // master list, matching web (datalist sourced from $masters['referrers']).
+  List<ExamMasterItem> _referrers = [];
 
   // Diagnosis
   List<ExamMasterItem> _diagnosisMasters = [];
@@ -219,6 +227,8 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
           ? await ExamService.instance.loadPrimaryExam(widget.patient.id)
           : null;
 
+      final referrers = await ReferrerService.instance.fetchAll();
+
       if (!mounted) return;
       setState(() {
         _formData = formData;
@@ -227,6 +237,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
         _fundusFrMasters   = List<ExamMasterItem>.from(formData.masters.fr);
         _diagnosisMasters  = List<ExamMasterItem>.from(formData.masters.diagnoses);
         _adviceMasters     = List<ExamMasterItem>.from(formData.masters.advices);
+        _referrers = referrers.map((r) => ExamMasterItem(id: r.id, value: r.name, isFavourite: false)).toList();
         _selectedDoctorId = widget.patient.doctor?.id;
         if (secondary != null) {
           _prefill(secondary);
@@ -1294,18 +1305,26 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
             const SizedBox(height: 2),
             Text('${p.fullName}  ·  MRD: ${p.patientCode}', style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 10)),
           ])),
+          if (PermissionService.instance.can(Perm.otSurgeryRecommend))
+            IconButton(
+              icon: const Icon(Icons.medical_services_rounded, color: Colors.white),
+              tooltip: 'Recommend Surgery',
+              onPressed: () => showRecommendSurgerySheet(context, patient: widget.patient, diagnosisHint: _diagnosisHintText()),
+            ),
         ]),
       )),
     );
   }
 
-  Widget _buildError() => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.wifi_off_rounded, size: 48, color: Color(0xFFDC3545)),
-        const SizedBox(height: 12),
-        Text(_loadError ?? 'Failed to load exam.', textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        ElevatedButton.icon(onPressed: _loadAll, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.teal)),
-      ]));
+  String? _diagnosisHintText() {
+    if (_selectedDiagnosisIds.isEmpty) return null;
+    return _diagnosisMasters
+        .where((d) => _selectedDiagnosisIds.contains(d.id))
+        .map((d) => d.value)
+        .join(', ');
+  }
+
+  Widget _buildError() => AppErrorState(message: _loadError ?? 'Failed to load exam.', onRetry: _loadAll);
 
   // ── History chips ─────────────────────────────────────────────────────────────
 
@@ -1413,7 +1432,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
           const SizedBox(width: 8),
           _miniDropdown(value: safeEye, items: eyeOptions, onChanged: (v) => setState(() => row.eye = v ?? '-'), width: 68),
           const SizedBox(width: 4),
-          GestureDetector(onTap: () => setState(() => _coRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: Color(0xFFDC3545), size: 20)),
+          GestureDetector(onTap: () => setState(() => _coRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 20)),
         ]),
         const SizedBox(height: 6),
         Row(children: [
@@ -1447,7 +1466,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
             onToggleFavourite: (item) => _toggleFavourite('kcos', item),
           )),
           const SizedBox(width: 4),
-          GestureDetector(onTap: () => setState(() => _kcoRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: Color(0xFFDC3545), size: 20)),
+          GestureDetector(onTap: () => setState(() => _kcoRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 20)),
         ]),
         const SizedBox(height: 6),
         Row(children: [
@@ -2406,7 +2425,14 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Hospital', style: TextStyle(fontSize: 11, color: AppColors.primary.withValues(alpha: 0.6))),
               const SizedBox(height: 4),
-              _oePlainField(hospitalCtrl),
+              _MasterAutocompleteField(
+                items: _referrers,
+                initialValue: hospitalCtrl.text,
+                hint: 'Hospital',
+                icon: Icons.local_hospital_outlined,
+                color: AppColors.primary,
+                onChanged: (v) => hospitalCtrl.text = v,
+              ),
             ])),
           ]),
         ]),
@@ -2702,7 +2728,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
             if (med.duration != null) row.duration = med.duration!;
           }))),
           const SizedBox(width: 6),
-          GestureDetector(onTap: () => setState(() => _medicines.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: Color(0xFFDC3545), size: 22)),
+          GestureDetector(onTap: () => setState(() => _medicines.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 22)),
         ]),
         const SizedBox(height: 6),
         Row(children: [
@@ -2842,6 +2868,7 @@ class _MasterAutocompleteField extends StatefulWidget {
 
 class _MasterAutocompleteFieldState extends State<_MasterAutocompleteField> {
   late TextEditingController _ctrl;
+  late FocusNode _focusNode;
   List<ExamMasterItem> _filtered = [];
   bool _showSuggestions = false;
 
@@ -2849,10 +2876,11 @@ class _MasterAutocompleteFieldState extends State<_MasterAutocompleteField> {
   void initState() {
     super.initState();
     _ctrl = TextEditingController(text: widget.initialValue);
+    _focusNode = FocusNode()..addListener(_onFocusChange);
   }
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
+  void dispose() { _ctrl.dispose(); _focusNode.dispose(); super.dispose(); }
 
   @override
   void didUpdateWidget(_MasterAutocompleteField old) {
@@ -2865,10 +2893,27 @@ class _MasterAutocompleteFieldState extends State<_MasterAutocompleteField> {
     }
   }
 
+  void _onFocusChange() {
+    // Matches the web app: focusing the field shows the full master list
+    // immediately (not just after typing), then typing filters it further.
+    if (_focusNode.hasFocus) {
+      _showAll();
+    } else {
+      setState(() => _showSuggestions = false);
+    }
+  }
+
+  void _showAll() {
+    if (widget.items.isEmpty) return;
+    final favs = widget.items.where((i) => i.isFavourite).toList();
+    final rest = widget.items.where((i) => !i.isFavourite).toList();
+    setState(() { _filtered = [...favs, ...rest]; _showSuggestions = true; });
+  }
+
   void _onChanged(String v) {
     widget.onChanged(v);
     if (v.isEmpty) {
-      setState(() { _filtered = []; _showSuggestions = false; });
+      _showAll();
       return;
     }
     final q = v.toLowerCase();
@@ -2886,6 +2931,7 @@ class _MasterAutocompleteFieldState extends State<_MasterAutocompleteField> {
       widget.onChanged(item.value);
     }
     setState(() { _filtered = []; _showSuggestions = false; });
+    _focusNode.unfocus();
   }
 
   @override
@@ -2894,6 +2940,7 @@ class _MasterAutocompleteFieldState extends State<_MasterAutocompleteField> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       TextFormField(
         controller: _ctrl,
+        focusNode: _focusNode,
         onChanged: _onChanged,
         style: const TextStyle(fontSize: 12),
         decoration: InputDecoration(

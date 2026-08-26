@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_route.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
@@ -297,7 +298,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFDC3545)),
+                foregroundColor: AppColors.red),
             child: const Text('Delete'),
           ),
         ],
@@ -713,28 +714,9 @@ class _PatientTabPageState extends State<_PatientTabPage>
   }
 
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.wifi_off_rounded,
-                size: 48, color: Color(0xFFDC3545)),
-            const SizedBox(height: 12),
-            Text(_error ?? 'Something went wrong.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF666666))),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => _goToPage(_currentPage),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            ),
-          ],
-        ),
-      ),
+    return AppErrorState(
+      message: _error ?? 'Something went wrong.',
+      onRetry: () => _goToPage(_currentPage),
     );
   }
 

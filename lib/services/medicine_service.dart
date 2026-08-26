@@ -41,13 +41,7 @@ class MedicineService with AuthenticatedService {
     _parse(res);
   }
 
-  Map<String, dynamic> _parse(http.Response res) {
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Request failed (${res.statusCode})');
-    }
-    return body;
-  }
+  Map<String, dynamic> _parse(http.Response res) => parseApiResponse(res);
 
   // ── Dosages ──────────────────────────────────────────────────────────────────
 
@@ -118,6 +112,15 @@ class MedicineService with AuthenticatedService {
 
   Future<MedGroupListResult> fetchGroups({int page = 1}) async {
     final j = await _get('medicine-groups', params: {'page': '$page'});
+    return MedGroupListResult.fromJson(j);
+  }
+
+  /// Round 3 Phase 4 — `GET /ot/medicine-groups?scope=ot`, same controller
+  /// method as [fetchGroups] with an additive `scope` filter (not a
+  /// duplicate endpoint). Used by the OT Surgery Record form's
+  /// medicine-group picker.
+  Future<MedGroupListResult> fetchOtMedicineGroups({int page = 1}) async {
+    final j = await _get('ot/medicine-groups', params: {'page': '$page', 'scope': 'ot'});
     return MedGroupListResult.fromJson(j);
   }
 

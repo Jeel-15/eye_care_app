@@ -1,7 +1,6 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
 class LocationItem {
   final int id;
@@ -32,26 +31,16 @@ class LocationItem {
   }
 }
 
-class LocationService {
+class LocationService with AuthenticatedService {
   LocationService._();
   static final LocationService instance = LocationService._();
 
   Future<List<LocationItem>> fetchAll() async {
-    final token = await AuthService.instance.getStoredToken();
     final res = await http
-        .get(
-          Uri.parse('${AppConfig.hospitalApiUrl}/masters/locations'),
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Accept': 'application/json',
-          },
-        )
+        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/locations'), headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Request failed (${res.statusCode})');
-    }
+    final body = parseApiResponse(res);
     return (body['data'] as List? ?? [])
         .map((e) => LocationItem.fromJson(e as Map<String, dynamic>))
         .toList();

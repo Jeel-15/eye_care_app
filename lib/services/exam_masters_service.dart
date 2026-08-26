@@ -1,5 +1,4 @@
 ﻿import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
@@ -238,12 +237,7 @@ class ExamMastersService with AuthenticatedService {
           .get(uri, headers: await headers)
           .timeout(_masterTimeout);
 
-      if (resp.statusCode != 200) {
-        debugPrint('[ExamMastersService] $type → HTTP ${resp.statusCode}');
-        return [];
-      }
-
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      final body = parseApiResponse(resp);
       final list = body['data'] as List? ?? [];
       return list
           .map((e) => ExamMasterItem.fromJson(e as Map<String, dynamic>))

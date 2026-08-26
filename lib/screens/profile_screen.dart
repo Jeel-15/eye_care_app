@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../models/auth_models.dart';
+import '../services/onboarding_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/widgets.dart';
 
@@ -258,6 +260,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                       const SizedBox(height: 24),
                       _buildSecuritySection(),
+                      if (kDebugMode) ...[
+                        const SizedBox(height: 24),
+                        _buildDebugSection(),
+                      ],
                     ],
                   ),
                 ),
@@ -492,6 +498,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 duration: const Duration(milliseconds: 250),
               ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Debug-only — never rendered in a release build (see kDebugMode guard at
+  // the call site). Lets a developer replay the one-time onboarding tour
+  // without uninstalling the app.
+  Widget _buildDebugSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader('DEVELOPER', Icons.bug_report_outlined),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primaryA08),
+            boxShadow: [BoxShadow(color: AppColors.primaryA05, blurRadius: 8, offset: const Offset(0, 2))],
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () async {
+              await OnboardingService.instance.resetForTesting();
+              if (!mounted) return;
+              showAppSnackBar(context, 'Onboarding will show again on next app open.', isSuccess: true);
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(AppRadius.md)),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.replay_rounded, color: AppColors.primary, size: 20),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Text('Reset Onboarding', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: AppColors.primaryA50),
+                ],
+              ),
+            ),
           ),
         ),
       ],

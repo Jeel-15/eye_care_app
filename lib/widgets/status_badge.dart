@@ -51,6 +51,17 @@ class StatusBadge extends StatelessWidget {
     return StatusBadge(label: status, color: color);
   }
 
+  factory StatusBadge.otAppointmentStatus(String status) {
+    final color = switch (status.toLowerCase()) {
+      'confirmed' => AppColors.green,
+      'booked'    => AppColors.blue,
+      'completed' => AppColors.teal,
+      'cancelled' => AppColors.red,
+      _           => AppColors.textDisabled,
+    };
+    return StatusBadge(label: status, color: color);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(

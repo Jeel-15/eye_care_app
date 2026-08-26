@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:open_filex/open_filex.dart';
@@ -20,21 +19,34 @@ class ReportService with AuthenticatedService {
     final params = filter.toQueryParams(page: page);
     final uri = Uri.parse('$_base/reports').replace(queryParameters: params);
     final res = await http.get(uri, headers: await headers);
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode != 200 || body['success'] != true) {
-      throw Exception(body['message'] ?? 'Failed to load reports');
-    }
-    return ReportResult.fromJson(body);
+    return ReportResult.fromJson(parseApiResponse(res));
   }
 
   Future<ReportFilterOptions> fetchFilterData() async {
     final uri = Uri.parse('$_base/reports/filter-data');
     final res = await http.get(uri, headers: await headers);
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode != 200 || body['success'] != true) {
-      throw Exception(body['message'] ?? 'Failed to load filter options');
-    }
+    final body = parseApiResponse(res);
     return ReportFilterOptions.fromJson(body['data'] as Map<String, dynamic>);
+  }
+
+  Future<ReportChannelCounts> fetchChannelCounts(ReportFilter filter) async {
+    final params = filter.toQueryParams()..remove('page');
+    final uri = Uri.parse('$_base/reports/channel-counts').replace(queryParameters: params);
+    final res = await http.get(uri, headers: await headers);
+    final body = parseApiResponse(res);
+    return ReportChannelCounts.fromJson(body['data'] as Map<String, dynamic>);
+  }
+
+  Future<ReportChannelResult> fetchChannel(
+    String channel,
+    ReportFilter filter, {
+    int page = 1,
+  }) async {
+    final params = filter.toQueryParams(page: page);
+    final uri = Uri.parse('$_base/reports/channel/$channel').replace(queryParameters: params);
+    final res = await http.get(uri, headers: await headers);
+    final body = parseApiResponse(res);
+    return ReportChannelResult.fromJson(body['data'] as Map<String, dynamic>);
   }
 
   /// Downloads the export file and opens it immediately with the system viewer.

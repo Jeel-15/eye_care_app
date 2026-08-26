@@ -52,11 +52,7 @@ class PatientService with AuthenticatedService {
         .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to load patients: ${resp.statusCode}');
-    }
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
 
     // Cache page-1 no-search result for instant next open
     if (page == 1 && search.isEmpty) {
@@ -82,11 +78,7 @@ class PatientService with AuthenticatedService {
         .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to fetch MRD: ${resp.statusCode}');
-    }
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     return body['mrd'] as String? ?? '';
   }
 
@@ -101,7 +93,7 @@ class PatientService with AuthenticatedService {
 
     if (resp.statusCode != 200) return [];
 
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     final list = body['patients'] as List? ?? [];
 
     return list
@@ -118,12 +110,7 @@ class PatientService with AuthenticatedService {
             body: jsonEncode(data))
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 201) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] ?? 'Failed to register patient.');
-    }
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     return Patient.fromJson(body['data'] as Map<String, dynamic>);
   }
 
@@ -136,12 +123,7 @@ class PatientService with AuthenticatedService {
             body: jsonEncode(data))
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 201) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] ?? 'Failed to register phone appointment.');
-    }
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     return Patient.fromJson(body['data'] as Map<String, dynamic>);
   }
 
@@ -154,12 +136,7 @@ class PatientService with AuthenticatedService {
             body: jsonEncode(data))
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] ?? 'Failed to update patient.');
-    }
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     return Patient.fromJson(body['data'] as Map<String, dynamic>);
   }
 
@@ -170,9 +147,7 @@ class PatientService with AuthenticatedService {
         .delete(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to delete patient.');
-    }
+    parseApiResponse(resp);
   }
 
   // ── Check-in ─────────────────────────────────────────────────────────────
@@ -186,12 +161,7 @@ class PatientService with AuthenticatedService {
             body: jsonEncode(data))
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] ?? 'Check-in failed.');
-    }
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     return Patient.fromJson(body['data'] as Map<String, dynamic>);
   }
 }

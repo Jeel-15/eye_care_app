@@ -3,8 +3,10 @@ import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
+import '../services/onboarding_service.dart';
 import '../services/permission_service.dart';
 import '../utils/app_nav_label.dart';
+import 'secret_tap_area.dart';
 
 class AppDrawer extends StatelessWidget {
   final UserInfo user;
@@ -41,15 +43,20 @@ class AppDrawer extends StatelessWidget {
     ];
 
     final otItems = [
-      if (p.can(Perm.otBookingCreate) || p.can(Perm.otPatientList))
-        const _Item(Icons.event_note_rounded, NavLabel.otBookings),
+      if (p.can(Perm.otAppointmentView))
+        const _Item(Icons.event_note_rounded, NavLabel.otAppointments),
+      if (p.can(Perm.otCounsellingFill))
+        const _Item(Icons.support_agent_rounded, NavLabel.otCounsellor),
       if (p.can(Perm.otPaymentRecord))
         const _Item(Icons.account_balance_wallet_rounded, NavLabel.accountantBilling),
       if (p.can(Perm.otWardEntry))
         const _Item(Icons.bed_rounded, NavLabel.wardManagement),
-      if (p.can(Perm.otSurgeryRecord))
-        const _Item(Icons.local_hospital_rounded, NavLabel.doctorDashboard),
-      if (p.can(Perm.otLensRecord) || p.can(Perm.otLensImplant) || p.can(Perm.otPatientList))
+      // Web has one merged "OT Assistant Dashboard" nav entry gated by
+      // lens.record/lens.implant/surgery.ready/surgery.record combined — no
+      // separate "Doctor Dashboard" (the old OT Doctor role's surgery
+      // recording was absorbed into OT Assistant, see
+      // ot_assistant_dashboard_screen.dart).
+      if (p.can(Perm.otLensRecord) || p.can(Perm.otLensImplant) || p.can(Perm.otPatientList) || p.can(Perm.otSurgeryReady) || p.can(Perm.otSurgeryRecord))
         const _Item(Icons.handyman_rounded, NavLabel.assistantDashboard),
       if (p.can(Perm.otBillingManage))
         const _Item(Icons.receipt_long_rounded, NavLabel.dischargeInvoices),
@@ -92,7 +99,7 @@ class AppDrawer extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildHeader(),
+          _buildHeader(context),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
@@ -195,11 +202,20 @@ class AppDrawer extends StatelessWidget {
 
   // ── Header ────────────────────────────────────────────────────────────────
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     final initials = hospital.name.isNotEmpty
         ? hospital.name.trim().split(RegExp(r'\s+')).map((w) => w[0]).take(2).join().toUpperCase()
         : '?';
-    return Container(
+    // Hidden dev entry: tap the header 5x within 2s to reset onboarding —
+    // same secret-gesture pattern as the login screen's logo, so it works
+    // in release builds without ever being a visibly discoverable button.
+    return SecretTapArea(
+      onTrigger: () async {
+        await OnboardingService.instance.resetForTesting();
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Onboarding will show again on next app open.')));
+      },
+      child: Container(
       color: AppColors.primary,
       child: SafeArea(
         bottom: false,
@@ -256,6 +272,7 @@ class AppDrawer extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

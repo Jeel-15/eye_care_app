@@ -576,16 +576,16 @@ class _SurgeryTypeSheetState extends State<_SurgeryTypeSheet> {
         decoration: BoxDecoration(
           color: const Color(0xFFFFF3F3),
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: const Color(0xFFDC3545).withValues(alpha: 0.3)),
+          border: Border.all(color: AppColors.red.withValues(alpha: 0.3)),
         ),
         child: Row(children: [
           const Icon(Icons.error_outline_rounded,
-              size: 16, color: Color(0xFFDC3545)),
+              size: 16, color: AppColors.red),
           const SizedBox(width: 8),
           Expanded(
             child: Text(_typesError!,
                 style: const TextStyle(
-                    fontSize: 12, color: Color(0xFFDC3545))),
+                    fontSize: 12, color: AppColors.red)),
           ),
           TextButton(
             onPressed: () {

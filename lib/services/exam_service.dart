@@ -10,13 +10,7 @@ class ExamService with AuthenticatedService {
   static final ExamService instance = ExamService._();
 
 
-  Map<String, dynamic> _parseBody(http.Response res) {
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Request failed (${res.statusCode})');
-    }
-    return body;
-  }
+  Map<String, dynamic> _parseBody(http.Response res) => parseApiResponse(res);
 
   // ── Primary Exam ─────────────────────────────────────────────────────────────
 
