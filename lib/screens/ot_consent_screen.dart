@@ -6,6 +6,7 @@ import '../models/ot_booking_models.dart';
 import '../services/ot_counsellor_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_section_header.dart';
 import '../widgets/ot/signature_pad_field.dart';
 
@@ -126,7 +127,7 @@ class _OtConsentScreenState extends State<OtConsentScreen> {
         _buildHeader(),
         Expanded(
           child: _loading
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _loadError != null
                   ? AppErrorState(message: _loadError!, onRetry: _load)
                   : _buildForm(),

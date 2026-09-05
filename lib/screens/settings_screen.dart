@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../services/permission_service.dart';
@@ -55,6 +56,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // Logo
   String? _logoUrl;
+  String? _logoNobgUrl;
+  String _logoSidebarStyle = 'white';
   bool _uploadingLogo = false;
 
   // Page state
@@ -139,7 +142,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _phoneCtrl.text      = s.hospitalPhone;
     _addressCtrl.text    = s.hospitalAddress;
     // Logo
-    _logoUrl     = s.hospitalLogoUrl.isNotEmpty ? s.hospitalLogoUrl : null;
+    _logoUrl          = s.hospitalLogoUrl.isNotEmpty ? s.hospitalLogoUrl : null;
+    _logoNobgUrl      = s.hospitalLogoNobgUrl.isNotEmpty ? s.hospitalLogoNobgUrl : null;
+    _logoSidebarStyle = s.logoSidebarStyle;
     // Location — names and pre-resolved IDs from server
     _selCountry   = s.hospitalCountry;
     _selCountryId = s.hospitalCountryId;
@@ -213,6 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         paginationLimit:     int.tryParse(_paginationLimit) ?? 25,
         defaultDilationTime: int.tryParse(_dilationCtrl.text.trim()) ?? 40,
         waitThresholds:      thresholds,
+        logoSidebarStyle:    _logoSidebarStyle,
       );
       if (!mounted) return;
       setState(() { _isDirty = false; _saving = false; });
@@ -239,7 +245,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final url = await SettingsService.instance.uploadLogo(File(picked.path));
       if (!mounted) return;
-      setState(() { _logoUrl = url; _uploadingLogo = false; });
+      // Backend clears the old background-removed variant on every app-side
+      // upload (the app can't regenerate a matching one) — reflect that here
+      // immediately so the sidebar-style preview doesn't show a stale image.
+      setState(() { _logoUrl = url; _logoNobgUrl = null; _uploadingLogo = false; });
       showAppSnackBar(context, 'Logo updated successfully.', isSuccess: true);
     } catch (e) {
       if (!mounted) return;
@@ -427,7 +436,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: AppColors.backgroundAlt,
       appBar: _buildAppBar(),
       body: _loading
-          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const AppSkeletonList()
           : _error != null
               ? _buildError()
               : _buildBody(),
@@ -719,26 +728,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _sectionHeader('HOSPITAL LOGO', Icons.image_rounded),
       const SizedBox(height: 10),
-      _card([
-        // Logo preview
-        Center(
-          child: _logoUrl != null && _logoUrl!.isNotEmpty
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    _logoUrl!, height: 90, fit: BoxFit.contain,
-                    cacheWidth: 300, cacheHeight: 180,
-                    loadingBuilder: (ctx, child, progress) => progress == null
-                        ? child
-                        : SizedBox(height: 90,
-                            child: Center(child: CircularProgressIndicator(
-                                color: AppColors.primaryA50, strokeWidth: 2))),
-                    errorBuilder: (ctx, e, s) => _logoPlaceholder(),
-                  ),
-                )
-              : _logoPlaceholder(),
+      // TEMPORARY DEBUG — remove once the logo issue is resolved. Shows the
+      // exact URL strings this screen's /settings fetch received, for a
+      // byte-for-byte comparison against the drawer's /auth/me values.
+      Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: Colors.amber.shade50, border: Border.all(color: Colors.amber), borderRadius: BorderRadius.circular(6)),
+        child: SelectableText(
+          'DEBUG /settings values:\n'
+          'logoUrl: "${_logoUrl ?? "(null)"}"\n'
+          'logoNobgUrl: "${_logoNobgUrl ?? "(null)"}"',
+          style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
         ),
-        const SizedBox(height: 14),
+      ),
+      _card([
+        if (_logoUrl != null) ...[
+          // Two clickable previews — tap to pick which one shows in the
+          // sidebar (mirrors web's Settings page exactly). "Original" always
+          // shows the plain logo; "Sidebar View" shows the background-removed
+          // white silhouette once one exists, matching what the drawer will
+          // actually render for each choice.
+          Row(children: [
+            Expanded(
+              child: _buildLogoPreviewBox(
+                label: 'Original',
+                hint: 'Shows original logo colors',
+                dark: false,
+                selected: _logoSidebarStyle == 'original_blur',
+                onTap: () { _markDirty(); setState(() => _logoSidebarStyle = 'original_blur'); },
+                child: _networkOrPlaceholder(_logoUrl!),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildLogoPreviewBox(
+                label: 'Sidebar View',
+                hint: 'Best with transparent PNG',
+                dark: true,
+                selected: _logoSidebarStyle == 'white',
+                onTap: () { _markDirty(); setState(() => _logoSidebarStyle = 'white'); },
+                child: _logoNobgUrl != null
+                    ? ColorFiltered(
+                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcATop),
+                        child: _networkOrPlaceholder(_logoNobgUrl!),
+                      )
+                    : _networkOrPlaceholder(_logoUrl!),
+              ),
+            ),
+          ]),
+          if (_logoSidebarStyle == 'white' && _logoNobgUrl == null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Upload via the website to enable a background-removed sidebar logo — showing the original logo until then.',
+              style: TextStyle(fontSize: 11, color: AppColors.primaryA45, height: 1.3),
+            ),
+          ],
+          const SizedBox(height: 14),
+        ] else
+          Center(child: _logoPlaceholder()),
+        if (_logoUrl == null) const SizedBox(height: 14),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
@@ -763,6 +813,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ]),
     ]);
+  }
+
+  Widget _networkOrPlaceholder(String url) => Image.network(
+        url,
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) => Icon(Icons.image_outlined, color: AppColors.primaryA28),
+      );
+
+  Widget _buildLogoPreviewBox({
+    required String label,
+    required String hint,
+    required bool dark,
+    required bool selected,
+    required VoidCallback onTap,
+    required Widget child,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: dark ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: selected ? AppColors.primary : AppColors.primaryA10, width: selected ? 2 : 1),
+        ),
+        child: Column(children: [
+          SizedBox(height: 56, child: Padding(padding: const EdgeInsets.all(4), child: child)),
+          const SizedBox(height: 8),
+          Text(label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: selected ? (dark ? Colors.white : AppColors.primary) : (dark ? Colors.white70 : AppColors.primaryA50),
+              )),
+          const SizedBox(height: 2),
+          Text(hint,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 9.5, color: dark ? Colors.white60 : AppColors.primaryA38)),
+        ]),
+      ),
+    );
   }
 
   Widget _logoPlaceholder() {
@@ -1265,8 +1357,7 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
         Divider(height: 1, color: AppColors.primaryA08),
         Flexible(
           child: _loading
-              ? Padding(padding: EdgeInsets.all(40),
-                  child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+              ? const AppSkeletonList()
               : _error != null
                   ? Padding(padding: const EdgeInsets.all(32),
                       child: Text(_error!, textAlign: TextAlign.center,

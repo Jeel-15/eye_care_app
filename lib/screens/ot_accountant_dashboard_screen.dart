@@ -11,6 +11,8 @@ import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
 import 'ot_payment_screen.dart';
+import '../utils/currency_format.dart';
+import '../widgets/skeleton.dart';
 
 /// Round 3 Phase 5 — Accountant / Billing. `today` = pending-payment queue
 /// (status counselled/paid, today's surgery date); `completed` = payment
@@ -143,15 +145,15 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.primary.withValues(alpha: 0.08))),
       child: Row(children: [
-        stat('Collected', '₹${s.collected.toStringAsFixed(0)}', AppColors.green),
-        stat('Refunded', '₹${s.refunded.toStringAsFixed(0)}', AppColors.red),
-        stat('Net', '₹${s.net.toStringAsFixed(0)}', AppColors.primary),
+        stat('Collected', '${currentCurrencySymbol()}${s.collected.toStringAsFixed(0)}', AppColors.green),
+        stat('Refunded', '${currentCurrencySymbol()}${s.refunded.toStringAsFixed(0)}', AppColors.red),
+        stat('Net', '${currentCurrencySymbol()}${s.net.toStringAsFixed(0)}', AppColors.primary),
       ]),
     );
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) return AppErrorState(message: _error!, onRetry: _load);
     if (_items.isEmpty) return AppEmptyState(message: 'No bookings here.', icon: Icons.account_balance_wallet_outlined, onRefresh: _load);
 
@@ -165,7 +167,7 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
         itemBuilder: (_, i) {
           if (i == 0) return Padding(padding: const EdgeInsets.only(bottom: 8), child: _buildMoneySummary());
           final item = _items[i - 1];
-          return _buildRow(item);
+          return AnimatedListItem(index: i, child: _buildRow(item));
         },
       ),
     );
@@ -197,9 +199,9 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
                 if (item.otStatus == OtStatus.surgeryRefused) ...[
                   const SizedBox(height: 6),
                   if ((item.refundableBalance ?? 0) > 0)
-                    Text('Refundable: ₹${item.refundableBalance!.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.orange))
+                    Text('Refundable: ${currentCurrencySymbol()}${item.refundableBalance!.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.orange))
                   else
-                    Text('Refunded: ₹${(item.totalRefunded ?? 0).toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.green)),
+                    Text('Refunded: ${currentCurrencySymbol()}${(item.totalRefunded ?? 0).toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.green)),
                 ],
               ]),
             ),
@@ -320,7 +322,7 @@ class _RefundDialogState extends State<_RefundDialog> {
       content: SizedBox(
         width: 360,
         child: _loading
-            ? const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()))
+            ? const SizedBox(height: 120, child: AppSkeletonList(count: 1, itemHeight: 90, padding: EdgeInsets.zero))
             : _loadError != null
                 ? Text(_loadError!, style: const TextStyle(color: AppColors.red))
                 : Builder(builder: (_) {
@@ -333,8 +335,8 @@ class _RefundDialogState extends State<_RefundDialog> {
                           child: Column(children: [
                             _readRow('Patient', f.booking.patient?.fullName ?? '—'),
                             _readRow('UHID', f.booking.patient?.patientCode ?? '—'),
-                            _readRow('Total Paid', '₹${f.totalPaid.toStringAsFixed(0)}'),
-                            _readRow('Already Refunded', '₹${f.totalRefunded.toStringAsFixed(0)}'),
+                            _readRow('Total Paid', '${currentCurrencySymbol()}${f.totalPaid.toStringAsFixed(0)}'),
+                            _readRow('Already Refunded', '${currentCurrencySymbol()}${f.totalRefunded.toStringAsFixed(0)}'),
                           ]),
                         ),
                         const SizedBox(height: 12),
@@ -344,7 +346,7 @@ class _RefundDialogState extends State<_RefundDialog> {
                           decoration: BoxDecoration(color: AppColors.red.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(AppRadius.md)),
                           child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                             const Text('Refund Amount (full)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                            Text('₹${f.refundAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.red)),
+                            Text('${currentCurrencySymbol()}${f.refundAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.red)),
                           ]),
                         ),
                         const SizedBox(height: 12),
@@ -417,7 +419,7 @@ class _ViewDetailsDialogState extends State<_ViewDetailsDialog> {
       content: SizedBox(
         width: 340,
         child: _loading
-            ? const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()))
+            ? const SizedBox(height: 100, child: AppSkeletonList(count: 1, itemHeight: 70, padding: EdgeInsets.zero))
             : _error != null
                 ? Text(_error!, style: const TextStyle(color: AppColors.red))
                 : Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -431,9 +433,9 @@ class _ViewDetailsDialogState extends State<_ViewDetailsDialog> {
                     const Text('OT Payment Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.darkNavy)),
                     const Divider(height: 16),
                     _row('OT Date', item.surgeryDate ?? '—'),
-                    _row('Package Amount', '₹${_status!.requiredTotal.toStringAsFixed(0)}'),
+                    _row('Package Amount', '${currentCurrencySymbol()}${_status!.requiredTotal.toStringAsFixed(0)}'),
                     _row('Payment Status', paymentStatusLabel(_status!.paymentStatus)),
-                    if (_status!.paymentStatus == 'partially_paid') _row('Remaining Balance', '₹${_status!.remainingBalance.toStringAsFixed(0)}'),
+                    if (_status!.paymentStatus == 'partially_paid') _row('Remaining Balance', '${currentCurrencySymbol()}${_status!.remainingBalance.toStringAsFixed(0)}'),
                     _row('Booking ID', '#${item.id}'),
                     const SizedBox(height: 14),
                     Container(
@@ -490,7 +492,7 @@ class _ReceiptDialogState extends State<_ReceiptDialog> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 400, maxHeight: 640),
         child: _loading
-            ? const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()))
+            ? const SizedBox(height: 200, child: AppSkeletonList(count: 2, itemHeight: 80, padding: EdgeInsets.zero))
             : _error != null
                 ? Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [Text(_error!, style: const TextStyle(color: AppColors.red), textAlign: TextAlign.center), const SizedBox(height: 12), ElevatedButton(onPressed: _load, child: const Text('Retry'))]))
                 : Padding(
@@ -547,7 +549,7 @@ class _DashboardReceiptPreview extends StatelessWidget {
         ),
       ]),
       const SizedBox(height: 18),
-      Text('₹${p.packageAmount.toStringAsFixed(2)}', textAlign: TextAlign.center, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.primary)),
+      Text('${currentCurrencySymbol()}${p.packageAmount.toStringAsFixed(2)}', textAlign: TextAlign.center, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.primary)),
       const SizedBox(height: 18),
       _box('Patient', [
         _row('Name', receipt.patient?.fullName ?? patientNameFallback ?? '—'),
@@ -562,9 +564,9 @@ class _DashboardReceiptPreview extends StatelessWidget {
         _row('Recorded By', p.recordedBy?.name ?? '—'),
       ]),
       _box('Package Balance', [
-        _row('Package Total', '₹${receipt.requiredTotal.toStringAsFixed(0)}'),
-        _row('Total Paid', '₹${receipt.totalPaid.toStringAsFixed(0)}'),
-        _row('Remaining', '₹${remaining.toStringAsFixed(0)}'),
+        _row('Package Total', '${currentCurrencySymbol()}${receipt.requiredTotal.toStringAsFixed(0)}'),
+        _row('Total Paid', '${currentCurrencySymbol()}${receipt.totalPaid.toStringAsFixed(0)}'),
+        _row('Remaining', '${currentCurrencySymbol()}${remaining.toStringAsFixed(0)}'),
         _row('Status', paymentStatusLabel(receipt.bookingPaymentStatus ?? 'pending')),
       ]),
       const SizedBox(height: 4),

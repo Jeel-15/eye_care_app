@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../services/ot_inventory_service.dart';
 import '../models/ot_inventory_models.dart';
+import '../utils/currency_format.dart';
 
 class OtPackageMasterScreen extends StatefulWidget {
   final Color accentColor;
@@ -121,7 +123,7 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) {
       return Center(
         child: Padding(
@@ -177,7 +179,7 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
                 ]),
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text('Total ₹${item.totalPreview.toStringAsFixed(0)}  ·  OT ₹${item.otCharges.toStringAsFixed(0)} · Surgeon ₹${item.surgeonCharges.toStringAsFixed(0)} · Nursing ₹${item.nursingCharges.toStringAsFixed(0)} · Consumables ₹${item.consumablesCharges.toStringAsFixed(0)}',
+                  child: Text('Total ${currentCurrencySymbol()}${item.totalPreview.toStringAsFixed(0)}  ·  OT ${currentCurrencySymbol()}${item.otCharges.toStringAsFixed(0)} · Surgeon ${currentCurrencySymbol()}${item.surgeonCharges.toStringAsFixed(0)} · Nursing ${currentCurrencySymbol()}${item.nursingCharges.toStringAsFixed(0)} · Consumables ${currentCurrencySymbol()}${item.consumablesCharges.toStringAsFixed(0)}',
                       style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                 ),
               ]),
@@ -305,15 +307,15 @@ class _PackageSheetState extends State<_PackageSheet> {
                   ]),
                   const SizedBox(height: 12),
                   Row(children: [
-                    Expanded(child: TextFormField(controller: _otCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('OT Charges', suffix: '₹'))),
+                    Expanded(child: TextFormField(controller: _otCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('OT Charges', suffix: currentCurrencySymbol()))),
                     const SizedBox(width: 10),
-                    Expanded(child: TextFormField(controller: _surgeonCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Surgeon Charges', suffix: '₹'))),
+                    Expanded(child: TextFormField(controller: _surgeonCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Surgeon Charges', suffix: currentCurrencySymbol()))),
                   ]),
                   const SizedBox(height: 12),
                   Row(children: [
-                    Expanded(child: TextFormField(controller: _nursingCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Nursing Charges', suffix: '₹'))),
+                    Expanded(child: TextFormField(controller: _nursingCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Nursing Charges', suffix: currentCurrencySymbol()))),
                     const SizedBox(width: 10),
-                    Expanded(child: TextFormField(controller: _consumablesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Consumables', suffix: '₹'))),
+                    Expanded(child: TextFormField(controller: _consumablesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Consumables', suffix: currentCurrencySymbol()))),
                   ]),
                 ]),
               ),

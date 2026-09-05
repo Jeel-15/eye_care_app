@@ -3,9 +3,11 @@ import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
+import '../services/auth_service.dart';
 import '../services/onboarding_service.dart';
 import '../services/permission_service.dart';
 import '../utils/app_nav_label.dart';
+import 'retry_network_image.dart';
 import 'secret_tap_area.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -33,8 +35,9 @@ class AppDrawer extends StatelessWidget {
         const _Item(Icons.people_outline_rounded, NavLabel.patients),
         const _Item(Icons.share_outlined, NavLabel.shareHistory),
       ],
-      if (p.can(Perm.opdFocCreate) || p.can(Perm.opdFocAccept))
-        const _Item(Icons.receipt_long_rounded, NavLabel.focRequests),
+      // FOC Requests disabled at client's request — see foc_screen.dart.
+      // if (p.can(Perm.opdFocCreate) || p.can(Perm.opdFocAccept))
+      //   const _Item(Icons.receipt_long_rounded, NavLabel.focRequests),
     ];
 
     final clinicalItems = [
@@ -65,6 +68,12 @@ class AppDrawer extends StatelessWidget {
     final reportsItems = [
       if (!isDoctor && p.can(Perm.reportsView))
         const _Item(Icons.bar_chart_rounded, NavLabel.reports),
+      // Web lists OPD Reports and OT Reports as sibling sidebar items — was
+      // reachable only via a dashboard quick-action tile (see
+      // dashboard_screen.dart's 'OT Reports' _QA), so the drawer needs its
+      // own entry too. Gated the same way as that quick action.
+      if (!isDoctor && p.can(Perm.reportsView) && p.canModule('ot'))
+        const _Item(Icons.insights_rounded, NavLabel.otReports),
     ];
 
     final medicineItems = [
@@ -202,6 +211,78 @@ class AppDrawer extends StatelessWidget {
 
   // ── Header ────────────────────────────────────────────────────────────────
 
+  /// Sidebar brand mark — mirrors web's rule: the bg-removed logo (with a
+  /// white-silhouette tint) is only used when style is 'white' and a nobg
+  /// version exists; 'original_blur' shows the plain logo in a frosted box;
+  /// hospitals with no logo at all keep the initials avatar unchanged.
+  Widget _buildBrandMark(String initials) {
+    // Read the live session cache, not the `hospital` constructor param —
+    // that's a snapshot frozen at login/launch and never updates in-place
+    // when a logo is changed elsewhere mid-session (same reasoning as
+    // currentCurrencySymbol() in currency_format.dart).
+    final live = AuthService.instance.cachedHospital;
+    final logoUrl = live?.logoUrl ?? hospital.logoUrl;
+    final logoNobgUrl = live?.logoNobgUrl ?? hospital.logoNobgUrl;
+    final logoSidebarStyle = live?.logoSidebarStyle ?? hospital.logoSidebarStyle;
+
+    if (logoUrl.isEmpty) {
+      return Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.20),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          initials,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Colors.white),
+        ),
+      );
+    }
+
+    final useNobg = logoSidebarStyle == 'white' && logoNobgUrl.isNotEmpty;
+    final logoSrc = useNobg ? logoNobgUrl : logoUrl;
+    // Testing a senior dev's hypothesis: maybe /storage/* isn't fully
+    // public and expects the same Bearer token as API calls. See
+    // LOGO_403_INVESTIGATION.md.
+    final token = AuthService.instance.cachedToken;
+    final image = RetryNetworkImage(
+      url: logoSrc,
+      fit: BoxFit.contain,
+      headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+      fallbackBuilder: (_) => Text(
+        initials,
+        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Colors.white),
+      ),
+    );
+
+    if (logoSidebarStyle == 'original_blur') {
+      return Container(
+        width: 38,
+        height: 38,
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.22),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: image,
+      );
+    }
+
+    return SizedBox(
+      width: 38,
+      height: 38,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: useNobg
+            ? ColorFiltered(colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcATop), child: image)
+            : image,
+      ),
+    );
+  }
+
   Widget _buildHeader(BuildContext context) {
     final initials = hospital.name.isNotEmpty
         ? hospital.name.trim().split(RegExp(r'\s+')).map((w) => w[0]).take(2).join().toUpperCase()
@@ -223,24 +304,7 @@ class AppDrawer extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Row(
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.20),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  initials,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              _buildBrandMark(initials),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -319,8 +383,6 @@ class AppDrawer extends StatelessWidget {
   // ── Footer ────────────────────────────────────────────────────────────────
 
   Widget _buildFooter(BuildContext context) {
-    final isAdmin = user.role?.slug == 'hospital_admin';
-
     // Compute user initials for the profile row avatar
     final nameParts = user.name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
     final words     = nameParts.where((p) => !(p.length <= 4 && p.endsWith('.'))).toList();
@@ -339,84 +401,84 @@ class AppDrawer extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
             children: [
-              // My Profile row — hidden for hospital admin (all info is in Settings)
-              if (!isAdmin)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.07)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                      onNavigate?.call(NavLabel.myProfile);
-                    },
-                    borderRadius: BorderRadius.circular(14),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                      child: Row(
-                        children: [
-                          // Avatar with initials
-                          Container(
-                            width: 36, height: 36,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.10)),
-                            ),
-                            child: Text(
-                              initials,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 13,
-                                color: AppColors.primary,
-                              ),
+              // My Profile row — always shown so any role (including
+              // Hospital Admin) can see and verify their own role name.
+              Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.07)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    onNavigate?.call(NavLabel.myProfile);
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                    child: Row(
+                      children: [
+                        // Avatar with initials
+                        Container(
+                          width: 36, height: 36,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.10)),
+                          ),
+                          child: Text(
+                            initials,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                              color: AppColors.primary,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user.name,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.primary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user.name,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
                                 ),
-                                if (user.role != null)
-                                  Text(
-                                    user.role!.name,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondary.withValues(alpha: 0.80),
-                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (user.role != null)
+                                Text(
+                                  user.role!.name,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textSecondary.withValues(alpha: 0.80),
                                   ),
-                              ],
-                            ),
+                                ),
+                            ],
                           ),
-                          Icon(Icons.arrow_forward_ios_rounded,
-                              size: 12,
-                              color: AppColors.textSecondary.withValues(alpha: 0.40)),
-                        ],
-                      ),
+                        ),
+                        Icon(Icons.arrow_forward_ios_rounded,
+                            size: 12,
+                            color: AppColors.textSecondary.withValues(alpha: 0.40)),
+                      ],
                     ),
                   ),
                 ),
+              ),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(

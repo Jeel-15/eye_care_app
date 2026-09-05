@@ -3,12 +3,16 @@ import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/report_models.dart';
 import '../services/permission_service.dart';
 import '../services/report_service.dart';
 import 'report_channel_screen.dart';
+import '../utils/app_route.dart';
+import '../utils/currency_format.dart';
+import '../utils/refreshable.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // OPD REPORTS — LANDING SCREEN
@@ -33,7 +37,7 @@ class ReportsScreen extends StatefulWidget {
   State<ReportsScreen> createState() => _ReportsScreenState();
 }
 
-class _ReportsScreenState extends State<ReportsScreen> {
+class _ReportsScreenState extends State<ReportsScreen> implements Refreshable {
   ReportChannelCounts? _counts;
   bool _loading = true;
   String? _error;
@@ -44,6 +48,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
     super.initState();
     _load();
   }
+
+  @override
+  Future<void> refreshSilently() => _load();
 
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
@@ -79,7 +86,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   void _openChannel(String channel, String label) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ReportChannelScreen(channel: channel, label: label)),
+      appRoute(ReportChannelScreen(channel: channel, label: label)),
     ).then((_) => _load());
   }
 
@@ -166,7 +173,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Widget _buildBody() {
     if (_loading && _counts == null) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
     if (_error != null && _counts == null) {
       return AppErrorState(message: _error!, onRetry: _load);
@@ -256,7 +263,7 @@ class _CollectionBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '₹${total.toStringAsFixed(2)}',
+                  '${currentCurrencySymbol()}${total.toStringAsFixed(2)}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,

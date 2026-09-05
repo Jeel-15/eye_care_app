@@ -3,6 +3,7 @@ import 'package:printing/printing.dart';
 import '../constants/app_colors.dart';
 import '../models/auth_models.dart';
 import '../models/patient_history_models.dart';
+import '../services/auth_service.dart';
 import '../services/prescription_service.dart';
 
 class PrescriptionPrintScreen extends StatelessWidget {
@@ -36,6 +37,9 @@ class PrescriptionPrintScreen extends StatelessWidget {
           hospitalName: hospital.name,
           exam: exam,
           patient: patient,
+          // Live session cache, not `hospital` — that's frozen at
+          // login/launch and won't reflect a logo uploaded mid-session.
+          hospitalLogoUrl: AuthService.instance.cachedHospital?.logoUrl ?? hospital.logoUrl,
         ),
         allowPrinting: true,
         allowSharing: true,

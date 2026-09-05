@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -7,6 +8,7 @@ import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
+import '../services/auth_service.dart';
 import '../widgets/app_animations.dart';
 
 
@@ -48,12 +50,28 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
     }
   }
 
+  Future<pw.MemoryImage?> _fetchLogo() async {
+    // Live session cache, not `widget.hospital` — that's frozen at
+    // login/launch and won't reflect a logo uploaded mid-session.
+    final logoUrl = AuthService.instance.cachedHospital?.logoUrl ?? widget.hospital.logoUrl;
+    if (logoUrl.isEmpty) return null;
+    try {
+      final res = await http.get(Uri.parse(logoUrl)).timeout(const Duration(seconds: 5));
+      if (res.statusCode == 200) return pw.MemoryImage(res.bodyBytes);
+    } catch (_) {
+      // Logo is a nice-to-have on the printed bill — never block bill
+      // generation over a failed/slow image fetch.
+    }
+    return null;
+  }
+
   Future<Uint8List> _buildPdf() async {
     final doc  = pw.Document();
     final p    = widget.patient;
     final fee  = p.caseFee ?? 0.0;
     final font     = await PdfGoogleFonts.notoSansRegular();
     final fontBold = await PdfGoogleFonts.notoSansBold();
+    final logo     = await _fetchLogo();
 
     doc.addPage(pw.Page(
       pageFormat: PdfPageFormat.a5,
@@ -67,6 +85,10 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
+                if (logo != null) ...[
+                  pw.Image(logo, height: 36, fit: pw.BoxFit.contain),
+                  pw.SizedBox(height: 6),
+                ],
                 pw.Text(
                   widget.hospital.name,
                   style: pw.TextStyle(
@@ -188,7 +210,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
                 children: [
                   _tc('#', fontBold, 9, header: true),
                   _tc('Description', fontBold, 9, header: true),
-                  _tc('Amount (Rs.)', fontBold, 9, header: true),
+                  _tc('Amount (${widget.hospital.currencySymbol})', fontBold, 9, header: true),
                 ],
               ),
               pw.TableRow(children: [
@@ -207,7 +229,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
                       fontWeight: pw.FontWeight.bold,
                       fontSize: 12,
                       color: PdfColor.fromHex('#1B4F72'))),
-              pw.Text('Rs. ${_fmtFee(fee)}',
+              pw.Text('${widget.hospital.currencySymbol} ${_fmtFee(fee)}',
                   style: pw.TextStyle(
                       fontWeight: pw.FontWeight.bold,
                       fontSize: 14,
@@ -593,7 +615,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
                           fontWeight: FontWeight.w800,
                           color: AppColors.primary)),
                 ),
-                Text('Amount (₹)',
+                Text('Amount (${widget.hospital.currencySymbol})',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -644,7 +666,7 @@ class _OpdBillScreenState extends State<OpdBillScreen> {
                           color: AppColors.primary)),
                 ),
                 const SizedBox(width: 16),
-                Text('₹${_fmtFee(fee)}',
+                Text('${widget.hospital.currencySymbol}${_fmtFee(fee)}',
                     style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,

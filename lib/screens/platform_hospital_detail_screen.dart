@@ -9,10 +9,15 @@ import '../utils/app_decorations.dart';
 import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_section_header.dart';
 import '../widgets/status_badge.dart';
 import 'platform_hospital_form_screen.dart';
 
+// Hardcoded ₹ here is intentional, not a currency-parity gap — mirrors
+// web's own deliberate INR-only SaaS/plan billing design (see
+// LOCATION_CURRENCY_PARITY_PRD.md Phase 5). Only hospital-facing screens
+// (patient billing, OT, dashboards) use the per-tenant currency.
 class PlatformHospitalDetailScreen extends StatefulWidget {
   final int tenantId;
 
@@ -158,7 +163,7 @@ class _PlatformHospitalDetailScreenState extends State<PlatformHospitalDetailScr
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _error != null
               ? Center(
                   child: Column(

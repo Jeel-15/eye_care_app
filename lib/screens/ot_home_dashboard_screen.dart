@@ -6,6 +6,7 @@ import '../models/ot_booking_models.dart';
 import '../services/ot_booking_service.dart';
 import '../services/permission_service.dart';
 import '../utils/app_route.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_error_state.dart';
 import 'ot_appointment_list_screen.dart';
 import 'ot_counsellor_dashboard_screen.dart';
@@ -65,7 +66,7 @@ class _OtHomeDashboardScreenState extends State<OtHomeDashboardScreen> {
         ],
       ),
       body: _loading
-          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const AppSkeletonList()
           : _error != null
               ? AppErrorState(message: _error!, onRetry: _load)
               : _buildBody(p),

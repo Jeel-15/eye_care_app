@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../utils/app_route.dart';
+import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
@@ -10,6 +12,8 @@ import '../models/patient_history_models.dart';
 import '../services/patient_history_service.dart';
 import '../services/permission_service.dart';
 import 'prescription_print_screen.dart';
+import 'primary_exam_screen.dart';
+import 'secondary_exam_screen.dart';
 
 
 // ─── Screen ────────────────────────────────────────────────────────────────────
@@ -233,7 +237,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
               title: 'Case Details',
               rows: [
                 ('Case Type',   p.caseType?.caseType ?? '—'),
-                ('Case Fee',    p.caseFee != null ? '₹${_fmtFee(p.caseFee!)}' : '—'),
+                ('Case Fee',    p.caseFee != null ? '${widget.hospital.currencySymbol}${_fmtFee(p.caseFee!)}' : '—'),
                 ('Referred By', p.referrer?.name ?? '—'),
               ],
             )),
@@ -360,13 +364,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
 
   Widget _buildTimelineBody() {
     if (_loading) {
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: 32),
-        child: Center(
-          child: CircularProgressIndicator(
-            color: AppColors.primary, strokeWidth: 2.5),
-        ),
-      );
+      return const AppSkeletonList();
     }
 
     if (_error != null) {
@@ -531,7 +529,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                 // Toggle + Print buttons row
                 Row(
                   children: [
-                    GestureDetector(
+                    PressScaleWrapper(
                       onTap: () => setState(() {
                         if (isExpanded) {
                           _expanded.remove(exam.id);
@@ -576,7 +574,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                     if (exam.prescriptions.isNotEmpty &&
                         PermissionService.instance.can(Perm.opdPrescriptionPrint)) ...[
                       const SizedBox(width: 8),
-                      GestureDetector(
+                      PressScaleWrapper(
                         onTap: () => Navigator.push(
                           context,
                           appRoute(PrescriptionPrintScreen(
@@ -598,6 +596,49 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                               Icon(Icons.print_outlined, size: 14, color: AppColors.primary),
                               SizedBox(width: 6),
                               Text('Print Rx',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    // Edit — reopens the same exam form pre-filled with the
+                    // saved data, matching web parity. Gated by the same
+                    // permission that already guards fresh entry.
+                    if (PermissionService.instance.can(
+                        isPrimary ? Perm.opdExamPrimary : Perm.opdExamSecondary)) ...[
+                      const SizedBox(width: 8),
+                      PressScaleWrapper(
+                        onTap: () => Navigator.push(
+                          context,
+                          appRoute(isPrimary
+                              ? PrimaryExamScreen(
+                                  user: widget.user,
+                                  hospital: widget.hospital,
+                                  patient: widget.patient,
+                                )
+                              : SecondaryExamScreen(
+                                  user: widget.user,
+                                  hospital: widget.hospital,
+                                  patient: widget.patient,
+                                )),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            border: Border.all(color: AppColors.primaryA18),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.edit_outlined, size: 14, color: AppColors.primary),
+                              const SizedBox(width: 6),
+                              Text('Edit',
                                   style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
@@ -1333,7 +1374,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                       ],
                     ),
                   ),
-                GestureDetector(
+                PressScaleWrapper(
                   onTap: () => setState(() {
                     if (isExpanded) {
                       _partnerExpanded.remove(expandKey);

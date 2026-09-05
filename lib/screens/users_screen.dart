@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
 import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../models/auth_models.dart';
 import '../services/permission_service.dart';
 import '../services/user_service.dart';
@@ -392,9 +394,7 @@ class _UsersScreenState extends State<UsersScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
+      return const AppSkeletonList();
     }
 
     if (_error != null) {
@@ -572,7 +572,7 @@ class _UserCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      GestureDetector(
+                      PressScaleWrapper(
                         onTap: onToggleStatus,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -612,6 +612,28 @@ class _UserCard extends StatelessWidget {
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (PermissionService.instance.isSuper && (user.originalPassword?.isNotEmpty ?? false)) ...[
+                    const SizedBox(height: 3),
+                    InkWell(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: user.originalPassword!));
+                        showAppSnackBar(context, 'Password copied.', isSuccess: true);
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.key_rounded, size: 11, color: Color(0x8064748B)),
+                          const SizedBox(width: 3),
+                          Text(
+                            user.originalPassword!,
+                            style: const TextStyle(fontSize: 11, color: Color(0xCC64748B), fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.copy_rounded, size: 12, color: AppColors.primaryA45),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 6),
                   Row(
                     children: [

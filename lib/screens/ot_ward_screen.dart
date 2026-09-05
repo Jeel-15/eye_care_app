@@ -10,6 +10,7 @@ import '../services/permission_service.dart';
 import '../services/user_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 
 /// Closes a sheet that contains text fields safely. `unfocus()` only
 /// *schedules* the focus change — it doesn't complete synchronously — so
@@ -217,7 +218,7 @@ class _OtWardScreenState extends State<OtWardScreen> with SingleTickerProviderSt
         ),
       ),
       body: _loading
-          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const AppSkeletonList()
           : _loadError != null
               ? AppErrorState(message: _loadError!, onRetry: _load)
               : Column(children: [

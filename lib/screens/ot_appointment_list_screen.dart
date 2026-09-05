@@ -11,6 +11,7 @@ import '../services/ot_slot_service.dart';
 import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
 import '../widgets/app_search_bar.dart';
@@ -176,7 +177,7 @@ class _OtAppointmentListScreenState extends State<OtAppointmentListScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) return AppErrorState(message: _error!, onRetry: _load);
     if (_items.isEmpty) return AppEmptyState(message: 'No appointments found.', icon: Icons.event_note_rounded, onRefresh: _load);
 
@@ -192,7 +193,9 @@ class _OtAppointmentListScreenState extends State<OtAppointmentListScreen> {
           // Matches web's index table exactly: Edit/Confirm/Cancel only show
           // for booked/confirmed appointments, else no action row at all.
           final actionable = item.status == 'booked' || item.status == 'confirmed';
-          return Padding(
+          return AnimatedListItem(
+            index: i,
+            child: Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Container(
               padding: const EdgeInsets.all(14),
@@ -254,6 +257,7 @@ class _OtAppointmentListScreenState extends State<OtAppointmentListScreen> {
                   ]),
                 ],
               ]),
+            ),
             ),
           );
         },
@@ -514,7 +518,7 @@ class _OtAppointmentFormScreenState extends State<OtAppointmentFormScreen> {
         _buildHeader(),
         Expanded(
           child: _loadingForm
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _formError != null
                   ? AppErrorState(message: _formError!, onRetry: () { setState(() => _loadingForm = true); _loadFormData(); })
                   : _buildForm(),

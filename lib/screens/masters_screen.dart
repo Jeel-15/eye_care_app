@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../utils/app_route.dart';
 import '../constants/app_colors.dart';
-import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_item_grid.dart';
+import '../widgets/app_section_card.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../services/permission_service.dart';
@@ -195,31 +196,31 @@ class MastersScreen extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 // ── Basic ────────────────────────────────────────────────
                 if (showBasic) ...[
-                  _SectionCard(
+                  AppSectionCard(
                     icon: Icons.grid_3x3_rounded,
                     title: 'Basic Masters',
                     color: AppColors.primary,
                     count: basicVisible.length,
-                    child: _Grid(items: basicVisible, onTap: (i) => _open(context, i)),
+                    child: _grid(context, basicVisible),
                   ),
                   const SizedBox(height: 14),
                 ],
 
                 // ── OT ───────────────────────────────────────────────────
                 if (showOt) ...[
-                  _SectionCard(
+                  AppSectionCard(
                     icon: Icons.local_hospital_rounded,
                     title: 'OT Masters',
                     color: AppColors.purple,
                     count: otVisible.length,
-                    child: _Grid(items: otVisible, onTap: (i) => _open(context, i)),
+                    child: _grid(context, otVisible),
                   ),
                   const SizedBox(height: 14),
                 ],
 
                 // ── Eye Exam ─────────────────────────────────────────────
                 if (showEyeExam) ...[
-                  _SectionCard(
+                  AppSectionCard(
                     icon: Icons.remove_red_eye_rounded,
                     title: 'Eye Exam Masters',
                     color: AppColors.teal,
@@ -231,32 +232,25 @@ class MastersScreen extends StatelessWidget {
                         _SubGroup(
                             icon: Icons.assignment_outlined, label: 'Clinical'),
                         const SizedBox(height: 10),
-                        _Grid(
-                            items: _clinical,
-                            onTap: (i) => _open(context, i)),
+                        _grid(context, _clinical),
                         _divider(),
                         _SubGroup(
                             icon: Icons.visibility_outlined,
                             label: 'Vision Values'),
                         const SizedBox(height: 10),
-                        _Grid(
-                            items: _vision, onTap: (i) => _open(context, i)),
+                        _grid(context, _vision),
                         _divider(),
                         _SubGroup(
                             icon: Icons.center_focus_weak_rounded,
                             label: 'Anterior Segment (O/E)'),
                         const SizedBox(height: 10),
-                        _Grid(
-                            items: _anterior,
-                            onTap: (i) => _open(context, i)),
+                        _grid(context, _anterior),
                         _divider(),
                         _SubGroup(
                             icon: Icons.panorama_fish_eye_rounded,
                             label: 'Posterior Segment (Fundus)'),
                         const SizedBox(height: 10),
-                        _Grid(
-                            items: _posterior,
-                            onTap: (i) => _open(context, i)),
+                        _grid(context, _posterior),
                       ],
                     ),
                   ),
@@ -337,124 +331,10 @@ class MastersScreen extends StatelessWidget {
     };
     Navigator.push(ctx, appRoute(screen));
   }
-}
 
-// ── Section card ──────────────────────────────────────────────────────────────
-class _SectionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final Color color;
-  final int count;
-  final Widget child;
-
-  const _SectionCard({
-    required this.icon,
-    required this.title,
-    required this.color,
-    required this.count,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-            color: AppColors.primaryA08),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryA07,
-            blurRadius: 24,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Header band ─────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 13, 14, 13),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.06),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(22)),
-              border: Border(
-                bottom: BorderSide(
-                    color: color.withValues(alpha: 0.12), width: 1),
-              ),
-            ),
-            child: Row(
-              children: [
-                // Pill icon badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [color, color.withValues(alpha: 0.72)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(999),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.32),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(icon, color: Colors.white, size: 13),
-                      const SizedBox(width: 6),
-                      Text(
-                        title.toUpperCase(),
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.8),
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                // Count chip
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(999),
-                    border:
-                        Border.all(color: color.withValues(alpha: 0.20)),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: color),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Content ──────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-            child: child,
-          ),
-        ],
-      ),
-    );
-  }
+  static Widget _grid(BuildContext context, List<_Item> items) => AppItemGrid(
+        items: items.map((i) => AppGridItem(icon: i.icon, label: i.label, color: i.color, onTap: () => _open(context, i))).toList(),
+      );
 }
 
 // ── Sub-group label ───────────────────────────────────────────────────────────
@@ -490,140 +370,6 @@ class _SubGroup extends StatelessWidget {
                 letterSpacing: 0.1),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ── 3-column grid ─────────────────────────────────────────────────────────────
-class _Grid extends StatelessWidget {
-  final List<_Item> items;
-  final void Function(_Item) onTap;
-  const _Grid({required this.items, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (_, constraints) {
-      final w = (constraints.maxWidth - 20) / 3;
-      return Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: [
-          for (final item in items)
-            SizedBox(width: w, child: _Card(item: item, onTap: onTap)),
-        ],
-      );
-    });
-  }
-}
-
-// ── Item card ─────────────────────────────────────────────────────────────────
-class _Card extends StatelessWidget {
-  final _Item item;
-  final void Function(_Item) onTap;
-  const _Card({required this.item, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = item.color;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => onTap(item),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        splashColor: c.withValues(alpha: 0.12),
-        highlightColor: c.withValues(alpha: 0.07),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border:
-                Border.all(color: c.withValues(alpha: 0.14)),
-            boxShadow: [
-              BoxShadow(
-                color: c.withValues(alpha: 0.09),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            child: Stack(
-              children: [
-                // Top accent gradient bar
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 3,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [c, c.withValues(alpha: 0.35)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                    ),
-                  ),
-                ),
-                // Card content
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Align(
-                        alignment: Alignment.center,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                c.withValues(alpha: 0.14),
-                                c.withValues(alpha: 0.04),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                            border: Border.all(
-                                color: c.withValues(alpha: 0.18)),
-                          ),
-                          child: Icon(item.icon, color: c, size: 22),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        item.label,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkNavy,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.chevron_right_rounded,
-                          size: 12,
-                          color: c.withValues(alpha: 0.45),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

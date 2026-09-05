@@ -4,6 +4,8 @@ import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
 import '../services/case_type_service.dart';
+import '../utils/currency_format.dart';
+import '../widgets/skeleton.dart';
 
 class CaseTypeMasterScreen extends StatefulWidget {
   final Color accentColor;
@@ -107,8 +109,8 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
 
 
   static String _formatFee(double fee) {
-    if (fee == fee.roundToDouble()) return '₹ ${fee.toInt()}';
-    return '₹ ${fee.toStringAsFixed(2)}';
+    if (fee == fee.roundToDouble()) return '${currentCurrencySymbol()} ${fee.toInt()}';
+    return '${currentCurrencySymbol()} ${fee.toStringAsFixed(2)}';
   }
 
   @override
@@ -178,7 +180,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
     if (_error != null) {
       return Center(
@@ -486,9 +488,9 @@ class _CaseTypeSheetState extends State<_CaseTypeSheet> {
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
               ],
               decoration: InputDecoration(
-                labelText: 'Case Fee (₹)',
+                labelText: 'Case Fee (${currentCurrencySymbol()})',
                 errorText: _feeError,
-                prefixText: '₹ ',
+                prefixText: '${currentCurrencySymbol()} ',
                 filled: true,
                 fillColor: AppColors.surfaceFill,
                 border: OutlineInputBorder(

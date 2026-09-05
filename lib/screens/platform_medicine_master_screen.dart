@@ -12,11 +12,16 @@ import '../utils/app_decorations.dart';
 import '../utils/app_dialogs.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_pagination_bar.dart';
 import '../widgets/app_search_bar.dart';
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
 
+// Hardcoded ₹ here is intentional, not a currency-parity gap — mirrors
+// web's own deliberate INR-only SaaS/plan billing design (see
+// LOCATION_CURRENCY_PARITY_PRD.md Phase 5). Only hospital-facing screens
+// (patient billing, OT, dashboards) use the per-tenant currency.
 class PlatformMedicineMasterScreen extends StatefulWidget {
   final PlatformAdmin admin;
   const PlatformMedicineMasterScreen({super.key, required this.admin});
@@ -187,7 +192,7 @@ abstract class _SimpleMasterTabState<T extends StatefulWidget> extends State<T>
         ]),
       ),
       Expanded(child: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _items.isEmpty
               ? AppEmptyState(message: 'No $_entityLabel found', icon: Icons.inbox_rounded)
               : RefreshIndicator(
@@ -199,25 +204,28 @@ abstract class _SimpleMasterTabState<T extends StatefulWidget> extends State<T>
                       if (i == _items.length) return AppPaginationBar(currentPage: _page, totalPages: _lastPage, onPageChange: (p) => _load(page: p));
                       final item = _items[i];
                       final isActive = item['is_active'] == true || item['is_active'] == 1;
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: AppDecorations.card(),
-                        child: Row(children: [
-                          Expanded(child: Text(item[_fieldKey] as String, style: AppTextStyles.cardTitle)),
-                          Switch(
-                            value: isActive,
-                            onChanged: (_) async {
-                              final newVal = await _toggleItem(item['id'] as int);
-                              setState(() => item['is_active'] = newVal);
-                            },
-                            activeThumbColor: AppColors.primary,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          IconButton(icon: Icon(Icons.edit_rounded, size: 18, color: AppColors.primary), onPressed: () => _showForm(item: item), padding: const EdgeInsets.all(4), constraints: const BoxConstraints()),
-                          const SizedBox(width: 4),
-                          IconButton(icon: const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red), onPressed: () => _confirmDelete(item), padding: const EdgeInsets.all(4), constraints: const BoxConstraints()),
-                        ]),
+                      return AnimatedListItem(
+                        index: i,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: AppDecorations.card(),
+                          child: Row(children: [
+                            Expanded(child: Text(item[_fieldKey] as String, style: AppTextStyles.cardTitle)),
+                            Switch(
+                              value: isActive,
+                              onChanged: (_) async {
+                                final newVal = await _toggleItem(item['id'] as int);
+                                setState(() => item['is_active'] = newVal);
+                              },
+                              activeThumbColor: AppColors.primary,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            IconButton(icon: Icon(Icons.edit_rounded, size: 18, color: AppColors.primary), onPressed: () => _showForm(item: item), padding: const EdgeInsets.all(4), constraints: const BoxConstraints()),
+                            const SizedBox(width: 4),
+                            IconButton(icon: const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red), onPressed: () => _confirmDelete(item), padding: const EdgeInsets.all(4), constraints: const BoxConstraints()),
+                          ]),
+                        ),
                       );
                     },
                   ),
@@ -431,7 +439,7 @@ class _MedicinesTabState extends State<_MedicinesTab> with AutomaticKeepAliveCli
         ]),
       ),
       Expanded(child: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _items.isEmpty
               ? AppEmptyState(message: 'No medicines found', icon: Icons.medication_outlined)
               : RefreshIndicator(
@@ -442,7 +450,9 @@ class _MedicinesTabState extends State<_MedicinesTab> with AutomaticKeepAliveCli
                     itemBuilder: (ctx, i) {
                       if (i == _items.length) return AppPaginationBar(currentPage: _page, totalPages: _lastPage, onPageChange: (p) => _load(page: p));
                       final m = _items[i];
-                      return Container(
+                      return AnimatedListItem(
+                        index: i,
+                        child: Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(12),
                         decoration: AppDecorations.card(),
@@ -483,6 +493,7 @@ class _MedicinesTabState extends State<_MedicinesTab> with AutomaticKeepAliveCli
                             ]),
                           ]),
                         ]),
+                        ),
                       );
                     },
                   ),

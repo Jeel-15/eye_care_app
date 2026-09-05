@@ -4,8 +4,10 @@ import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../utils/date_format.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../services/ot_inventory_service.dart';
 import '../models/ot_inventory_models.dart';
+import '../utils/currency_format.dart';
 
 class OtLensInventoryMasterScreen extends StatefulWidget {
   final Color accentColor;
@@ -121,7 +123,7 @@ class _OtLensInventoryMasterScreenState extends State<OtLensInventoryMasterScree
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) {
       return Center(
         child: Padding(
@@ -183,7 +185,7 @@ class _OtLensInventoryMasterScreenState extends State<OtLensInventoryMasterScree
                 ]),
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text('MRP ₹${item.mrp.toStringAsFixed(0)}${item.manufacturer != null && item.manufacturer!.isNotEmpty ? '  ·  ${item.manufacturer}' : ''}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                  child: Text('MRP ${currentCurrencySymbol()}${item.mrp.toStringAsFixed(0)}${item.manufacturer != null && item.manufacturer!.isNotEmpty ? '  ·  ${item.manufacturer}' : ''}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
                 ),
               ]),
             ),
@@ -359,9 +361,9 @@ class _LensInventorySheetState extends State<_LensInventorySheet> {
                   ]),
                   const SizedBox(height: 12),
                   Row(children: [
-                    Expanded(child: TextFormField(controller: _mrpCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))], decoration: _deco('MRP *', error: _mrpError, suffix: '₹'))),
+                    Expanded(child: TextFormField(controller: _mrpCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))], decoration: _deco('MRP *', error: _mrpError, suffix: currentCurrencySymbol()))),
                     const SizedBox(width: 10),
-                    Expanded(child: TextFormField(controller: _purchaseCostCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))], decoration: _deco('Purchase Cost', suffix: '₹'))),
+                    Expanded(child: TextFormField(controller: _purchaseCostCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))], decoration: _deco('Purchase Cost', suffix: currentCurrencySymbol()))),
                   ]),
                   const SizedBox(height: 12),
                   TextFormField(controller: _supplierCtrl, decoration: _deco('Supplier')),

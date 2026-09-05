@@ -12,6 +12,7 @@ import '../utils/app_dialogs.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_pagination_bar.dart';
 import '../widgets/app_search_bar.dart';
 
@@ -71,7 +72,7 @@ class _PlatformLocationMasterScreenState extends State<PlatformLocationMasterScr
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _dropdownData == null
               ? AppErrorState(message: 'Could not load location data.', onRetry: _loadDropdown)
               : TabBarView(
@@ -177,7 +178,7 @@ class _CountriesTabState extends State<_CountriesTab> with AutomaticKeepAliveCli
         child: AppSearchBar(controller: _searchCtrl, hint: 'Search countries...', onChanged: _onSearch),
       ),
       Expanded(child: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _items.isEmpty
               ? AppEmptyState(message: 'No countries found', icon: Icons.public_off_rounded)
               : RefreshIndicator(
@@ -188,12 +189,15 @@ class _CountriesTabState extends State<_CountriesTab> with AutomaticKeepAliveCli
                     itemBuilder: (ctx, i) {
                       if (i == _items.length) return AppPaginationBar(currentPage: _page, totalPages: _lastPage, onPageChange: (p) => _load(page: p));
                       final c = _items[i];
-                      return _LocationCard(
-                        title: c.name, subtitle: c.defaultTimezone,
-                        badge: '${c.statesCount} states', badgeColor: AppColors.primary,
-                        isActive: c.isActive,
-                        onEdit: () => _showForm(item: c), onDelete: () => _delete(c),
-                        onToggle: () async { await _svc.toggleCountry(c.id); _load(page: _page); },
+                      return AnimatedListItem(
+                        index: i,
+                        child: _LocationCard(
+                          title: c.name, subtitle: c.defaultTimezone,
+                          badge: '${c.statesCount} states', badgeColor: AppColors.primary,
+                          isActive: c.isActive,
+                          onEdit: () => _showForm(item: c), onDelete: () => _delete(c),
+                          onToggle: () async { await _svc.toggleCountry(c.id); _load(page: _page); },
+                        ),
                       );
                     },
                   ),
@@ -300,7 +304,7 @@ class _StatesTabState extends State<_StatesTab> with AutomaticKeepAliveClientMix
         child: AppSearchBar(controller: _searchCtrl, hint: 'Search states...', onChanged: _onSearch),
       ),
       Expanded(child: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _items.isEmpty ? AppEmptyState(message: 'No states found', icon: Icons.map_outlined)
           : RefreshIndicator(
               onRefresh: () => _load(page: _page),
@@ -310,10 +314,13 @@ class _StatesTabState extends State<_StatesTab> with AutomaticKeepAliveClientMix
                 itemBuilder: (ctx, i) {
                   if (i == _items.length) return AppPaginationBar(currentPage: _page, totalPages: _lastPage, onPageChange: (p) => _load(page: p));
                   final s = _items[i];
-                  return _LocationCard(
-                    title: s.name, subtitle: s.countryName ?? '', isActive: s.isActive,
-                    onEdit: () => _showForm(item: s), onDelete: () => _delete(s),
-                    onToggle: () async { await _svc.toggleState(s.id); _load(page: _page); },
+                  return AnimatedListItem(
+                    index: i,
+                    child: _LocationCard(
+                      title: s.name, subtitle: s.countryName ?? '', isActive: s.isActive,
+                      onEdit: () => _showForm(item: s), onDelete: () => _delete(s),
+                      onToggle: () async { await _svc.toggleState(s.id); _load(page: _page); },
+                    ),
                   );
                 },
               ),
@@ -420,7 +427,7 @@ class _DistrictsTabState extends State<_DistrictsTab> with AutomaticKeepAliveCli
         child: AppSearchBar(controller: _searchCtrl, hint: 'Search districts...', onChanged: _onSearch),
       ),
       Expanded(child: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _items.isEmpty ? AppEmptyState(message: 'No districts found', icon: Icons.location_city_outlined)
           : RefreshIndicator(
               onRefresh: () => _load(page: _page),
@@ -430,10 +437,13 @@ class _DistrictsTabState extends State<_DistrictsTab> with AutomaticKeepAliveCli
                 itemBuilder: (ctx, i) {
                   if (i == _items.length) return AppPaginationBar(currentPage: _page, totalPages: _lastPage, onPageChange: (p) => _load(page: p));
                   final d = _items[i];
-                  return _LocationCard(
-                    title: d.name, subtitle: d.stateName ?? '', isActive: d.isActive,
-                    onEdit: () => _showForm(item: d), onDelete: () => _delete(d),
-                    onToggle: () async { await _svc.toggleDistrict(d.id); _load(page: _page); },
+                  return AnimatedListItem(
+                    index: i,
+                    child: _LocationCard(
+                      title: d.name, subtitle: d.stateName ?? '', isActive: d.isActive,
+                      onEdit: () => _showForm(item: d), onDelete: () => _delete(d),
+                      onToggle: () async { await _svc.toggleDistrict(d.id); _load(page: _page); },
+                    ),
                   );
                 },
               ),
@@ -569,7 +579,7 @@ class _CitiesTabState extends State<_CitiesTab> with AutomaticKeepAliveClientMix
         child: AppSearchBar(controller: _searchCtrl, hint: 'Search cities...', onChanged: _onSearch),
       ),
       Expanded(child: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _items.isEmpty ? AppEmptyState(message: 'No cities found', icon: Icons.location_off_rounded)
           : RefreshIndicator(
               onRefresh: () => _load(page: _page),
@@ -580,10 +590,13 @@ class _CitiesTabState extends State<_CitiesTab> with AutomaticKeepAliveClientMix
                   if (i == _items.length) return AppPaginationBar(currentPage: _page, totalPages: _lastPage, onPageChange: (p) => _load(page: p));
                   final c = _items[i];
                   final sub = [if (c.stateName != null) c.stateName!, if (c.districtName != null) c.districtName!].join(' › ');
-                  return _LocationCard(
-                    title: c.name, subtitle: sub, isActive: c.isActive,
-                    onEdit: () => _showForm(item: c), onDelete: () => _delete(c),
-                    onToggle: () async { await _svc.toggleCity(c.id); _load(page: _page); },
+                  return AnimatedListItem(
+                    index: i,
+                    child: _LocationCard(
+                      title: c.name, subtitle: sub, isActive: c.isActive,
+                      onEdit: () => _showForm(item: c), onDelete: () => _delete(c),
+                      onToggle: () async { await _svc.toggleCity(c.id); _load(page: _page); },
+                    ),
                   );
                 },
               ),

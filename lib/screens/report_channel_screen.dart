@@ -5,10 +5,12 @@ import '../utils/date_format.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
+import '../widgets/skeleton.dart';
 import '../constants/permissions.dart';
 import '../models/report_models.dart';
 import '../services/permission_service.dart';
 import '../services/report_service.dart';
+import '../utils/currency_format.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // PER-CHANNEL PATIENT LIST — web's channel.blade.php (Report Filters card,
@@ -233,9 +235,9 @@ class _ReportChannelScreenState extends State<ReportChannelScreen> {
             onRetry: () => _load(),
           ),
           if (_loading && result == null)
-            SizedBox(
+            const SizedBox(
               height: 260,
-              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              child: AppSkeletonList(count: 1, itemHeight: 220, padding: EdgeInsets.zero),
             )
           else if (_error != null && result == null)
             SizedBox(
@@ -427,12 +429,8 @@ class _FilterCard extends StatelessWidget {
   // fetch fails, filterOptions stays null forever and this card used to
   // spin indefinitely with no way out. Show the real error + a retry
   // instead of an infinite loader.
-  Widget _buildFilterLoading() => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
-        ),
-      );
+  Widget _buildFilterLoading() =>
+      const AppSkeletonList(count: 3, itemHeight: 60);
 
   Widget _buildFilterError() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,7 +467,7 @@ class _FilterCard extends StatelessWidget {
       children: [
         _FilterLabel('Date Range'),
         const SizedBox(height: 6),
-        GestureDetector(
+        PressScaleWrapper(
           onTap: onPickDateRange,
           child: Container(
             width: double.infinity,
@@ -744,7 +742,7 @@ class _PatientCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Text(
-                  '₹${patient.caseFee.toStringAsFixed(2)}',
+                  '${currentCurrencySymbol()}${patient.caseFee.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,

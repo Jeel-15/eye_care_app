@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../services/ot_surgery_type_service.dart';
 
 class OtSurgeryTypeMasterScreen extends StatefulWidget {
@@ -183,7 +184,7 @@ class _OtSurgeryTypeMasterScreenState
 
   Widget _buildBody() {
     if (_loading) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
     if (_error != null) {
       return Center(

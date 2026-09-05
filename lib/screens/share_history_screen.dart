@@ -4,6 +4,7 @@ import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
 import '../models/share_history_models.dart';
@@ -191,10 +192,7 @@ class _PatientHistoryTabState extends State<_PatientHistoryTab>
           ),
           const SizedBox(height: 14),
           if (_loading)
-            Center(child: Padding(
-              padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ))
+            const AppSkeletonList()
           else if (_error != null)
             AppErrorState(message: _error!, onRetry: () => _search(page: _page))
           else if (_searched && _patients.isEmpty)
@@ -372,10 +370,7 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
           ),
           const SizedBox(height: 14),
           if (_loading)
-            Center(child: Padding(
-              padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ))
+            const AppSkeletonList()
           else if (_error != null)
             AppErrorState(message: _error!, onRetry: () => _load(page: _page))
           else if (_hospitals.isEmpty)
@@ -511,7 +506,7 @@ class _RequestsTabState extends State<_RequestsTab>
     super.build(context);
 
     if (_loading) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
     if (_error != null) {
       return AppErrorState(message: _error!, onRetry: _load);
@@ -741,10 +736,7 @@ class _PartnerPatientsScreenState extends State<_PartnerPatientsScreen> {
           ),
           const SizedBox(height: 14),
           if (_loading)
-            Center(child: Padding(
-              padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ))
+            const AppSkeletonList()
           else if (_error != null)
             AppErrorState(message: _error!, onRetry: () => _load(page: _page))
           else if (_patients.isEmpty)
@@ -1281,10 +1273,7 @@ class _HospitalDetailSheetState extends State<_HospitalDetailSheet> {
           const SizedBox(height: 16),
           Text(widget.hospitalName, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.primary)),
           if (_loading)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-            )
+            const AppSkeletonList()
           else if (_error != null)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),

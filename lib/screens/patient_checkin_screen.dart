@@ -6,6 +6,7 @@ import '../utils/app_route.dart';
 import '../utils/date_format.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import 'package:flutter/services.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
@@ -221,8 +222,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
           _buildAppBar(),
           Expanded(
             child: _mastersLoading
-                ? Center(
-                    child: CircularProgressIndicator(color: AppColors.primary))
+                ? const AppSkeletonList()
                 : _mastersError != null
                     ? _buildError()
                     : _buildForm(),
@@ -403,7 +403,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionLabel('Case Fee (₹) *'),
+                    _sectionLabel('Case Fee (${widget.hospital.currencySymbol}) *'),
                     _caseFeeField(),
                   ],
                 ),

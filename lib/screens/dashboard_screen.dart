@@ -9,8 +9,13 @@ import '../models/auth_models.dart';
 import '../models/dashboard_models.dart';
 import '../models/ot_appointment_models.dart';
 import '../models/patient_models.dart';
+import '../services/auth_service.dart';
 import '../services/dashboard_service.dart';
 import '../services/permission_service.dart';
+import '../utils/currency_format.dart';
+import '../utils/refreshable.dart';
+import '../widgets/retry_network_image.dart';
+import '../widgets/skeleton.dart';
 import 'ot_appointment_list_screen.dart';
 import 'opd_bill_screen.dart';
 import 'patient_checkin_screen.dart';
@@ -45,7 +50,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin
+    implements Refreshable {
   DashboardData? _data;
   bool _loading = true;
   bool _refreshing = false;
@@ -72,6 +78,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     _timer?.cancel();
     super.dispose();
   }
+
+  @override
+  Future<void> refreshSilently() => _fetch();
 
   Future<void> _fetch() async {
     // Show cached data instantly while fetching fresh in background
@@ -106,6 +115,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   bool _isDifferent(DashboardData a, DashboardData b) =>
       a.todayPatients            != b.todayPatients            ||
+      a.pendingExams             != b.pendingExams              ||
       a.primaryQueueCount        != b.primaryQueueCount        ||
       a.secondaryQueueCount      != b.secondaryQueueCount      ||
       a.revenueToday             != b.revenueToday             ||
@@ -113,7 +123,11 @@ class _DashboardScreenState extends State<DashboardScreen>
       a.primaryQueue.length      != b.primaryQueue.length      ||
       a.receptionists.length     != b.receptionists.length     ||
       a.doctorCards.length       != b.doctorCards.length       ||
-      a.pendingShareRequestsCount != b.pendingShareRequestsCount;
+      a.pendingShareRequestsCount != b.pendingShareRequestsCount ||
+      a.accountantPendingCount  != b.accountantPendingCount    ||
+      a.wardPendingCount        != b.wardPendingCount          ||
+      a.otAssistantPendingCount != b.otAssistantPendingCount   ||
+      a.dischargePendingCount   != b.dischargePendingCount;
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +157,55 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   // ── AppBar ────────────────────────────────────────────────────────────────
+
+  /// Same brand-mark logic as app_drawer.dart's _buildBrandMark() — kept
+  /// deliberately separate (not shared) since this is a temporary
+  /// diagnostic placement, not yet a confirmed permanent design decision.
+  /// See LOGO_403_INVESTIGATION.md.
+  Widget _buildHospitalAvatar(String initials) {
+    final live = AuthService.instance.cachedHospital;
+    final logoUrl = live?.logoUrl ?? widget.hospital.logoUrl;
+    final logoNobgUrl = live?.logoNobgUrl ?? widget.hospital.logoNobgUrl;
+    final logoSidebarStyle = live?.logoSidebarStyle ?? widget.hospital.logoSidebarStyle;
+
+    if (logoUrl.isEmpty) {
+      return CircleAvatar(
+        radius: 18,
+        backgroundColor: Colors.white.withValues(alpha: 0.20),
+        child: Text(
+          initials,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+        ),
+      );
+    }
+
+    final useNobg = logoSidebarStyle == 'white' && logoNobgUrl.isNotEmpty;
+    final logoSrc = useNobg ? logoNobgUrl : logoUrl;
+    // Testing a senior dev's hypothesis: maybe /storage/* isn't fully
+    // public and expects the same Bearer token as API calls. See
+    // LOGO_403_INVESTIGATION.md.
+    final token = AuthService.instance.cachedToken;
+    final image = RetryNetworkImage(
+      url: logoSrc,
+      fit: BoxFit.contain,
+      headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+      fallbackBuilder: (_) => Text(
+        initials,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+      ),
+    );
+
+    return CircleAvatar(
+      radius: 18,
+      backgroundColor: logoSidebarStyle == 'original_blur' ? Colors.white.withValues(alpha: 0.22) : Colors.transparent,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: useNobg
+            ? ColorFiltered(colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcATop), child: image)
+            : image,
+      ),
+    );
+  }
 
   AppBar _buildAppBar() {
     final name = widget.user.name.trim();
@@ -188,18 +251,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.white.withValues(alpha: 0.20),
-                child: Text(
-                  initials,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              _buildHospitalAvatar(initials),
               if ((_data?.pendingShareRequestsCount ?? 0) > 0)
                 Positioned(
                   top: -2,
@@ -474,9 +526,13 @@ class _DashboardScreenState extends State<DashboardScreen>
         if (d.subscriptionDaysLeft != null && d.subscriptionDaysLeft! <= 14)
           _buildSubscriptionBanner(d.subscriptionDaysLeft!),
         const AppSectionHeader(title: "Today's Overview"),
-        _buildStatsRow1(d),
-        const SizedBox(height: 10),
-        _buildStatsRow2(d),
+        if (p.isSuper) ...[
+          _buildHospitalAdminCards(d),
+        ] else ...[
+          _buildStatsRow1(d),
+          const SizedBox(height: 10),
+          _buildStatsRow2(d),
+        ],
         if (d.isReceptionist && d.receptionistStats != null) ...[
           const SizedBox(height: 10),
           _buildReceptionistStatsRow(d.receptionistStats!),
@@ -494,10 +550,6 @@ class _DashboardScreenState extends State<DashboardScreen>
         if (p.isSuper && d.receptionists.isNotEmpty) ...[
           const SizedBox(height: 16),
           _buildReceptionTable(d),
-        ],
-        if (!d.isDoctor && d.doctorCards.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          _buildDoctorCardsStrip(d.doctorCards),
         ],
         const SizedBox(height: 20),
         _buildQuickActions(),
@@ -541,6 +593,47 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // ── Stat card rows ────────────────────────────────────────────────────────
 
+  /// Hospital Admin's own 8-card set — web gives the tenant's Hospital
+  /// Admin (`is_super`) a completely different, simpler dashboard than
+  /// every other role (`index.blade.php:1610-1725`, comment: "Hospital
+  /// admin: only these 8 cards"). Mutually exclusive with
+  /// `_buildStatsRow1`/`_buildStatsRow2` — see DASHBOARD_PARITY_FIX_PLAN.md
+  /// Phase 7.
+  Widget _buildHospitalAdminCards(DashboardData d) {
+    return Column(children: [
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(children: [
+          _statCard(label: 'Total Today Patients', value: '${d.todayPatients}', icon: Icons.people_alt_rounded, iconBg: AppColors.primary, rawCount: d.todayPatients),
+          const SizedBox(width: 10),
+          _statCard(label: 'Total Collection', value: _fmtRupee(d.revenueToday), icon: Icons.account_balance_wallet_rounded, iconBg: AppColors.green),
+          const SizedBox(width: 10),
+          PressScaleWrapper(
+            onTap: () => _push(ReportsScreen(user: widget.user, hospital: widget.hospital)),
+            child: _statCard(label: 'Report', value: '—', icon: Icons.bar_chart_rounded, iconBg: AppColors.secondary, badge: 'Summary'),
+          ),
+          const SizedBox(width: 10),
+          _statCard(label: 'Doctor', value: '${d.totalDoctors}', icon: Icons.person_rounded, iconBg: AppColors.blue, rawCount: d.totalDoctors),
+        ]),
+      ),
+      const SizedBox(height: 10),
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(children: [
+          _statCard(label: 'Reception', value: '${d.totalReceptions}', icon: Icons.headset_mic_rounded, iconBg: AppColors.teal, rawCount: d.totalReceptions),
+          const SizedBox(width: 10),
+          _statCard(label: 'Primary / Second', value: '${d.todayPrimary}/${d.todaySecondary}', icon: Icons.remove_red_eye_rounded, iconBg: AppColors.teal),
+          const SizedBox(width: 10),
+          _statCard(label: 'OT Total', value: '${d.otTotalToday}', icon: Icons.local_hospital_rounded, iconBg: AppColors.purple, rawCount: d.otTotalToday),
+          if (d.pendingShareRequestsCount != null) ...[
+            const SizedBox(width: 10),
+            _statCard(label: 'Incoming Requests', value: '${d.pendingShareRequestsCount}', icon: Icons.send_rounded, iconBg: AppColors.secondary, rawCount: d.pendingShareRequestsCount),
+          ],
+        ]),
+      ),
+    ]);
+  }
+
   Widget _buildStatsRow1(DashboardData d) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -557,35 +650,67 @@ class _DashboardScreenState extends State<DashboardScreen>
           if (!d.isOtDoctor) ...[
             const SizedBox(width: 10),
             _statCard(
-              label: 'Primary Queue',
-              value: '${d.isDoctor ? d.myPrimaryPending : d.primaryQueueCount}',
-              icon: Icons.groups_rounded,
-              iconBg: AppColors.green,
-              badge: 'Waiting',
-              rawCount: d.isDoctor ? d.myPrimaryPending : d.primaryQueueCount,
+              label: 'Pending Exams',
+              value: '${d.pendingExams}',
+              icon: Icons.pending_actions_rounded,
+              iconBg: AppColors.orange,
+              badge: 'In queue',
+              rawCount: d.pendingExams,
             ),
             const SizedBox(width: 10),
             _statCard(
-              label: 'Secondary Queue',
-              value: '${d.isDoctor ? d.mySecondaryPending : d.secondaryQueueCount}',
-              icon: Icons.group_add_rounded,
-              iconBg: AppColors.orange,
-              badge: 'Post-Exam',
-              rawCount: d.isDoctor ? d.mySecondaryPending : d.secondaryQueueCount,
+              label: 'OPD Queue',
+              value: '${d.isDoctor ? d.myPrimaryPending : d.primaryQueueCount}/${d.isDoctor ? d.mySecondaryPending : d.secondaryQueueCount}',
+              icon: Icons.groups_rounded,
+              iconBg: AppColors.teal,
+              badge: 'Primary / Secondary',
             ),
           ],
-          const SizedBox(width: 10),
-          _statCard(
-            label: 'OT Today',
-            value: '${d.otToday}',
-            icon: Icons.medical_services_rounded,
-            iconBg: AppColors.teal,
-            badge: '${d.otOperated} done',
-            rawCount: d.otToday,
-          ),
+          ..._otSlotCards(d),
         ],
       ),
     );
+  }
+
+  /// Web swaps the generic "OT Appointment" card for a role-specific
+  /// pending-count card for Accountant/Ward Management/OT Assistant/
+  /// Discharge Counter — mirrors `Hospital\DashboardController.php:386-460`
+  /// + `index.blade.php`'s `@if/@elseif` chain exactly (each field is null
+  /// unless that role is logged in, so this is a plain first-match swap).
+  /// See DASHBOARD_PARITY_FIX_PLAN.md Phase 4.
+  List<Widget> _otSlotCards(DashboardData d) {
+    if (d.accountantPendingCount != null) {
+      return [
+        const SizedBox(width: 10),
+        _statCard(label: 'Pending Patients', value: '${d.accountantPendingCount}', icon: Icons.hourglass_bottom_rounded, iconBg: AppColors.orange, badge: 'OT payment', rawCount: d.accountantPendingCount),
+        const SizedBox(width: 10),
+        _statCard(label: 'Refunds', value: '${d.accountantRefundsCount ?? 0}', icon: Icons.replay_rounded, iconBg: const Color(0xFFC0392B), badge: 'Surgery refused', rawCount: d.accountantRefundsCount),
+        const SizedBox(width: 10),
+        _statCard(label: 'Completed', value: '${d.accountantCompletedCount ?? 0}', icon: Icons.check_circle_rounded, iconBg: AppColors.green, badge: 'Verified+', rawCount: d.accountantCompletedCount),
+      ];
+    }
+    if (d.wardPendingCount != null) {
+      return [
+        const SizedBox(width: 10),
+        _statCard(label: 'Pending Patient', value: '${d.wardPendingCount}', icon: Icons.hourglass_bottom_rounded, iconBg: AppColors.orange, badge: 'Ward entry', rawCount: d.wardPendingCount),
+      ];
+    }
+    if (d.otAssistantPendingCount != null) {
+      return [
+        const SizedBox(width: 10),
+        _statCard(label: 'Pending Patient', value: '${d.otAssistantPendingCount}', icon: Icons.hourglass_bottom_rounded, iconBg: AppColors.orange, badge: 'Ready for OT', rawCount: d.otAssistantPendingCount),
+      ];
+    }
+    if (d.dischargePendingCount != null) {
+      return [
+        const SizedBox(width: 10),
+        _statCard(label: 'Pending Patient', value: '${d.dischargePendingCount}', icon: Icons.hourglass_bottom_rounded, iconBg: AppColors.orange, badge: 'Discharge', rawCount: d.dischargePendingCount),
+      ];
+    }
+    return [
+      const SizedBox(width: 10),
+      _statCard(label: 'OT Appointment', value: '${d.otToday}', icon: Icons.medical_services_rounded, iconBg: AppColors.teal, badge: '${d.otOperated} confirmed', rawCount: d.otToday),
+    ];
   }
 
   Widget _buildStatsRow2(DashboardData d) {
@@ -594,23 +719,17 @@ class _DashboardScreenState extends State<DashboardScreen>
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _statCard(
-            label: 'Walk-ins',
-            value: '${d.todayWalkin}',
-            icon: Icons.directions_walk_rounded,
-            iconBg: AppColors.primary,
-            badge: 'Walkin',
-            rawCount: d.todayWalkin,
-          ),
-          const SizedBox(width: 10),
-          _statCard(
-            label: 'Phone Appts',
-            value: '${d.todayPhone}',
-            icon: Icons.phone_in_talk_rounded,
-            iconBg: AppColors.secondary,
-            badge: 'Phone',
-            rawCount: d.todayPhone,
-          ),
+          if (!d.isReceptionist) ...[
+            _statCard(
+              label: 'Registrations',
+              value: '${d.todayRegistrations}',
+              icon: Icons.fact_check_rounded,
+              iconBg: AppColors.primary,
+              badge: 'W:${d.todayWalkin} P:${d.todayPhone}',
+              rawCount: d.todayRegistrations,
+            ),
+            const SizedBox(width: 10),
+          ],
           if (!d.isDoctor && p.can(Perm.reportsView)) ...[
             const SizedBox(width: 10),
             _statCard(
@@ -619,17 +738,6 @@ class _DashboardScreenState extends State<DashboardScreen>
               icon: Icons.currency_rupee_rounded,
               iconBg: AppColors.green,
               badge: '${_fmtRupee(d.revenueMonth)} mo',
-            ),
-          ],
-          if (p.isSuper) ...[
-            const SizedBox(width: 10),
-            _statCard(
-              label: 'Total Staff',
-              value: '${d.totalStaff}',
-              icon: Icons.badge_rounded,
-              iconBg: AppColors.primary,
-              badge: 'Active',
-              rawCount: d.totalStaff,
             ),
           ],
         ],
@@ -765,7 +873,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                 ),
                 const Spacer(),
-                GestureDetector(
+                PressScaleWrapper(
                   onTap: () => Navigator.of(context).push(appRoute(
                     ClinicalQueueScreen(user: widget.user, hospital: widget.hospital),
                   )),
@@ -1126,9 +1234,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     Navigator.of(context).push(appRoute(screen));
   }
 
-  void _comingSoon(String label) {
-    showAppSnackBar(context, '$label — Coming Soon', duration: const Duration(seconds: 2));
-  }
+  // Only caller was the FOC quick action, disabled at client's request.
+  // void _comingSoon(String label) {
+  //   showAppSnackBar(context, '$label — Coming Soon', duration: const Duration(seconds: 2));
+  // }
 
   // ── Receptionist-specific stats row ──────────────────────────────────────
 
@@ -1173,100 +1282,6 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
         ],
       ),
-    );
-  }
-
-  // ── Doctor cards strip (receptionist / admin view) ────────────────────────
-
-  Widget _buildDoctorCardsStrip(List<DoctorCard> cards) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const AppSectionHeader(title: 'Doctors Today'),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: cards.asMap().entries.map((entry) {
-              final i = entry.key;
-              final c = entry.value;
-              return AnimatedListItem(
-                index: i,
-                child: Padding(
-                  padding: EdgeInsets.only(right: i < cards.length - 1 ? 10.0 : 0),
-                  child: Container(
-                    width: 152,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.10),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.person_rounded,
-                                  size: 14, color: AppColors.primary),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                c.name,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _doctorStat('${c.assignedToday}', 'Total', AppColors.primary),
-                            _doctorStat('${c.primaryCount}', 'Primary', AppColors.green),
-                            _doctorStat('${c.secondaryCount}', 'Secondary', AppColors.orange),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _doctorStat(String value, String label, Color color) {
-    return Column(
-      children: [
-        Text(value,
-            style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w900, color: color, height: 1)),
-        const SizedBox(height: 2),
-        Text(label,
-            style: const TextStyle(
-                fontSize: 9, fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
-      ],
     );
   }
 
@@ -1315,9 +1330,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       if (p.can(Perm.settingsHospital))
         _QA(Icons.settings_rounded,         'Settings',       const Color(0xFF475569),
             () => _push(SettingsScreen(user: u, hospital: h))),
-      if (p.can(Perm.opdFocCreate) || p.can(Perm.opdFocAccept))
-        _QA(Icons.money_off_rounded,        'FOC',            const Color(0xFFD97706),
-            () => _comingSoon('FOC')),
+      // FOC disabled at client's request — see foc_screen.dart.
+      // if (p.can(Perm.opdFocCreate) || p.can(Perm.opdFocAccept))
+      //   _QA(Icons.money_off_rounded,        'FOC',            const Color(0xFFD97706),
+      //       () => _comingSoon('FOC')),
     ];
     if (actions.isEmpty) return const SizedBox.shrink();
     return Column(
@@ -1389,28 +1405,9 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  String _fmtRupee(double amount) {
-    if (amount >= 10000000) return '₹${(amount / 10000000).toStringAsFixed(1)}Cr';
-    if (amount >= 100000) return '₹${(amount / 100000).toStringAsFixed(1)}L';
-    if (amount >= 1000) return '₹${(amount / 1000).toStringAsFixed(0)}k';
-    return '₹${amount.toInt()}';
-  }
+  String _fmtRupee(double amount) => formatMoneyCompact(amount, widget.hospital.currencySymbol);
 
-  String _fmtRupeeFull(double amount) {
-    final n = amount.toInt();
-    if (n == 0) return '₹0';
-    final s = n.toString();
-    if (s.length <= 3) return '₹$s';
-    final last3 = s.substring(s.length - 3);
-    var rest = s.substring(0, s.length - 3);
-    final chunks = <String>[last3];
-    while (rest.length > 2) {
-      chunks.add(rest.substring(rest.length - 2));
-      rest = rest.substring(0, rest.length - 2);
-    }
-    if (rest.isNotEmpty) chunks.add(rest);
-    return '₹${chunks.reversed.join(',')}';
-  }
+  String _fmtRupeeFull(double amount) => formatMoney(amount, widget.hospital.currencySymbol);
 
   String _fmtWait(int minutes) {
     if (minutes < 1) return 'Just in';
@@ -1581,10 +1578,7 @@ class _TodayPatientsWidgetState extends State<_TodayPatientsWidget> {
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
           if (_loading)
-            const Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const AppSkeletonList(count: 3, itemHeight: 56)
           else if (_error != null)
             Padding(
               padding: const EdgeInsets.all(20),

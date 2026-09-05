@@ -6,6 +6,8 @@ import '../utils/date_format.dart';
 import '../services/ot_report_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
+import '../widgets/app_record_card.dart';
 
 class OtReportViewerScreen extends StatefulWidget {
   final String type;
@@ -94,10 +96,10 @@ class _OtReportViewerScreenState extends State<OtReportViewerScreen> {
         _buildDateRangeBar(),
         Expanded(
           child: _loading
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _error != null
                   ? AppErrorState(message: _error!, onRetry: _load)
-                  : _buildTable(),
+                  : _buildList(),
         ),
       ]),
     );
@@ -141,40 +143,45 @@ class _OtReportViewerScreenState extends State<OtReportViewerScreen> {
     }
   }
 
-  Widget _buildTable() {
+  /// Renders each row as a card instead of a DataTable — on a phone-width
+  /// screen a wide table forces heavy left-right scrolling, whereas a card
+  /// list (matching report_channel_screen.dart's `_PatientCard` style) reads
+  /// top-to-bottom with no horizontal scroll. First column becomes the
+  /// card's bold title (usually the patient/entity name); the rest render
+  /// as label/value fields. `hospital-report`'s trailing patient-id column
+  /// stays a print-prescription action instead of a text field, same logic
+  /// as before.
+  Widget _buildList() {
     final r = _result!;
     if (r.rows.isEmpty) {
       return Center(child: Text('No data for ${r.from} – ${r.to}', style: const TextStyle(color: AppColors.textSecondary)));
     }
 
-    final headings = List<String>.from(r.headings);
-    if (_isHospitalReport && headings.isNotEmpty) {
-      headings[headings.length - 1] = 'Prescription';
-    }
+    final headings = r.headings;
 
-    List<DataCell> buildCells(List<dynamic> row) {
+    Widget cardFor(List<dynamic> row) {
       if (!_isHospitalReport) {
-        return row.map((c) => DataCell(Text('$c', style: const TextStyle(fontSize: 12)))).toList();
+        final fields = [for (var i = 1; i < row.length; i++) AppRecordField(headings[i], '${row[i]}')];
+        return AppRecordCard(title: '${row[0]}', fields: fields);
       }
+
       final cells = List<dynamic>.from(row);
       final patientId = cells.isNotEmpty ? cells.removeLast() : null;
       final hasExam = (cells.length > 6 && '${cells[6]}' != '-') || (cells.length > 7 && '${cells[7]}' != '-');
       final pid = patientId is int ? patientId : int.tryParse('$patientId');
+      final fields = [for (var i = 1; i < cells.length; i++) AppRecordField(headings[i], '${cells[i]}')];
 
-      return [
-        ...cells.map((c) => DataCell(Text('$c', style: const TextStyle(fontSize: 12)))),
-        DataCell(
-          (hasExam && pid != null)
-              ? (_printingPatientId == pid
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : IconButton(
-                      icon: Icon(Icons.print_outlined, size: 18, color: AppColors.primary),
-                      tooltip: 'View',
-                      onPressed: () => _printPrescription(pid),
-                    ))
-              : const Text('-', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-        ),
-      ];
+      Widget? trailing;
+      if (hasExam && pid != null) {
+        trailing = _printingPatientId == pid
+            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+            : IconButton(
+                icon: Icon(Icons.print_outlined, size: 18, color: AppColors.primary),
+                tooltip: 'View Prescription',
+                onPressed: () => _printPrescription(pid),
+              );
+      }
+      return AppRecordCard(title: '${cells[0]}', fields: fields, trailing: trailing);
     }
 
     return Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
@@ -187,14 +194,11 @@ class _OtReportViewerScreenState extends State<OtReportViewerScreen> {
         ),
       ),
       Expanded(
-        child: SingleChildScrollView(
+        child: ListView.separated(
           padding: const EdgeInsets.all(14),
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(AppColors.primary.withValues(alpha: 0.06)),
-            columns: headings.map((h) => DataColumn(label: Text(h, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)))).toList(),
-            rows: r.rows.map((row) => DataRow(cells: buildCells(row))).toList(),
-          ),
+          itemCount: r.rows.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (_, i) => cardFor(r.rows[i]),
         ),
       ),
     ]);

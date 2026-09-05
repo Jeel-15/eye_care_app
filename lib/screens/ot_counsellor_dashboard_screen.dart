@@ -3,6 +3,7 @@ import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../models/ot_booking_models.dart';
 import '../utils/date_format.dart';
+import '../widgets/skeleton.dart';
 import '../services/ot_accountant_service.dart';
 import '../services/ot_counsellor_service.dart';
 import '../utils/app_route.dart';
@@ -89,7 +90,7 @@ class _OtCounsellorDashboardScreenState extends State<OtCounsellorDashboardScree
         title: const Text('OT Counsellor', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.2)),
       ),
       body: _loading
-          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const AppSkeletonList()
           : _error != null
               ? AppErrorState(message: _error!, onRetry: _load)
               : RefreshIndicator(color: AppColors.primary, onRefresh: _load, child: _buildBody()),

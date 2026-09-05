@@ -15,6 +15,7 @@ import '../constants/permissions.dart';
 import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/ot/recommend_surgery_sheet.dart';
 
 class _PrescRow {
@@ -538,7 +539,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
         itemCount: _stepNames.length,
         itemBuilder: (_, i) {
           final isActive = i == _currentStep;
-          return GestureDetector(
+          return PressScaleWrapper(
             onTap: () => _goToStep(i),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -747,7 +748,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                 ),
               )),
               const SizedBox(width: 8),
-              GestureDetector(
+              PressScaleWrapper(
                 onTap: () => showDialog<void>(
                   context: bsCtx,
                   builder: (dCtx) => AlertDialog(
@@ -855,7 +856,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
               border: Border.all(color: Colors.amber.shade300),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              GestureDetector(
+              PressScaleWrapper(
                 onTap: () => setState(() => _coRows.add(_CoRow(complaint: item.value))),
                 child: Padding(
                   padding: const EdgeInsets.only(left: 10, top: 5, bottom: 5, right: 4),
@@ -863,7 +864,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                       color: Colors.amber.shade900)),
                 ),
               ),
-              GestureDetector(
+              PressScaleWrapper(
                 onTap: () => onUnfavourite(item),
                 child: Padding(
                   padding: const EdgeInsets.only(right: 8, top: 5, bottom: 5),
@@ -900,13 +901,13 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(color: Colors.amber.shade300)),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              GestureDetector(
+              PressScaleWrapper(
                 onTap: () => setState(() => _kcoRows.add(_KcoRow(condition: item.value))),
                 child: Padding(padding: const EdgeInsets.only(left: 10, top: 5, bottom: 5, right: 4),
                     child: Text(item.value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
                         color: Colors.amber.shade900))),
               ),
-              GestureDetector(
+              PressScaleWrapper(
                 onTap: () => _toggleFavourite('kcos', item),
                 child: Padding(padding: const EdgeInsets.only(right: 8, top: 5, bottom: 5),
                     child: Icon(Icons.star_rounded, size: 13, color: Colors.amber.shade600)),
@@ -1080,7 +1081,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
             const SizedBox(width: 6),
             const Text('Medicines (Rx)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
             const Spacer(),
-            GestureDetector(
+            PressScaleWrapper(
               onTap: () => setState(() => _medicines.add(_PrescRow())),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -1164,7 +1165,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
             Expanded(child: Text('QUICK ADD',
                 style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
                     letterSpacing: 0.8, color: AppColors.primary.withValues(alpha: 0.55)))),
-            GestureDetector(
+            PressScaleWrapper(
               onTap: _showAdviceMoreSheet,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1184,7 +1185,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
           const SizedBox(height: 8),
           if (favAdvices.isNotEmpty)
             Wrap(spacing: 6, runSpacing: 6, children: favAdvices.map((a) {
-              return GestureDetector(
+              return PressScaleWrapper(
                 onTap: () { _appendAdviceText(a.value); setState(() {}); },
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -1248,7 +1249,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
           if (!_loading && _loadError == null) _buildStepBar(),
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
+                ? const AppSkeletonList()
                 : _loadError != null
                     ? _buildError()
                     : PageView(
@@ -1366,7 +1367,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                   border: Border.all(color: Colors.amber.shade300),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  GestureDetector(
+                  PressScaleWrapper(
                     onTap: () {
                       if (!selected) setState(() => _historyChips.add(item.value));
                     },
@@ -1376,7 +1377,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                           color: Colors.amber.shade900, fontWeight: FontWeight.w600)),
                     ),
                   ),
-                  GestureDetector(
+                  PressScaleWrapper(
                     onTap: () => _toggleFavourite('hno', item),
                     child: Padding(
                       padding: const EdgeInsets.only(right: 8, top: 5, bottom: 5),
@@ -1432,7 +1433,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
           const SizedBox(width: 8),
           _miniDropdown(value: safeEye, items: eyeOptions, onChanged: (v) => setState(() => row.eye = v ?? '-'), width: 68),
           const SizedBox(width: 4),
-          GestureDetector(onTap: () => setState(() => _coRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 20)),
+          PressScaleWrapper(onTap: () => setState(() => _coRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 20)),
         ]),
         const SizedBox(height: 6),
         Row(children: [
@@ -1466,7 +1467,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
             onToggleFavourite: (item) => _toggleFavourite('kcos', item),
           )),
           const SizedBox(width: 4),
-          GestureDetector(onTap: () => setState(() => _kcoRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 20)),
+          PressScaleWrapper(onTap: () => setState(() => _kcoRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 20)),
         ]),
         const SizedBox(height: 6),
         Row(children: [
@@ -1614,7 +1615,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                 itemBuilder: (_, i) {
                   final v = filtered[i].value;
                   final isSel = ctrl.text == v;
-                  return GestureDetector(
+                  return PressScaleWrapper(
                     onTap: () => Navigator.pop(ctx, v),
                     child: Container(
                       decoration: BoxDecoration(
@@ -1738,7 +1739,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
       final txtColor = isEmpty ? Colors.grey.shade400  : isZero ? const Color(0xFF475569) : isMinus ? const Color(0xFFB91C1C) : const Color(0xFF15803D);
       return Expanded(child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: GestureDetector(
+        child: PressScaleWrapper(
           onTap: () async {
             final sign = t.startsWith('-') ? '-' : '+';
             final picked = await _showSphCylPicker(items, ctrl.text, forcedSign: isEmpty ? '+' : sign);
@@ -1776,7 +1777,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
     }
     return Expanded(child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: GestureDetector(
+      child: PressScaleWrapper(
         onTap: (!axisOff && items.isNotEmpty) ? openListPicker : null,
         child: Container(
           height: 40,
@@ -1808,7 +1809,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
     }).toList();
 
     Widget chip(String label, bool isSel, bool isFav, VoidCallback onTap) =>
-      GestureDetector(
+      PressScaleWrapper(
         onTap: onTap,
         child: Container(
           width: 58, height: 36,
@@ -1823,7 +1824,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
         ),
       );
 
-    Widget zeroChip(bool isSel, VoidCallback onTap) => GestureDetector(
+    Widget zeroChip(bool isSel, VoidCallback onTap) => PressScaleWrapper(
       onTap: onTap,
       child: Container(
         width: 58, height: 36,
@@ -1862,7 +1863,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                       for (final s in ['-', '+'])
                         Expanded(child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: GestureDetector(
+                          child: PressScaleWrapper(
                             onTap: () => ss(() {
                               final prev = sign;
                               sign = s;
@@ -1931,7 +1932,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                           ),
                         )),
                         const SizedBox(width: 8),
-                        GestureDetector(
+                        PressScaleWrapper(
                           onTap: () => ss(() { selected = ''; customCtrl.clear(); }),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1963,7 +1964,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                           style: const TextStyle(fontSize: 13),
                         )),
                         const SizedBox(width: 8),
-                        GestureDetector(
+                        PressScaleWrapper(
                           onTap: () {
                             final custom = customCtrl.text.trim();
                             String? result;
@@ -2132,7 +2133,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
     return Expanded(child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        GestureDetector(
+        PressScaleWrapper(
           onTap: () async {
             // Pick ADD value; NS is auto-calculated after
             final curAdd = addCtrl.text.trim();
@@ -2285,7 +2286,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
       decoration: InputDecoration(
         hintText: '—', hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3), fontSize: 12),
         contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), isDense: true,
-        suffixIcon: hasItems ? GestureDetector(
+        suffixIcon: hasItems ? PressScaleWrapper(
           onTap: () => _openOePickerSheet(fieldKey, ctrl),
           child: Icon(Icons.arrow_drop_down_rounded, size: 18, color: AppColors.primary.withValues(alpha: 0.5)),
         ) : null,
@@ -2384,7 +2385,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
     const opts = ['Block', 'Phaco'];
 
     Widget opChips(String current, void Function(String) onSel) => Wrap(spacing: 6, children: opts.map((o) =>
-      GestureDetector(
+      PressScaleWrapper(
         onTap: () => setState(() => onSel(o)),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -2521,7 +2522,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
       decoration: InputDecoration(
         hintText: '—', hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3), fontSize: 12),
         contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), isDense: true,
-        suffixIcon: masterList.isNotEmpty ? GestureDetector(
+        suffixIcon: masterList.isNotEmpty ? PressScaleWrapper(
           onTap: () => _openFundusPickerSheet(masterList, apiType, ctrl, label),
           child: Icon(Icons.arrow_drop_down_rounded, size: 18, color: AppColors.primary.withValues(alpha: 0.5)),
         ) : null,
@@ -2634,7 +2635,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                 style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
           ),
           const Spacer(),
-          GestureDetector(
+          PressScaleWrapper(
             onTap: () => setState(() => _selectedDiagnosisIds.clear()),
             child: Text('Clear all', style: TextStyle(fontSize: 11, color: Colors.red.shade600, fontWeight: FontWeight.w600)),
           ),
@@ -2679,7 +2680,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
               child: IntrinsicHeight(
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   // ☆/★ favourite toggle
-                  GestureDetector(
+                  PressScaleWrapper(
                     onTap: () => _toggleDiagnosisFav(d),
                     child: Container(
                       padding: const EdgeInsets.only(left: 8, top: 6, bottom: 6, right: 4),
@@ -2694,7 +2695,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                   ),
                   Container(width: 0.5, color: selected ? Colors.white24 : AppColors.primary.withValues(alpha: 0.1)),
                   // Main selection tap area
-                  GestureDetector(
+                  PressScaleWrapper(
                     onTap: () => setState(() {
                       if (selected) _selectedDiagnosisIds.remove(d.id);
                       else _selectedDiagnosisIds.add(d.id);
@@ -2728,7 +2729,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
             if (med.duration != null) row.duration = med.duration!;
           }))),
           const SizedBox(width: 6),
-          GestureDetector(onTap: () => setState(() => _medicines.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 22)),
+          PressScaleWrapper(onTap: () => setState(() => _medicines.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 22)),
         ]),
         const SizedBox(height: 6),
         Row(children: [
@@ -2771,7 +2772,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
         ]),
       );
 
-  Widget _addBtn(VoidCallback onTap) => GestureDetector(onTap: onTap,
+  Widget _addBtn(VoidCallback onTap) => PressScaleWrapper(onTap: onTap,
         child: Container(padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(color: AppColors.teal.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.xl)),
             child: Icon(Icons.add_rounded, color: AppColors.teal, size: 18)));
@@ -2973,9 +2974,8 @@ class _MasterAutocompleteFieldState extends State<_MasterAutocompleteField> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                 child: Row(children: [
                   if (widget.onToggleFavourite != null)
-                    GestureDetector(
+                    PressScaleWrapper(
                       onTap: () => widget.onToggleFavourite!(item),
-                      behavior: HitTestBehavior.opaque,
                       child: Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Icon(

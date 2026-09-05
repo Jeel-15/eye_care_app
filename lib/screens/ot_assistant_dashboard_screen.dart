@@ -7,7 +7,9 @@ import '../models/ot_booking_models.dart';
 import '../services/ot_assistant_service.dart';
 import '../services/permission_service.dart';
 import '../utils/app_route.dart';
+import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
 import 'ot_surgery_record_screen.dart';
@@ -89,7 +91,7 @@ class _OtAssistantDashboardScreenState extends State<OtAssistantDashboardScreen>
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) return AppErrorState(message: _error!, onRetry: _load);
     if (_items.isEmpty) return AppEmptyState(message: 'No bookings ready for surgery.', icon: Icons.handyman_rounded, onRefresh: _load);
 
@@ -102,42 +104,45 @@ class _OtAssistantDashboardScreenState extends State<OtAssistantDashboardScreen>
         itemCount: _items.length,
         itemBuilder: (_, i) {
           final item = _items[i];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)), boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(item.patient?.fullName ?? 'Patient', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
-                      const SizedBox(height: 2),
-                      Text('${item.patient?.patientCode ?? ''}${item.eye != null ? ' · ${item.eye}' : ''}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-                    ]),
-                  ),
-                  Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFF0F6FB), borderRadius: BorderRadius.circular(999)), child: Text(OtStatus.label(item.otStatus).toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.darkNavy))),
-                ]),
-                const SizedBox(height: 8),
-                Wrap(spacing: 6, runSpacing: 6, children: [
-                  if (item.otType != null) _infoChip(Icons.heart_broken_outlined, item.otType!),
-                  if (item.packageAmount != null) _infoChip(Icons.currency_rupee_rounded, item.packageAmount!.toStringAsFixed(0)),
-                  if (_seeAll && item.otDoctor != null) _infoChip(Icons.person_outline_rounded, 'Dr. ${item.otDoctor!.name}'),
-                  if (item.paymentStatus != null)
-                    Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: paymentStatusColor(item.paymentStatus!).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)), child: Text(paymentStatusLabel(item.paymentStatus!), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: paymentStatusColor(item.paymentStatus!)))),
-                ]),
-                const SizedBox(height: 10),
-                if (_canSurgery)
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _openSurgery(item),
-                      icon: const Icon(Icons.local_hospital_outlined, size: 16),
-                      label: const Text('Operate', style: TextStyle(fontSize: 12)),
-                      style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4))),
+          return AnimatedListItem(
+            index: i,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)), boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(item.patient?.fullName ?? 'Patient', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
+                        const SizedBox(height: 2),
+                        Text('${item.patient?.patientCode ?? ''}${item.eye != null ? ' · ${item.eye}' : ''}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                      ]),
                     ),
-                  ),
-              ]),
+                    Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFF0F6FB), borderRadius: BorderRadius.circular(999)), child: Text(OtStatus.label(item.otStatus).toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.darkNavy))),
+                  ]),
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 6, runSpacing: 6, children: [
+                    if (item.otType != null) _infoChip(Icons.heart_broken_outlined, item.otType!),
+                    if (item.packageAmount != null) _infoChip(Icons.currency_rupee_rounded, item.packageAmount!.toStringAsFixed(0)),
+                    if (_seeAll && item.otDoctor != null) _infoChip(Icons.person_outline_rounded, 'Dr. ${item.otDoctor!.name}'),
+                    if (item.paymentStatus != null)
+                      Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: paymentStatusColor(item.paymentStatus!).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)), child: Text(paymentStatusLabel(item.paymentStatus!), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: paymentStatusColor(item.paymentStatus!)))),
+                  ]),
+                  const SizedBox(height: 10),
+                  if (_canSurgery)
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _openSurgery(item),
+                        icon: const Icon(Icons.local_hospital_outlined, size: 16),
+                        label: const Text('Operate', style: TextStyle(fontSize: 12)),
+                        style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4))),
+                      ),
+                    ),
+                ]),
+              ),
             ),
           );
         },

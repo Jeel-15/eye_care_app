@@ -4,7 +4,9 @@ import '../models/ot_booking_models.dart';
 import '../services/ot_discharge_service.dart';
 import '../utils/date_format.dart';
 import '../utils/app_route.dart';
+import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
 import '../widgets/status_badge.dart';
@@ -64,7 +66,7 @@ class _OtDischargeDashboardScreenState extends State<OtDischargeDashboardScreen>
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) return AppErrorState(message: _error!, onRetry: _load);
 
     return Column(children: [
@@ -79,7 +81,7 @@ class _OtDischargeDashboardScreenState extends State<OtDischargeDashboardScreen>
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(14, 0, 14, 20),
                   itemCount: _items.length,
-                  itemBuilder: (_, i) => _bookingCard(_items[i]),
+                  itemBuilder: (_, i) => AnimatedListItem(index: i, child: _bookingCard(_items[i])),
                 ),
               ),
       ),

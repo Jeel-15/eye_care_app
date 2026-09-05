@@ -7,6 +7,7 @@ import '../services/ot_ward_service.dart';
 import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
 import 'ot_ward_screen.dart';
@@ -72,7 +73,7 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen> {
         _buildHeader(),
         Expanded(
           child: _loading
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _error != null
                   ? AppErrorState(message: _error!, onRetry: _load)
                   : _buildBody(),
@@ -115,7 +116,9 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen> {
           final item = _items[i];
           final canSend = item.otStatus == OtStatus.paymentVerified || item.otStatus == OtStatus.inWard;
           final sending = _sendingId == item.id;
-          return Container(
+          return AnimatedListItem(
+            index: i,
+            child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.primary.withValues(alpha: 0.08))),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -159,6 +162,7 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen> {
                 ],
               ]),
             ]),
+            ),
           );
         },
       ),

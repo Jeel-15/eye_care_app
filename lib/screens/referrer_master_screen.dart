@@ -4,6 +4,7 @@ import '../constants/app_colors.dart';
 import '../utils/phone_rules.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../services/referrer_service.dart';
 import '../services/masters_service.dart';
 
@@ -183,7 +184,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
     if (_error != null) {
       return Center(
@@ -247,7 +248,9 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
           final item = items[i];
           final hasContact =
               item.contact != null && item.contact!.isNotEmpty;
-          return Padding(
+          return AnimatedListItem(
+            index: i,
+            child: Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Container(
               padding: const EdgeInsets.fromLTRB(12, 11, 8, 11),
@@ -340,6 +343,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
                   ),
                 ],
               ),
+            ),
             ),
           );
         },

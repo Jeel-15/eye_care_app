@@ -1,3 +1,7 @@
+// FOC (Free of Charge) feature disabled at the client's request — kept
+// commented out (not deleted) in case it's needed again in future, mirroring
+// how the web developer handled the same request on the web app.
+/*
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -8,6 +12,7 @@ import '../models/auth_models.dart';
 import '../models/foc_models.dart';
 import '../services/foc_service.dart';
 import '../services/permission_service.dart';
+import '../widgets/skeleton.dart';
 
 
 class FocScreen extends StatefulWidget {
@@ -80,7 +85,7 @@ class _FocScreenState extends State<FocScreen> {
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Required' : null),
                 const SizedBox(height: 12),
-                _field(focFeeCtrl, 'FOC Fee (₹)',
+                _field(focFeeCtrl, 'FOC Fee (${widget.hospital.currencySymbol})',
                     hint: '0.00',
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     validator: (v) {
@@ -217,7 +222,7 @@ class _FocScreenState extends State<FocScreen> {
         title: const Text('Accept FOC Request'),
         content: Text(
           'Accept FOC for ${foc.patient?.fullName ?? "Patient #${foc.patientId}"}?'
-          '\nFee of ₹${foc.focFee.toStringAsFixed(2)} will be waived.',
+          '\nFee of ${widget.hospital.currencySymbol}${foc.focFee.toStringAsFixed(2)} will be waived.',
         ),
         actions: [
           TextButton(
@@ -333,7 +338,7 @@ class _FocScreenState extends State<FocScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppSkeletonList();
     }
     if (_error != null) {
       return Center(
@@ -363,7 +368,7 @@ class _FocScreenState extends State<FocScreen> {
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 88),
         itemCount: _result!.items.length,
-        itemBuilder: (_, i) => _buildCard(_result!.items[i]),
+        itemBuilder: (_, i) => AnimatedListItem(index: i, child: _buildCard(_result!.items[i])),
       ),
     );
   }
@@ -514,3 +519,4 @@ class _FocScreenState extends State<FocScreen> {
     );
   }
 }
+*/

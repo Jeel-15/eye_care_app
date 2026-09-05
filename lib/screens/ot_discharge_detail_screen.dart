@@ -7,6 +7,8 @@ import '../utils/date_format.dart';
 import '../services/ot_discharge_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_section_header.dart';
+import '../widgets/skeleton.dart';
+import '../utils/currency_format.dart';
 
 /// Round 3 Phase 6 — Discharge detail: generate invoice + print documents.
 ///
@@ -112,7 +114,7 @@ class _OtDischargeDetailScreenState extends State<OtDischargeDetailScreen> {
         _buildHeader(),
         Expanded(
           child: _loadingInvoice
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _buildBody(),
         ),
       ]),
@@ -192,7 +194,7 @@ class _OtDischargeDetailScreenState extends State<OtDischargeDetailScreen> {
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(children: [
                 Expanded(child: Text(item.head, style: const TextStyle(fontSize: 12.5))),
-                Text('₹${item.amount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                Text('${currentCurrencySymbol()}${item.amount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
               ]),
             ),
         ],
@@ -220,7 +222,7 @@ class _OtDischargeDetailScreenState extends State<OtDischargeDetailScreen> {
         padding: const EdgeInsets.only(bottom: 2),
         child: Row(children: [
           Expanded(child: Text(label, style: TextStyle(fontSize: bold ? 13 : 12, fontWeight: bold ? FontWeight.w800 : FontWeight.w500, color: bold ? AppColors.darkNavy : AppColors.textSecondary))),
-          Text('${negative && amount > 0 ? '-' : ''}₹${amount.toStringAsFixed(2)}', style: TextStyle(fontSize: bold ? 13 : 12, fontWeight: bold ? FontWeight.w800 : FontWeight.w600, color: bold ? AppColors.darkNavy : AppColors.textSecondary)),
+          Text('${negative && amount > 0 ? '-' : ''}${currentCurrencySymbol()}${amount.toStringAsFixed(2)}', style: TextStyle(fontSize: bold ? 13 : 12, fontWeight: bold ? FontWeight.w800 : FontWeight.w600, color: bold ? AppColors.darkNavy : AppColors.textSecondary)),
         ]),
       );
 

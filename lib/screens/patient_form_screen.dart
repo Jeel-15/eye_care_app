@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../models/auth_models.dart';
 import '../models/ot_appointment_models.dart';
 import '../models/patient_models.dart';
+import '../services/base_service.dart' show StaleRecordException;
 import '../services/masters_service.dart';
 import '../services/patient_service.dart';
 import '../constants/app_colors.dart';
@@ -12,6 +13,7 @@ import '../constants/app_radius.dart';
 import '../utils/date_format.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 
 enum PatientFormMode { addWalkIn, addPhone, edit }
 
@@ -433,6 +435,12 @@ class _PatientFormScreenState extends State<PatientFormScreen>
         data['case_fee'] =
             double.tryParse(_caseFeeCtrl.text.trim()) ?? 0;
         data['case_id'] = _selectedCaseId;
+        // Optimistic-concurrency guard — lets the backend detect if this
+        // record was edited elsewhere (web/another platform) since this
+        // form loaded it. See ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 5.
+        if (widget.patient!.updatedAt != null) {
+          data['expected_updated_at'] = widget.patient!.updatedAt!.toIso8601String();
+        }
         await PatientService.instance
             .updatePatient(widget.patient!.id, data);
       } else if (isPhone) {
@@ -446,6 +454,12 @@ class _PatientFormScreenState extends State<PatientFormScreen>
         await Future.delayed(const Duration(milliseconds: 700));
         if (mounted) Navigator.of(context).pop(true);
       }
+    } on StaleRecordException catch (e) {
+      if (mounted) {
+        setState(() => _submitting = false);
+        await showStaleRecordDialog(context, e.humanMessage, () => Navigator.of(context).pop(true));
+      }
+      return;
     } catch (e) {
       if (mounted) {
         showAppSnackBar(context, e.toString(), isError: true,
@@ -467,8 +481,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
           _buildAppBar(),
           Expanded(
             child: _mastersLoading
-                ? Center(
-                    child: CircularProgressIndicator(color: AppColors.primary))
+                ? const AppSkeletonList()
                 : _mastersError != null
                     ? _buildMastersError()
                     : FadeTransition(
@@ -638,7 +651,7 @@ class _PatientFormScreenState extends State<PatientFormScreen>
           if (!isPhone) ...[
             _sectionLabel('Case Type *'),
             _caseTypeDropdown(),
-            _sectionLabel('Case Fee (₹) *'),
+            _sectionLabel('Case Fee (${widget.hospital.currencySymbol}) *'),
             _textField(
               _caseFeeCtrl,
               'Case Fee',

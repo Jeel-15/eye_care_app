@@ -10,6 +10,7 @@ import '../utils/app_decorations.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_pagination_bar.dart';
 
 class PlatformAuditLogsScreen extends StatefulWidget {
@@ -229,7 +230,7 @@ class _PlatformAuditLogsScreenState extends State<PlatformAuditLogsScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _error != null
               ? AppErrorState(message: _error!, onRetry: _load)
               : (_result?.logs.isEmpty ?? true)

@@ -8,6 +8,7 @@ import '../models/auth_models.dart';
 import '../models/clinical_queue_models.dart';
 import '../models/patient_models.dart';
 import '../services/clinical_queue_service.dart';
+import '../utils/refreshable.dart';
 import 'primary_exam_screen.dart';
 import 'secondary_exam_screen.dart';
 import '../constants/app_colors.dart';
@@ -83,7 +84,8 @@ class ClinicalQueueScreen extends StatefulWidget {
 }
 
 class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin
+    implements Refreshable {
 
   QueueData? _data;
   bool _loading = false;
@@ -116,6 +118,9 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
     _stopQueueTicker();
     super.dispose();
   }
+
+  @override
+  Future<void> refreshSilently() => _load(silent: true);
 
   Future<void> _load({bool silent = false}) async {
     if (!silent) setState(() { _loading = true; _error = null; });

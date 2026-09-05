@@ -6,6 +6,8 @@ import '../services/ot_accountant_service.dart';
 import '../utils/date_format.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
+import '../utils/currency_format.dart';
 
 /// See the matching helper in `ot_ward_screen.dart` for why this is needed
 /// — `unfocus()` only schedules the focus change, it doesn't apply
@@ -83,7 +85,7 @@ class _OtPaymentScreenState extends State<OtPaymentScreen> {
         _buildHeader(),
         Expanded(
           child: _loading
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _loadError != null
                   ? AppErrorState(message: _loadError!, onRetry: _load)
                   : _buildBody(),
@@ -132,9 +134,9 @@ class _OtPaymentScreenState extends State<OtPaymentScreen> {
                 Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: paymentStatusColor(s.paymentStatus).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.full)), child: Text(paymentStatusLabel(s.paymentStatus), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: paymentStatusColor(s.paymentStatus)))),
               ]),
               const Divider(height: 24),
-              _row('Required Total', '₹${s.requiredTotal.toStringAsFixed(0)}'),
-              _row('Total Paid', '₹${s.totalPaid.toStringAsFixed(0)}'),
-              _row('Remaining Balance', '₹${s.remainingBalance.toStringAsFixed(0)}', bold: true),
+              _row('Required Total', '${currentCurrencySymbol()}${s.requiredTotal.toStringAsFixed(0)}'),
+              _row('Total Paid', '${currentCurrencySymbol()}${s.totalPaid.toStringAsFixed(0)}'),
+              _row('Remaining Balance', '${currentCurrencySymbol()}${s.remainingBalance.toStringAsFixed(0)}', bold: true),
             ]),
           ),
           const SizedBox(height: 12),
@@ -162,7 +164,7 @@ class _OtPaymentScreenState extends State<OtPaymentScreen> {
                       child: Row(children: [
                         Expanded(
                           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('₹${p.packageAmount.toStringAsFixed(0)} · ${p.paymentMode}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                            Text('${currentCurrencySymbol()}${p.packageAmount.toStringAsFixed(0)} · ${p.paymentMode}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
                             if (p.receiptNumber != null) Text('Receipt: ${p.receiptNumber}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                           ]),
                         ),
@@ -293,7 +295,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
             ]),
           ),
           if (_loadingForm)
-            Padding(padding: const EdgeInsets.all(32), child: CircularProgressIndicator(color: AppColors.primary))
+            const AppSkeletonList(count: 3, itemHeight: 60)
           else if (_formError != null)
             Padding(padding: const EdgeInsets.all(20), child: Column(children: [Text(_formError!, style: const TextStyle(color: AppColors.red)), const SizedBox(height: 10), ElevatedButton(onPressed: () { setState(() => _loadingForm = true); _loadFormData(); }, child: const Text('Retry'))]))
           else ...[
@@ -309,8 +311,8 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
                     child: Column(children: [
                       _readRow('UHID', f.booking.patient?.patientCode ?? '—'),
                       _readRow('OT Package', f.counselling?.packageName ?? '—'),
-                      _readRow('Total Amount', '₹${f.requiredTotal.toStringAsFixed(0)}'),
-                      _readRow('Amount Paid', '₹${f.totalPaidSoFar.toStringAsFixed(0)}'),
+                      _readRow('Total Amount', '${currentCurrencySymbol()}${f.requiredTotal.toStringAsFixed(0)}'),
+                      _readRow('Amount Paid', '${currentCurrencySymbol()}${f.totalPaidSoFar.toStringAsFixed(0)}'),
                       _readRow('Payment Status', paymentStatusLabel(f.booking.paymentStatus ?? 'pending')),
                       _readRow('Mediclaim', (f.counselling?.mediclaim ?? false) ? 'YES' : 'NO'),
                       _readRow('Invoice Number', f.invoiceNumber ?? '—'),
@@ -326,7 +328,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
                     decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(AppRadius.md)),
                     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                       const Text('Amount to be Paid', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
-                      Text('₹${f.remainingBalance.toStringAsFixed(0)}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                      Text('${currentCurrencySymbol()}${f.remainingBalance.toStringAsFixed(0)}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary)),
                     ]),
                   ),
                   if (disabled) Padding(padding: const EdgeInsets.only(top: 4), child: Text('Nothing remaining to pay.', style: const TextStyle(fontSize: 12, color: AppColors.red, fontWeight: FontWeight.w600))),
@@ -408,7 +410,7 @@ class _ReceiptDialogState extends State<_ReceiptDialog> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 400, maxHeight: 640),
         child: _loading
-            ? const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()))
+            ? const SizedBox(height: 200, child: AppSkeletonList(count: 2, itemHeight: 80, padding: EdgeInsets.zero))
             : _error != null
                 ? Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [Text(_error!, style: const TextStyle(color: AppColors.red), textAlign: TextAlign.center), const SizedBox(height: 12), ElevatedButton(onPressed: _load, child: const Text('Retry'))]))
                 : Padding(
@@ -467,7 +469,7 @@ class _ReceiptPreview extends StatelessWidget {
         ),
       ]),
       const SizedBox(height: 18),
-      Text('₹${p.packageAmount.toStringAsFixed(2)}', textAlign: TextAlign.center, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.primary)),
+      Text('${currentCurrencySymbol()}${p.packageAmount.toStringAsFixed(2)}', textAlign: TextAlign.center, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.primary)),
       const SizedBox(height: 18),
       _box('Patient', [
         _row('Name', receipt.patient?.fullName ?? patientNameFallback ?? '—'),
@@ -482,9 +484,9 @@ class _ReceiptPreview extends StatelessWidget {
         _row('Recorded By', p.recordedBy?.name ?? '—'),
       ]),
       _box('Package Balance', [
-        _row('Package Total', '₹${receipt.requiredTotal.toStringAsFixed(0)}'),
-        _row('Total Paid', '₹${receipt.totalPaid.toStringAsFixed(0)}'),
-        _row('Remaining', '₹${remaining.toStringAsFixed(0)}'),
+        _row('Package Total', '${currentCurrencySymbol()}${receipt.requiredTotal.toStringAsFixed(0)}'),
+        _row('Total Paid', '${currentCurrencySymbol()}${receipt.totalPaid.toStringAsFixed(0)}'),
+        _row('Remaining', '${currentCurrencySymbol()}${remaining.toStringAsFixed(0)}'),
         _row('Status', paymentStatusLabel(receipt.bookingPaymentStatus ?? 'pending')),
       ]),
       const SizedBox(height: 4),
@@ -541,16 +543,16 @@ class _BillingDetailsDialogState extends State<_BillingDetailsDialog> {
       content: SizedBox(
         width: 320,
         child: _loading
-            ? const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()))
+            ? const SizedBox(height: 100, child: AppSkeletonList(count: 1, itemHeight: 70, padding: EdgeInsets.zero))
             : _error != null
                 ? Text(_error!, style: const TextStyle(color: AppColors.red))
                 : Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                     _row('Patient', _data!.booking.patient?.fullName ?? '—'),
                     _row('UHID', _data!.booking.patient?.patientCode ?? '—'),
                     _row('OT Package', _data!.counselling?.packageName ?? '—'),
-                    _row('Total Amount', '₹${_data!.requiredTotal.toStringAsFixed(0)}'),
-                    _row('Amount Paid', '₹${_data!.totalPaidSoFar.toStringAsFixed(0)}'),
-                    _row('Remaining Balance', '₹${_data!.remainingBalance.toStringAsFixed(0)}'),
+                    _row('Total Amount', '${currentCurrencySymbol()}${_data!.requiredTotal.toStringAsFixed(0)}'),
+                    _row('Amount Paid', '${currentCurrencySymbol()}${_data!.totalPaidSoFar.toStringAsFixed(0)}'),
+                    _row('Remaining Balance', '${currentCurrencySymbol()}${_data!.remainingBalance.toStringAsFixed(0)}'),
                     _row('Mediclaim', (_data!.counselling?.mediclaim ?? false) ? 'YES' : 'NO'),
                     _row('Payment Status', paymentStatusLabel(_data!.booking.paymentStatus ?? 'pending')),
                     _row('Invoice Number', _data!.invoiceNumber ?? '—'),

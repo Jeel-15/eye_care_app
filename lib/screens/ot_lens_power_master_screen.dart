@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../services/ot_inventory_service.dart';
 import '../models/ot_inventory_models.dart';
 
@@ -114,7 +115,7 @@ class _OtLensPowerMasterScreenState extends State<OtLensPowerMasterScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) {
       return Center(
         child: Padding(

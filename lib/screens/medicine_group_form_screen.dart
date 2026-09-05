@@ -7,6 +7,7 @@ import '../widgets/app_error_state.dart';
 import '../models/auth_models.dart';
 import '../models/medicine_models.dart';
 import '../services/medicine_service.dart';
+import '../widgets/skeleton.dart';
 
 BoxDecoration _cardDeco() => BoxDecoration(
       color: Colors.white,
@@ -216,7 +217,7 @@ class _MedicineGroupFormScreenState extends State<MedicineGroupFormScreen> {
         ],
       ),
       body: _loadingFormData
-          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const AppSkeletonList()
           : _loadError != null
               ? _buildError()
               : _buildForm(),

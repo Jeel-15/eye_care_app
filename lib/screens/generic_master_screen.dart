@@ -215,8 +215,7 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return Center(
-          child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
     if (_error != null) {
       return Center(
@@ -280,14 +279,17 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(14, 6, 14, 100),
         itemCount: items.length,
-        itemBuilder: (_, i) => _ItemRow(
+        itemBuilder: (_, i) => AnimatedListItem(
           index: i,
-          item: items[i],
-          hasFavourite: widget.hasFavourite,
-          accentColor: widget.accentColor,
-          onEdit: () => _openSheet(item: items[i]),
-          onDelete: () => _delete(items[i]),
-          onToggleFav: () => _toggleFav(items[i]),
+          child: _ItemRow(
+            index: i,
+            item: items[i],
+            hasFavourite: widget.hasFavourite,
+            accentColor: widget.accentColor,
+            onEdit: () => _openSheet(item: items[i]),
+            onDelete: () => _delete(items[i]),
+            onToggleFav: () => _toggleFav(items[i]),
+          ),
         ),
       ),
     );

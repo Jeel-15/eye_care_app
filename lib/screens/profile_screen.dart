@@ -163,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: AppColors.backgroundAlt,
       appBar: _buildAppBar(),
       body: _loading
-          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const AppSkeletonList()
           : _error != null
               ? _buildError()
               : _buildBody(),

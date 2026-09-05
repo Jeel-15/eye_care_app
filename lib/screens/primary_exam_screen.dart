@@ -11,11 +11,9 @@ import '../services/referrer_service.dart';
 import '../services/simple_master_service.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
-import '../constants/permissions.dart';
-import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
-import '../widgets/ot/recommend_surgery_sheet.dart';
+import '../widgets/skeleton.dart';
 
 
 class _CoRow {
@@ -453,7 +451,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         itemCount: _stepNames.length,
         itemBuilder: (_, i) {
           final isActive = i == _currentStep;
-          return GestureDetector(
+          return PressScaleWrapper(
             onTap: () => _goToStep(i),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -615,7 +613,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
               border: Border.all(color: Colors.amber.shade300),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              GestureDetector(
+              PressScaleWrapper(
                 onTap: () => setState(() => _coRows.add(_CoRow(complaint: item.value))),
                 child: Padding(
                   padding: const EdgeInsets.only(left: 10, top: 5, bottom: 5, right: 4),
@@ -623,7 +621,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                       color: Colors.amber.shade900)),
                 ),
               ),
-              GestureDetector(
+              PressScaleWrapper(
                 onTap: () => onUnfavourite(item),
                 child: Padding(
                   padding: const EdgeInsets.only(right: 8, top: 5, bottom: 5),
@@ -661,13 +659,13 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(color: Colors.amber.shade300)),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              GestureDetector(
+              PressScaleWrapper(
                 onTap: () => setState(() => _kcoRows.add(_KcoRow(condition: item.value))),
                 child: Padding(padding: const EdgeInsets.only(left: 10, top: 5, bottom: 5, right: 4),
                     child: Text(item.value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
                         color: Colors.amber.shade900))),
               ),
-              GestureDetector(
+              PressScaleWrapper(
                 onTap: () => _toggleFavourite('kcos', item),
                 child: Padding(padding: const EdgeInsets.only(right: 8, top: 5, bottom: 5),
                     child: Icon(Icons.star_rounded, size: 13, color: Colors.amber.shade600)),
@@ -831,7 +829,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         if (!_loading && _loadError == null) _buildStepBar(),
         Expanded(
           child: _loading
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _loadError != null
                   ? _buildError()
                   : PageView(
@@ -875,12 +873,6 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             const SizedBox(height: 2),
             Text('${p.fullName}  ·  MRD: ${p.patientCode}', style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 10)),
           ])),
-          if (PermissionService.instance.can(Perm.otSurgeryRecommend))
-            IconButton(
-              icon: const Icon(Icons.medical_services_rounded, color: Colors.white),
-              tooltip: 'Recommend Surgery',
-              onPressed: () => showRecommendSurgerySheet(context, patient: widget.patient),
-            ),
         ]),
       )),
     );
@@ -930,7 +922,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                   border: Border.all(color: Colors.amber.shade300),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  GestureDetector(
+                  PressScaleWrapper(
                     onTap: () {
                       if (!selected) setState(() => _historyChips.add(item.value));
                     },
@@ -941,7 +933,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                           fontWeight: FontWeight.w600)),
                     ),
                   ),
-                  GestureDetector(
+                  PressScaleWrapper(
                     onTap: () => _toggleFavourite('hno', item),
                     child: Padding(
                       padding: const EdgeInsets.only(right: 8, top: 5, bottom: 5),
@@ -997,7 +989,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
           const SizedBox(width: 8),
           _miniDropdown(value: safeEye, items: eyeOptions, onChanged: (v) => setState(() => row.eye = v ?? '-'), width: 68),
           const SizedBox(width: 4),
-          GestureDetector(onTap: () => setState(() => _coRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 20)),
+          PressScaleWrapper(onTap: () => setState(() => _coRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 20)),
         ]),
         const SizedBox(height: 6),
         Row(children: [
@@ -1031,7 +1023,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
             onToggleFavourite: (item) => _toggleFavourite('kcos', item),
           )),
           const SizedBox(width: 4),
-          GestureDetector(onTap: () => setState(() => _kcoRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 20)),
+          PressScaleWrapper(onTap: () => setState(() => _kcoRows.removeAt(idx)), child: const Icon(Icons.remove_circle_rounded, color: AppColors.red, size: 20)),
         ]),
         const SizedBox(height: 6),
         Row(children: [
@@ -1178,7 +1170,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                 itemBuilder: (_, i) {
                   final v = filtered[i].value;
                   final isSel = ctrl.text == v;
-                  return GestureDetector(
+                  return PressScaleWrapper(
                     onTap: () => Navigator.pop(ctx, v),
                     child: Container(
                       decoration: BoxDecoration(
@@ -1307,7 +1299,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       final txtColor = isEmpty ? Colors.grey.shade400  : isZero ? const Color(0xFF475569) : isMinus ? const Color(0xFFB91C1C) : const Color(0xFF15803D);
       return Expanded(child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: GestureDetector(
+        child: PressScaleWrapper(
           onTap: () async {
             final sign = t.startsWith('-') ? '-' : '+';
             final picked = await _showSphCylPicker(items, ctrl.text, forcedSign: isEmpty ? '+' : sign);
@@ -1345,7 +1337,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     }
     return Expanded(child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: GestureDetector(
+      child: PressScaleWrapper(
         onTap: (!axisOff && items.isNotEmpty) ? openListPicker : null,
         child: Container(
           height: 40,
@@ -1377,7 +1369,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     }).toList();
 
     Widget chip(String label, bool isSel, bool isFav, VoidCallback onTap) =>
-      GestureDetector(
+      PressScaleWrapper(
         onTap: onTap,
         child: Container(
           width: 58, height: 36,
@@ -1392,7 +1384,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         ),
       );
 
-    Widget zeroChip(bool isSel, VoidCallback onTap) => GestureDetector(
+    Widget zeroChip(bool isSel, VoidCallback onTap) => PressScaleWrapper(
       onTap: onTap,
       child: Container(
         width: 58, height: 36,
@@ -1431,7 +1423,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                       for (final s in ['-', '+'])
                         Expanded(child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: GestureDetector(
+                          child: PressScaleWrapper(
                             onTap: () => ss(() {
                               final prev = sign;
                               sign = s;
@@ -1500,7 +1492,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                           ),
                         )),
                         const SizedBox(width: 8),
-                        GestureDetector(
+                        PressScaleWrapper(
                           onTap: () => ss(() { selected = ''; customCtrl.clear(); }),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1532,7 +1524,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
                           style: const TextStyle(fontSize: 13),
                         )),
                         const SizedBox(width: 8),
-                        GestureDetector(
+                        PressScaleWrapper(
                           onTap: () {
                             final custom = customCtrl.text.trim();
                             String? result;
@@ -1702,7 +1694,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     return Expanded(child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        GestureDetector(
+        PressScaleWrapper(
           onTap: () async {
             final curAdd = addCtrl.text.trim();
             final addIsMinus = curAdd.startsWith('-');
@@ -1858,7 +1850,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       decoration: InputDecoration(
         hintText: '—', hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3), fontSize: 12),
         contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), isDense: true,
-        suffixIcon: hasItems ? GestureDetector(
+        suffixIcon: hasItems ? PressScaleWrapper(
           onTap: () => _openOePickerSheet(fieldKey, ctrl),
           child: Icon(Icons.arrow_drop_down_rounded, size: 18, color: AppColors.primary.withValues(alpha: 0.5)),
         ) : null,
@@ -1957,7 +1949,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
     const opts = ['Block', 'Phaco'];
 
     Widget opChips(String current, void Function(String) onSel) => Wrap(spacing: 6, children: opts.map((o) =>
-      GestureDetector(
+      PressScaleWrapper(
         onTap: () => setState(() => onSel(o)),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -2097,7 +2089,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
       decoration: InputDecoration(
         hintText: '—', hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3), fontSize: 12),
         contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), isDense: true,
-        suffixIcon: masterList.isNotEmpty ? GestureDetector(
+        suffixIcon: masterList.isNotEmpty ? PressScaleWrapper(
           onTap: () => _openFundusPickerSheet(masterList, apiType, ctrl, label),
           child: Icon(Icons.arrow_drop_down_rounded, size: 18, color: AppColors.primary.withValues(alpha: 0.5)),
         ) : null,
@@ -2198,7 +2190,7 @@ class _PrimaryExamScreenState extends State<PrimaryExamScreen> {
         ]),
       );
 
-  Widget _addBtn(VoidCallback onTap) => GestureDetector(onTap: onTap,
+  Widget _addBtn(VoidCallback onTap) => PressScaleWrapper(onTap: onTap,
         child: Container(padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(AppRadius.xl)),
             child: Icon(Icons.add_rounded, color: AppColors.primary, size: 18)));
@@ -2392,9 +2384,8 @@ class _MasterAutocompleteFieldState extends State<_MasterAutocompleteField> {
                 child: Row(children: [
                   // ★/☆ toggle button — only when onToggleFavourite is provided
                   if (widget.onToggleFavourite != null)
-                    GestureDetector(
+                    PressScaleWrapper(
                       onTap: () => widget.onToggleFavourite!(item),
-                      behavior: HitTestBehavior.opaque,
                       child: Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Icon(

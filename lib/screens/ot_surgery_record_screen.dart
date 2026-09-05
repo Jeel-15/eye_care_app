@@ -7,7 +7,9 @@ import '../models/ot_assistant_models.dart';
 import '../services/ot_assistant_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_section_header.dart';
+import '../utils/currency_format.dart';
 
 /// One `_medicineRows` line — medicine is a dropdown pick (not free text, see
 /// OT_SURGERY_RECORD_WEB_PARITY_FIX_PLAN.md G5) so it always resolves against
@@ -243,7 +245,7 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
         _buildHeader(),
         Expanded(
           child: _loading
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _loadError != null
                   ? AppErrorState(message: _loadError!, onRetry: _load)
                   : _buildForm(),
@@ -291,7 +293,7 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
               child: InputDecorator(decoration: _deco('OT Date *'), child: Text(_fmtDisplayDate(_surgeryDate))),
             ),
             const SizedBox(height: 8),
-            _readOnlyRow('Package', '₹${(formData.counselling?.packageAmount ?? formData.booking.packageAmount ?? 0).toStringAsFixed(2)}'),
+            _readOnlyRow('Package', '${currentCurrencySymbol()}${(formData.counselling?.packageAmount ?? formData.booking.packageAmount ?? 0).toStringAsFixed(2)}'),
             _readOnlyRow('Mediclaim', (formData.counselling?.mediclaim ?? formData.booking.hasMediclaim ?? false) ? 'YES' : 'NO'),
             const SizedBox(height: 16),
 
@@ -352,7 +354,7 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
             Row(children: [
               Expanded(child: TextFormField(controller: _estimatedPowerCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: _deco('Estimated Power'))),
               const SizedBox(width: 10),
-              Expanded(child: TextFormField(controller: _lensCostCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _deco('Lens Cost (₹)', hint: 'Enter lens cost'))),
+              Expanded(child: TextFormField(controller: _lensCostCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _deco('Lens Cost (${currentCurrencySymbol()})', hint: 'Enter lens cost'))),
             ]),
             const SizedBox(height: 16),
 

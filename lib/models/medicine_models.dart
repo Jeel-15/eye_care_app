@@ -125,6 +125,26 @@ class MedListResult {
 
 // ── Medicine Group ────────────────────────────────────────────────────────────
 
+/// Result of a CSV/Excel bulk medicine import — mirrors web's plain-language
+/// summary + per-row error list (see CSV_MEDICINE_IMPORT_PARITY_PLAN.md).
+class MedicineImportResult {
+  final int imported;
+  final int skipped;
+  final List<String> errors;
+
+  const MedicineImportResult({
+    required this.imported,
+    required this.skipped,
+    required this.errors,
+  });
+
+  factory MedicineImportResult.fromJson(Map<String, dynamic> j) => MedicineImportResult(
+        imported: (j['imported'] as num?)?.toInt() ?? 0,
+        skipped: (j['skipped'] as num?)?.toInt() ?? 0,
+        errors: (j['errors'] as List?)?.map((e) => e.toString()).toList() ?? const [],
+      );
+}
+
 class MedGroupItem {
   final int? medicineId;
   final String? medicineName;

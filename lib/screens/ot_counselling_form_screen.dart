@@ -7,8 +7,10 @@ import '../models/ot_inventory_models.dart';
 import '../services/ot_counsellor_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_section_header.dart';
 import '../utils/app_route.dart';
+import '../utils/currency_format.dart';
 import 'ot_consent_screen.dart';
 
 /// Round 3 Phase 1 — Counsellor form. One scrollable sectioned form, single
@@ -181,7 +183,7 @@ class _OtCounsellingFormScreenState extends State<OtCounsellingFormScreen> {
       );
       final totalEstimate = await OtCounsellorService.instance.storeCounselling(widget.bookingId, counselling);
       if (!mounted) return;
-      showAppSnackBar(context, 'Counselling saved — estimate ₹${totalEstimate.toStringAsFixed(0)}', isSuccess: true);
+      showAppSnackBar(context, 'Counselling saved — estimate ${currentCurrencySymbol()}${totalEstimate.toStringAsFixed(0)}', isSuccess: true);
       Navigator.of(context).push(appRoute(OtConsentScreen(bookingId: widget.bookingId, patientName: widget.patientName)));
     } catch (e) {
       if (mounted) {
@@ -221,7 +223,7 @@ class _OtCounsellingFormScreenState extends State<OtCounsellingFormScreen> {
         _buildHeader(),
         Expanded(
           child: _loading
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _loadError != null
                   ? AppErrorState(message: _loadError!, onRetry: _load)
                   : _buildForm(),
@@ -293,7 +295,7 @@ class _OtCounsellingFormScreenState extends State<OtCounsellingFormScreen> {
               // Lens Cost is now a plain manual field, decoupled from the
               // package (web pull 2026-08-07) — typed in and added into
               // Total Estimate, not autofilled by package selection anymore.
-              Expanded(child: TextFormField(controller: _lensCostCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: _genFmt, decoration: _deco('Lens Cost', suffix: '₹'))),
+              Expanded(child: TextFormField(controller: _lensCostCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: _genFmt, decoration: _deco('Lens Cost', suffix: currentCurrencySymbol()))),
             ]),
             const SizedBox(height: 16),
 
@@ -314,15 +316,15 @@ class _OtCounsellingFormScreenState extends State<OtCounsellingFormScreen> {
             TextFormField(controller: _packageNameCtrl, decoration: _deco('Package Name')),
             const SizedBox(height: 10),
             Row(children: [
-              Expanded(child: TextFormField(controller: _otChargesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: _genFmt, decoration: _deco('OT Charges', suffix: '₹'))),
+              Expanded(child: TextFormField(controller: _otChargesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: _genFmt, decoration: _deco('OT Charges', suffix: currentCurrencySymbol()))),
               const SizedBox(width: 10),
-              Expanded(child: TextFormField(controller: _surgeonChargesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: _genFmt, decoration: _deco('Surgeon Charges', suffix: '₹'))),
+              Expanded(child: TextFormField(controller: _surgeonChargesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: _genFmt, decoration: _deco('Surgeon Charges', suffix: currentCurrencySymbol()))),
             ]),
             const SizedBox(height: 10),
             Row(children: [
-              Expanded(child: TextFormField(controller: _nursingChargesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: _genFmt, decoration: _deco('Nursing Charges', suffix: '₹'))),
+              Expanded(child: TextFormField(controller: _nursingChargesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: _genFmt, decoration: _deco('Nursing Charges', suffix: currentCurrencySymbol()))),
               const SizedBox(width: 10),
-              Expanded(child: TextFormField(controller: _consumablesChargesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: _genFmt, decoration: _deco('Consumables', suffix: '₹'))),
+              Expanded(child: TextFormField(controller: _consumablesChargesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: _genFmt, decoration: _deco('Consumables', suffix: currentCurrencySymbol()))),
             ]),
             const SizedBox(height: 12),
             // Matches web exactly: Total Estimate = ot_charges + surgeon_charges
@@ -334,7 +336,7 @@ class _OtCounsellingFormScreenState extends State<OtCounsellingFormScreen> {
               decoration: BoxDecoration(color: const Color(0xFFF0F6FB), borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.primary.withValues(alpha: 0.18))),
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 const Text('Total Estimate', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                Text('₹${_totalEstimate.toStringAsFixed(2)}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                Text('${currentCurrencySymbol()}${_totalEstimate.toStringAsFixed(2)}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary)),
               ]),
             ),
             const SizedBox(height: 16),

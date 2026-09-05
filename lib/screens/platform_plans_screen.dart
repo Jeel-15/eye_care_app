@@ -9,8 +9,13 @@ import '../services/platform_plan_service.dart';
 import '../utils/app_decorations.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_section_header.dart';
 
+// Hardcoded ₹ here is intentional, not a currency-parity gap — mirrors
+// web's own deliberate INR-only SaaS/plan billing design (see
+// LOCATION_CURRENCY_PARITY_PRD.md Phase 5). Only hospital-facing screens
+// (patient billing, OT, dashboards) use the per-tenant currency.
 class PlatformPlansScreen extends StatefulWidget {
   final PlatformAdmin admin;
 
@@ -76,7 +81,7 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
         label: Text('Edit Pricing', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w800)),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _error != null
               ? AppErrorState(message: _error!, onRetry: _load)
               : RefreshIndicator(

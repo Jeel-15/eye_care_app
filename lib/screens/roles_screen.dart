@@ -5,6 +5,7 @@ import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
+import '../widgets/skeleton.dart';
 import '../models/auth_models.dart';
 import '../models/role_models.dart';
 import '../services/permission_service.dart';
@@ -130,7 +131,7 @@ class _RolesScreenState extends State<RolesScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppSkeletonList();
     }
     if (_error != null) {
       return Center(
@@ -413,7 +414,7 @@ class _RoleEditorScreenState extends State<RoleEditorScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _error != null
               ? Center(
                   child: Column(mainAxisSize: MainAxisSize.min, children: [

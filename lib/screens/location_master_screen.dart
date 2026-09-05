@@ -3,6 +3,7 @@ import '../constants/app_colors.dart';
 import '../widgets/app_empty_state.dart';
 import '../constants/app_radius.dart';
 import '../services/location_service.dart';
+import '../widgets/skeleton.dart';
 
 class LocationMasterScreen extends StatefulWidget {
   final Color accentColor;
@@ -147,7 +148,7 @@ class _LocationMasterScreenState extends State<LocationMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
     if (_error != null) {
       return Center(

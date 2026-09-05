@@ -10,6 +10,7 @@ import '../models/patient_models.dart';
 import '../services/permission_service.dart';
 import '../services/exam_masters_service.dart';
 import '../services/patient_service.dart';
+import '../utils/refreshable.dart';
 import 'opd_bill_screen.dart';
 import 'patient_checkin_screen.dart';
 import 'patient_form_screen.dart';
@@ -42,10 +43,19 @@ class PatientsScreen extends StatefulWidget {
 }
 
 class _PatientsScreenState extends State<PatientsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin
+    implements Refreshable {
   late final TabController _tabController;
   final _todayPageKey = GlobalKey<_PatientTabPageState>();
   final _allPageKey = GlobalKey<_PatientTabPageState>();
+
+  // Relays to both tab pages' own data reload — the actual list/pagination
+  // state lives in _PatientTabPageState, not here.
+  @override
+  Future<void> refreshSilently() async {
+    await _todayPageKey.currentState?.refreshSilently();
+    await _allPageKey.currentState?.refreshSilently();
+  }
 
   @override
   void initState() {
@@ -165,7 +175,8 @@ class _PatientTabPage extends StatefulWidget {
 }
 
 class _PatientTabPageState extends State<_PatientTabPage>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin
+    implements Refreshable {
   @override
   bool get wantKeepAlive => true;
 
@@ -198,6 +209,9 @@ class _PatientTabPageState extends State<_PatientTabPage>
   }
 
   // ── Data loading ────────────────────────────────────────────────────────────
+
+  @override
+  Future<void> refreshSilently() => _goToPage(_currentPage);
 
   Future<void> _goToPage(int page, {bool scrollTop = false}) async {
     if (_isLoading) return;
@@ -277,7 +291,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _PatientDetailSheet(patient: p, onEdit: () {
+      builder: (_) => _PatientDetailSheet(patient: p, currencySymbol: widget.hospital.currencySymbol, onEdit: () {
         Navigator.pop(context);
         _openEdit(p);
       }),
@@ -432,6 +446,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
                   child: _PatientCard(
                     key: ValueKey(p.id),
                     patient: p,
+                    currencySymbol: widget.hospital.currencySymbol,
                     onView: () => _viewDetail(p),
                     onEdit: () => _openEdit(p),
                     onDelete: () => _deletePatient(p),
@@ -795,6 +810,7 @@ class _StatCard extends StatelessWidget {
 
 class _PatientCard extends StatelessWidget {
   final Patient patient;
+  final String currencySymbol;
   final VoidCallback onView;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -807,6 +823,7 @@ class _PatientCard extends StatelessWidget {
   const _PatientCard({
     super.key,
     required this.patient,
+    required this.currencySymbol,
     required this.onView,
     required this.onEdit,
     required this.onDelete,
@@ -904,7 +921,7 @@ class _PatientCard extends StatelessWidget {
                 _typeBadge(p.type),
                 const Spacer(),
                 if (p.caseFee != null)
-                  Text('₹${_fmt(p.caseFee!)}',
+                  Text('$currencySymbol${_fmt(p.caseFee!)}',
                       style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
@@ -1187,7 +1204,7 @@ class _ActionBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveFg = onTap == null ? fg.withValues(alpha: 0.35) : fg;
-    return GestureDetector(
+    return PressScaleWrapper(
       onTap: onTap,
       child: Container(
         width: 34,
@@ -1248,7 +1265,7 @@ class _PagArrow extends StatelessWidget {
     final color = enabled
         ? AppColors.primary
         : AppColors.primaryA22;
-    return GestureDetector(
+    return PressScaleWrapper(
       onTap: enabled ? onTap : null,
       child: Container(
         width: 30,
@@ -1277,7 +1294,7 @@ class _PagNum extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PressScaleWrapper(
       onTap: active ? null : onTap,
       child: Container(
         constraints: const BoxConstraints(minWidth: 30),
@@ -1333,10 +1350,12 @@ class _PagDot extends StatelessWidget {
 
 class _PatientDetailSheet extends StatelessWidget {
   final Patient patient;
+  final String currencySymbol;
   final VoidCallback onEdit;
 
   const _PatientDetailSheet({
     required this.patient,
+    required this.currencySymbol,
     required this.onEdit,
   });
 
@@ -1511,7 +1530,7 @@ class _PatientDetailSheet extends StatelessWidget {
               p.caseType?.caseType ?? '—'),
           _apptDiv(),
           _apptItem(Icons.currency_rupee_rounded, 'Fee',
-              p.caseFee != null ? '₹${p.caseFee!.toInt()}' : '—'),
+              p.caseFee != null ? '$currencySymbol${p.caseFee!.toInt()}' : '—'),
         ],
       ),
     );

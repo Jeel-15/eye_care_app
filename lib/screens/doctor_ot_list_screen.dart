@@ -9,6 +9,7 @@ import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
+import '../widgets/skeleton.dart';
 
 /// Doctor's own OT patient drill-down — net new (web pull 2026-08-07,
 /// "Phase 2"): two actions once a patient's ward consult is pending —
@@ -154,7 +155,7 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
         _buildHeader(),
         Expanded(
           child: _loading
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _error != null
                   ? AppErrorState(message: _error!, onRetry: _load)
                   : _buildBody(),
@@ -196,7 +197,9 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
         itemBuilder: (_, i) {
           final item = _items[i];
           final pending = _isConsultPending(item);
-          return Padding(
+          return AnimatedListItem(
+            index: i,
+            child: Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Container(
               padding: const EdgeInsets.all(12),
@@ -244,6 +247,7 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
                   ]),
                 ],
               ]),
+            ),
             ),
           );
         },

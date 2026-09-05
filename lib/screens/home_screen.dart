@@ -10,6 +10,7 @@ import '../services/onboarding_service.dart';
 import '../services/permission_service.dart';
 import '../utils/app_nav_label.dart';
 import '../utils/medicines_tab.dart';
+import '../utils/refreshable.dart';
 import '../widgets/app_drawer.dart';
 import 'dashboard_screen.dart';
 import 'login_screen.dart';
@@ -22,7 +23,8 @@ import 'medicines_screen.dart';
 import 'profile_screen.dart';
 import 'settings_screen.dart';
 import 'users_screen.dart';
-import 'foc_screen.dart';
+// FOC Requests disabled at client's request — see foc_screen.dart.
+// import 'foc_screen.dart';
 import 'roles_screen.dart';
 import 'doctor_dashboard_screen.dart';
 import 'onboarding_screen.dart';
@@ -32,6 +34,7 @@ import 'ot_accountant_dashboard_screen.dart';
 import 'ot_discharge_dashboard_screen.dart';
 import 'ot_assistant_dashboard_screen.dart';
 import 'ot_ward_queue_screen.dart';
+import 'ot_reports_screen.dart';
 import '../utils/app_route.dart';
 
 
@@ -52,6 +55,11 @@ class _HomeScreenState extends State<HomeScreen>
 
   final Map<int, Widget> _builtPages   = {};
   final Set<int>         _visitedPages = {0};
+
+  // One key per tab — lets _silentRefresh() reach the currently visible
+  // module's own reload method on app resume without knowing its type.
+  // See ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 4.
+  final List<GlobalKey> _pageKeys = List.generate(5, (_) => GlobalKey());
 
   // One controller per page — drives per-page cross-fade + scale.
   // Forward = page coming in (fade 0→1, scale 0.96→1.0).
@@ -115,6 +123,11 @@ class _HomeScreenState extends State<HomeScreen>
       } else {
         setState(() {});
       }
+      // Reload the currently visible module's own data — the setState above
+      // only refreshes permissions/nav, the cached page widget instance
+      // otherwise keeps whatever data it already had.
+      final pageState = _pageKeys[_currentIndex].currentState;
+      if (pageState is Refreshable) (pageState as Refreshable).refreshSilently();
     } catch (_) {
       // Network error — keep existing permissions, don't disrupt user
     }
@@ -152,36 +165,42 @@ class _HomeScreenState extends State<HomeScreen>
       case 0:
         if (_isDoctorUser) {
           return DoctorDashboardScreen(
+            key: _pageKeys[i],
             user: widget.user,
             hospital: widget.hospital,
             onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
           );
         }
         return DashboardScreen(
+          key: _pageKeys[i],
           user: widget.user,
           hospital: widget.hospital,
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         );
       case 1:
         return PatientsScreen(
+          key: _pageKeys[i],
           user: widget.user,
           hospital: widget.hospital,
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         );
       case 2:
         return MastersScreen(
+          key: _pageKeys[i],
           user: widget.user,
           hospital: widget.hospital,
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         );
       case 3:
         return ReportsScreen(
+          key: _pageKeys[i],
           user: widget.user,
           hospital: widget.hospital,
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         );
       case 4:
         return ClinicalQueueScreen(
+          key: _pageKeys[i],
           user: widget.user,
           hospital: widget.hospital,
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
@@ -215,6 +234,8 @@ class _HomeScreenState extends State<HomeScreen>
         _goTo(4);
       case NavLabel.reports:
         _goTo(3);
+      case NavLabel.otReports:
+        Navigator.push(context, appRoute(const OtReportsScreen()));
       case NavLabel.medicines:
         Navigator.push(context, appRoute(MedicinesScreen(user: widget.user, hospital: widget.hospital, initialTab: MedicinesTab.medicines)));
       case NavLabel.medicineGroups:
@@ -235,8 +256,9 @@ class _HomeScreenState extends State<HomeScreen>
         Navigator.push(context, appRoute(MastersScreen(user: widget.user, hospital: widget.hospital)));
       case NavLabel.users:
         Navigator.push(context, appRoute(UsersScreen(user: widget.user, hospital: widget.hospital)));
-      case NavLabel.focRequests:
-        Navigator.push(context, appRoute(FocScreen(user: widget.user, hospital: widget.hospital)));
+      // FOC Requests disabled at client's request — see foc_screen.dart.
+      // case NavLabel.focRequests:
+      //   Navigator.push(context, appRoute(FocScreen(user: widget.user, hospital: widget.hospital)));
       case NavLabel.rolesAndPerms:
         Navigator.push(context, appRoute(RolesScreen(user: widget.user, hospital: widget.hospital)));
       case NavLabel.otAppointments:

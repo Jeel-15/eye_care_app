@@ -12,10 +12,15 @@ import '../utils/app_decorations.dart';
 import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_section_header.dart';
 import '../widgets/status_badge.dart';
 import 'platform_hospital_detail_screen.dart';
 
+// Hardcoded ₹ here is intentional, not a currency-parity gap — mirrors
+// web's own deliberate INR-only SaaS/plan billing design (see
+// LOCATION_CURRENCY_PARITY_PRD.md Phase 5). Only hospital-facing screens
+// (patient billing, OT, dashboards) use the per-tenant currency.
 class PlatformDashboardScreen extends StatefulWidget {
   final PlatformAdmin admin;
   final VoidCallback onMenuTap;
@@ -76,7 +81,7 @@ class _PlatformDashboardScreenState extends State<PlatformDashboardScreen> {
               ),
             ),
             if (_loading)
-              const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
+              const SliverFillRemaining(child: AppSkeletonList())
             else if (_error != null)
               SliverFillRemaining(
                 child: AppErrorState(message: _error!, onRetry: _load),
