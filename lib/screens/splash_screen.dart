@@ -5,8 +5,8 @@ import '../models/auth_models.dart';
 import '../services/access_guard.dart';
 import '../services/auth_service.dart';
 import '../services/base_service.dart' show PlanAccessBlockedException;
-import '../services/permission_service.dart';
 import '../utils/circular_reveal_route.dart';
+import '../utils/session_policy.dart';
 import '../widgets/pulsing_pupil_loader.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
@@ -83,13 +83,24 @@ class _SplashScreenState extends State<SplashScreen>
 
     try {
       _sessionResult = await AuthService.instance.refreshSession();
+      _hospitalResult = await AuthService.instance.getStoredHospital();
     } on PlanAccessBlockedException {
       // AccessGuard has already navigated to the Access Restricted screen —
       // don't fall back to cached user data, that would let a blocked
       // account straight into the dashboard.
       _sessionResult = null;
     } catch (_) {
-      _sessionResult = await AuthService.instance.getStoredUser();
+      final lastVerified = await AuthService.instance.getLastVerifiedAt();
+      if (SessionPolicy.canUseOfflineCache(
+        lastVerifiedAt: lastVerified,
+        now: DateTime.now().toUtc(),
+      )) {
+        _sessionResult = await AuthService.instance.getStoredUser();
+      } else {
+        await AuthService.instance.clearSession();
+        _sessionResult = null;
+        _hospitalResult = null;
+      }
     }
   }
 
@@ -108,7 +119,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (_sessionResult != null && _hospitalResult != null) {
       // Phase 2: fade spinner, then circular reveal into HomeScreen
       _spinnerCtrl.forward(); // runs in background — don't await
-      PermissionService.instance.load(_sessionResult!.role);
+      AuthService.instance.applyPermissions(_sessionResult!);
       Navigator.of(context).pushReplacement(
         circularRevealRoute(
           page: HomeScreen(user: _sessionResult!, hospital: _hospitalResult!),
@@ -236,10 +247,9 @@ class _SplashScreenState extends State<SplashScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _headline('Eye-', 72, Colors.white),
-                    _headline('SaaS', 72, Colors.white),
+                    _headline('Eye', 72, Colors.white),
                     _headline(
-                      'HMS',
+                      'nosis',
                       96,
                       AppColors.splashAccent.withValues(alpha: 0.90),
                     ),
@@ -273,7 +283,7 @@ class _SplashScreenState extends State<SplashScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'POWERED BY EYE-SAAS',
+                      'POWERED BY EYENOSIS',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,

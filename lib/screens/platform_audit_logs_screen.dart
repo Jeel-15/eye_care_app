@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -239,7 +240,7 @@ class _PlatformAuditLogsScreenState extends State<PlatformAuditLogsScreen> {
                       icon: Icons.history_outlined,
                       onRefresh: _load,
                     )
-                  : RefreshIndicator(
+                  : AppRefreshIndicator(
                       color: AppColors.primary,
                       onRefresh: () => _load(page: _page),
                       child: ListView.builder(

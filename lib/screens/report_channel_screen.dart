@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../utils/date_format.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
+import '../widgets/app_record_card.dart';
 import '../widgets/skeleton.dart';
 import '../constants/permissions.dart';
 import '../models/report_models.dart';
 import '../services/permission_service.dart';
 import '../services/report_service.dart';
 import '../utils/currency_format.dart';
+import '../utils/app_date_picker.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // PER-CHANNEL PATIENT LIST — web's channel.blade.php (Report Filters card,
@@ -109,7 +112,7 @@ class _ReportChannelScreenState extends State<ReportChannelScreen> {
 
   Future<void> _pickDateRange() async {
     final now = DateTime.now();
-    final range = await showDateRangePicker(
+    final range = await showAppDateRangePicker(
       context: context,
       firstDate: DateTime(2024),
       lastDate: now.add(const Duration(days: 1)),
@@ -184,7 +187,8 @@ class _ReportChannelScreenState extends State<ReportChannelScreen> {
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         actions: [
-          if (PermissionService.instance.can(Perm.reportsExport)) ...[
+          if (PermissionService.instance.can(Perm.reportsExport) ||
+              PermissionService.instance.can(Perm.opdReportsExport)) ...[
             IconButton(
               tooltip: 'Export Excel',
               onPressed: _exporting ? null : () => _export('excel'),
@@ -202,7 +206,7 @@ class _ReportChannelScreenState extends State<ReportChannelScreen> {
 
   Widget _buildBody() {
     final result = _result;
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: () => _load(page: _page),
       color: AppColors.primary,
       child: ListView(
@@ -684,6 +688,15 @@ class _SummaryRow extends StatelessWidget {
 // PATIENT CARD
 // ═════════════════════════════════════════════════════════════════════════════
 
+/// This card is the ORIGIN of the icon-badge grid pattern (3 design
+/// iterations landed here — see RECORD_CARD_UNIFICATION_PLAN.md intro for
+/// the full history: plain rows wasted space, fully-colored pills looked
+/// like a "rainbow", landed on color living only on a small icon badge with
+/// the field's label doing the actual identification work). Now migrated
+/// onto the shared `AppRecordCard`/`AppRecordField` (plan §5 step 4) so
+/// there's exactly one implementation of this pattern in the codebase
+/// instead of this screen's private copy plus the shared one every other
+/// screen uses.
 class _PatientCard extends StatelessWidget {
   final ReportPatient patient;
   final bool isOtAppointment;
@@ -692,140 +705,33 @@ class _PatientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primaryA10),
-        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      patient.patientCode,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF6B7D93),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      patient.fullName,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF18324A),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Case fees shown for every row on this channel screen, per
-              // web's channel.blade.php (unconditional `money()` column) —
-              // unlike the fee badge below, this preserves the amount even
-              // when it's zero, matching web exactly.
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1F9D55).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppRadius.xl),
-                ),
-                child: Text(
-                  '${currentCurrencySymbol()}${patient.caseFee.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1F9D55),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _Chip(icon: Icons.calendar_today_outlined, text: patient.appointmentDate),
-              const SizedBox(width: 12),
-              if (patient.age != null)
-                _Chip(icon: Icons.person_outline_rounded, text: '${patient.age} yrs'),
-            ],
-          ),
-          if (patient.contactNo != null) ...[
-            const SizedBox(height: 7),
-            _Chip(icon: Icons.call_outlined, text: patient.contactNo!),
-          ],
-          const SizedBox(height: 7),
-          Row(
-            children: [
-              if (patient.doctorName != null)
-                Expanded(
-                  child: _Chip(
-                    icon: isOtAppointment ? Icons.support_agent_rounded : Icons.medical_services_outlined,
-                    text: patient.doctorName!,
-                    maxWidth: true,
-                  ),
-                ),
-              if (patient.doctorName != null && patient.caseTypeLabel != '-')
-                const SizedBox(width: 12),
-              if (patient.caseTypeLabel != '-')
-                _Chip(icon: Icons.label_outline_rounded, text: patient.caseTypeLabel),
-            ],
-          ),
-          const SizedBox(height: 7),
-          Row(
-            children: [
-              if (patient.receptionistName != null)
-                Expanded(
-                  child: _Chip(
-                    icon: Icons.support_agent_rounded,
-                    text: patient.receptionistName!,
-                    maxWidth: true,
-                  ),
-                ),
-              if (patient.receptionistName != null && patient.locationCity != null)
-                const SizedBox(width: 12),
-              if (patient.locationCity != null)
-                _Chip(icon: Icons.location_on_outlined, text: patient.locationCity!),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final bool maxWidth;
-
-  const _Chip({required this.icon, required this.text, this.maxWidth = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: maxWidth ? MainAxisSize.max : MainAxisSize.min,
-      children: [
-        Icon(icon, size: 12, color: const Color(0xFF6B7D93)),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            text,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93)),
-          ),
+    return AppRecordCard(
+      title: patient.fullName,
+      subtitle: '${patient.patientCode}  ·  ${patient.appointmentDate}',
+      // Case fees shown for every row on this channel screen, per web's
+      // channel.blade.php (unconditional `money()` column) — preserves
+      // the amount even when it's zero, matching web exactly.
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(color: const Color(0xFF1F9D55).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.xl)),
+        child: Text(
+          '${currentCurrencySymbol()}${patient.caseFee.toStringAsFixed(2)}',
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF1F9D55)),
         ),
+      ),
+      fields: [
+        if (patient.age != null) AppRecordField('Age', '${patient.age} yrs', icon: Icons.cake_outlined, color: RecordFieldColors.age),
+        if (patient.contactNo != null) AppRecordField('Phone', patient.contactNo!, icon: Icons.call_outlined, color: RecordFieldColors.phone),
+        if (patient.doctorName != null)
+          AppRecordField(
+            isOtAppointment ? 'Assistant' : 'Doctor',
+            patient.doctorName!,
+            icon: isOtAppointment ? Icons.support_agent_rounded : Icons.medical_services_outlined,
+            color: RecordFieldColors.doctor,
+          ),
+        if (patient.caseTypeLabel != '-') AppRecordField('Case Type', patient.caseTypeLabel, icon: Icons.label_outline_rounded, color: RecordFieldColors.caseType),
+        if (patient.receptionistName != null) AppRecordField('Receptionist', patient.receptionistName!, icon: Icons.badge_outlined, color: RecordFieldColors.receptionist),
+        if (patient.locationCity != null) AppRecordField('City', patient.locationCity!, icon: Icons.location_on_outlined, color: RecordFieldColors.location),
       ],
     );
   }

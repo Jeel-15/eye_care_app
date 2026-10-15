@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -151,7 +152,10 @@ class _CountriesTabState extends State<_CountriesTab> with AutomaticKeepAliveCli
       ),
     );
     final name = nameCtrl.text.trim(); final tz = tzCtrl.text.trim();
-    nameCtrl.dispose(); tzCtrl.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      nameCtrl.dispose();
+      tzCtrl.dispose();
+    });
     if (saved != true) return;
     final result = item == null
         ? await _svc.storeCountry(name, tz)
@@ -181,7 +185,7 @@ class _CountriesTabState extends State<_CountriesTab> with AutomaticKeepAliveCli
           ? const AppSkeletonList()
           : _items.isEmpty
               ? AppEmptyState(message: 'No countries found', icon: Icons.public_off_rounded)
-              : RefreshIndicator(
+              : AppRefreshIndicator(
                   onRefresh: () => _load(page: _page),
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 80),
@@ -271,7 +275,10 @@ class _StatesTabState extends State<_StatesTab> with AutomaticKeepAliveClientMix
         ],
       )),
     );
-    final name = nameCtrl.text.trim(); nameCtrl.dispose();
+    final name = nameCtrl.text.trim();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      nameCtrl.dispose();
+    });
     if (saved != true) return;
     final result = item == null
         ? await _svc.storeState(selCountryId!, name)
@@ -306,7 +313,7 @@ class _StatesTabState extends State<_StatesTab> with AutomaticKeepAliveClientMix
       Expanded(child: _loading
           ? const AppSkeletonList()
           : _items.isEmpty ? AppEmptyState(message: 'No states found', icon: Icons.map_outlined)
-          : RefreshIndicator(
+          : AppRefreshIndicator(
               onRefresh: () => _load(page: _page),
               child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 80),
@@ -394,7 +401,10 @@ class _DistrictsTabState extends State<_DistrictsTab> with AutomaticKeepAliveCli
         ],
       )),
     );
-    final name = nameCtrl.text.trim(); nameCtrl.dispose();
+    final name = nameCtrl.text.trim();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      nameCtrl.dispose();
+    });
     if (saved != true) return;
     final result = item == null
         ? await _svc.storeDistrict(selStateId!, name)
@@ -429,7 +439,7 @@ class _DistrictsTabState extends State<_DistrictsTab> with AutomaticKeepAliveCli
       Expanded(child: _loading
           ? const AppSkeletonList()
           : _items.isEmpty ? AppEmptyState(message: 'No districts found', icon: Icons.location_city_outlined)
-          : RefreshIndicator(
+          : AppRefreshIndicator(
               onRefresh: () => _load(page: _page),
               child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 80),
@@ -537,7 +547,10 @@ class _CitiesTabState extends State<_CitiesTab> with AutomaticKeepAliveClientMix
         );
       }),
     );
-    final name = nameCtrl.text.trim(); nameCtrl.dispose();
+    final name = nameCtrl.text.trim();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      nameCtrl.dispose();
+    });
     if (saved != true) return;
     final result = item == null
         ? await _svc.storeCity(stateId: selStateId!, districtId: selDistrictId, name: name)
@@ -581,7 +594,7 @@ class _CitiesTabState extends State<_CitiesTab> with AutomaticKeepAliveClientMix
       Expanded(child: _loading
           ? const AppSkeletonList()
           : _items.isEmpty ? AppEmptyState(message: 'No cities found', icon: Icons.location_off_rounded)
-          : RefreshIndicator(
+          : AppRefreshIndicator(
               onRefresh: () => _load(page: _page),
               child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 80),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -182,7 +183,7 @@ class _PlatformHospitalsScreenState extends State<PlatformHospitalsScreen> {
                             icon: Icons.local_hospital_outlined,
                             onRefresh: _load,
                           )
-                        : RefreshIndicator(
+                        : AppRefreshIndicator(
                             color: AppColors.primary,
                             onRefresh: () => _load(page: _currentPage),
                             child: ListView.builder(

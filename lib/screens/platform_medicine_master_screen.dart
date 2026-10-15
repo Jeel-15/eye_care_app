@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
@@ -150,7 +151,9 @@ abstract class _SimpleMasterTabState<T extends StatefulWidget> extends State<T>
       ),
     );
     final value = ctrl.text.trim();
-    ctrl.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ctrl.dispose();
+    });
     if (saved != true) return;
     final result = item == null ? await _storeItem(value) : await _updateItem(item['id'] as int, value);
     if (!mounted) return;
@@ -195,7 +198,7 @@ abstract class _SimpleMasterTabState<T extends StatefulWidget> extends State<T>
           ? const AppSkeletonList()
           : _items.isEmpty
               ? AppEmptyState(message: 'No $_entityLabel found', icon: Icons.inbox_rounded)
-              : RefreshIndicator(
+              : AppRefreshIndicator(
                   onRefresh: () => _load(page: _page),
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
@@ -442,7 +445,7 @@ class _MedicinesTabState extends State<_MedicinesTab> with AutomaticKeepAliveCli
           ? const AppSkeletonList()
           : _items.isEmpty
               ? AppEmptyState(message: 'No medicines found', icon: Icons.medication_outlined)
-              : RefreshIndicator(
+              : AppRefreshIndicator(
                   onRefresh: () => _load(page: _page),
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),

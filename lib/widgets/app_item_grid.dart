@@ -21,17 +21,19 @@ class AppGridItem {
 /// duplicating it.
 class AppItemGrid extends StatelessWidget {
   final List<AppGridItem> items;
+  final bool compact;
 
-  const AppItemGrid({super.key, required this.items});
+  const AppItemGrid({super.key, required this.items, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (_, constraints) {
-      final w = (constraints.maxWidth - 20) / 3;
+      final gap = compact ? 16.0 : 20.0;
+      final w = (constraints.maxWidth - gap) / 3;
       return Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: [for (final item in items) SizedBox(width: w, child: _AppGridCard(item: item))],
+        spacing: compact ? 8 : 10,
+        runSpacing: compact ? 8 : 10,
+        children: [for (final item in items) SizedBox(width: w, child: _AppGridCard(item: item, compact: compact))],
       );
     });
   }
@@ -39,11 +41,13 @@ class AppItemGrid extends StatelessWidget {
 
 class _AppGridCard extends StatelessWidget {
   final AppGridItem item;
-  const _AppGridCard({required this.item});
+  final bool compact;
+  const _AppGridCard({required this.item, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     final c = item.color;
+    final iconBox = compact ? 30.0 : 44.0;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -71,7 +75,7 @@ class _AppGridCard extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+                padding: EdgeInsets.fromLTRB(6, compact ? 7 : 10, 6, compact ? 7 : 10),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -79,26 +83,28 @@ class _AppGridCard extends StatelessWidget {
                     Align(
                       alignment: Alignment.center,
                       child: Container(
-                        width: 44,
-                        height: 44,
+                        width: iconBox,
+                        height: iconBox,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(colors: [c.withValues(alpha: 0.14), c.withValues(alpha: 0.04)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(color: c.withValues(alpha: 0.18)),
                         ),
-                        child: Icon(item.icon, color: c, size: 22),
+                        child: Icon(item.icon, color: c, size: compact ? 16 : 22),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: compact ? 5 : 8),
                     Text(
                       item.label,
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.darkNavy, height: 1.3),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.darkNavy, height: 1.2),
                     ),
-                    const SizedBox(height: 4),
-                    Align(alignment: Alignment.center, child: Icon(Icons.chevron_right_rounded, size: 12, color: c.withValues(alpha: 0.45))),
+                    if (!compact) ...[
+                      const SizedBox(height: 4),
+                      Align(alignment: Alignment.center, child: Icon(Icons.chevron_right_rounded, size: 12, color: c.withValues(alpha: 0.45))),
+                    ],
                   ],
                 ),
               ),

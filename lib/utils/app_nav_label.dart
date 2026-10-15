@@ -28,9 +28,15 @@ abstract final class NavLabel {
   static const String routeOfAdmin       = 'Route of Admin.';
   static const String dosages            = 'Dosages';
   static const String medicineGroups     = 'Medicine Groups';
+  static const String wardMedicine       = 'Ward Medicine';
 
   // ── Config ────────────────────────────────────────────────────────────────
   static const String masters      = 'Masters';
+  /// Web doctor black-menu label for eye-exam masters (same destination as Masters).
+  static const String diagnosisMaster = 'Diagnosis Master';
+  static const String medicineMaster  = 'Medicine Master';
+  /// Web doctor black-menu History (exam_history) — apps use Share History screen.
+  static const String history      = 'History';
   static const String settings     = 'Settings';
   static const String rolesAndPerms = 'Roles & Permissions';
   static const String users        = 'Users';

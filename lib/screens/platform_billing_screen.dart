@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
@@ -255,7 +256,7 @@ class _PaymentsTabState extends State<_PaymentsTab> {
                               icon: Icons.receipt_outlined,
                               onRefresh: _load,
                             )
-                          : RefreshIndicator(
+                          : AppRefreshIndicator(
                               color: AppColors.primary,
                               onRefresh: () => _load(page: _page),
                               child: ListView.builder(
@@ -844,7 +845,7 @@ class _SubscriptionsTabState extends State<_SubscriptionsTab> {
                           icon: Icons.loop_outlined,
                           onRefresh: _load,
                         )
-                      : RefreshIndicator(
+                      : AppRefreshIndicator(
                           color: AppColors.primary,
                           onRefresh: () => _load(page: _page),
                           child: ListView.builder(

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../constants/permissions.dart';
+import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
 import '../services/case_type_service.dart';
+import '../services/masters_service.dart';
 import '../utils/currency_format.dart';
 import '../widgets/skeleton.dart';
 
@@ -20,10 +24,15 @@ class CaseTypeMasterScreen extends StatefulWidget {
 }
 
 class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
+  final _p = PermissionService.instance;
   List<CaseTypeItem> _all = [];
   bool _loading = false;
   String? _error;
   String _query = '';
+
+  bool get _canAdd => _p.can(Perm.masterCaseTypeAdd);
+  bool get _canEdit => _p.can(Perm.masterCaseTypeEdit);
+  bool get _canDelete => _p.can(Perm.masterCaseTypeDelete);
 
   List<CaseTypeItem> get _filtered => _query.isEmpty
       ? _all
@@ -77,14 +86,15 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
     if (ok != true || !mounted) return;
     try {
       await CaseTypeService.instance.delete(item.id);
+      MastersService.instance.clearCache();
       await _load();
     } catch (e) {
       if (mounted) showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
-  void _openSheet({CaseTypeItem? item}) {
-    showModalBottomSheet(
+  Future<void> _openSheet({CaseTypeItem? item}) async {
+    final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -100,10 +110,13 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
           } else {
             await CaseTypeService.instance.update(item.id, caseType, caseFee);
           }
-          await _load();
         },
       ),
     );
+    if (saved == true && mounted) {
+      MastersService.instance.clearCache();
+      await _load();
+    }
   }
 
 
@@ -134,14 +147,16 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
             letterSpacing: -0.2,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
-            tooltip: 'Add',
-            onPressed: () => _openSheet(),
-          ),
-        ],
       ),
+      floatingActionButton: _canAdd
+          ? FloatingActionButton.extended(
+              onPressed: () => _openSheet(),
+              backgroundColor: widget.accentColor,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add'),
+            )
+          : null,
       body: Column(
         children: [
           _buildSearch(),
@@ -221,7 +236,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
             Text(
               _query.isNotEmpty
                   ? 'No results for "$_query"'
-                  : 'No case types yet.\nTap + to add one.',
+                  : (_canAdd ? 'No case types yet.\nTap Add to create one.' : 'No case types yet.'),
               textAlign: TextAlign.center,
               style: const TextStyle(
                   color: AppColors.textDisabled,
@@ -233,7 +248,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
       ]);
     }
 
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
@@ -299,28 +314,30 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  if (_canEdit) const SizedBox(width: 4),
                   // Edit
-                  InkWell(
-                    onTap: () => _openSheet(item: item),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.edit_outlined,
-                          size: 18, color: AppColors.orange),
+                  if (_canEdit)
+                    InkWell(
+                      onTap: () => _openSheet(item: item),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      child: const Padding(
+                        padding: EdgeInsets.all(6),
+                        child: Icon(Icons.edit_outlined,
+                            size: 18, color: AppColors.orange),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 2),
+                  if (_canDelete) const SizedBox(width: 2),
                   // Delete
-                  InkWell(
-                    onTap: () => _delete(item),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.delete_outline_rounded,
-                          size: 18, color: AppColors.red),
+                  if (_canDelete)
+                    InkWell(
+                      onTap: () => _delete(item),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      child: const Padding(
+                        padding: EdgeInsets.all(6),
+                        child: Icon(Icons.delete_outline_rounded,
+                            size: 18, color: AppColors.red),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -395,7 +412,7 @@ class _CaseTypeSheetState extends State<_CaseTypeSheet> {
     setState(() => _saving = true);
     try {
       await widget.onSave(name, fee!);
-      if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);

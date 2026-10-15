@@ -19,6 +19,9 @@ class AccessGuard {
   bool _showing = false;
   bool get isBlocking => _showing;
 
+  /// A successful login starts a fresh navigation/blocking lifecycle.
+  void reset() => _showing = false;
+
   /// Tenant-level block (plan expired/suspended/pending). Doesn't clear the
   /// session — the token stays valid for whenever access is restored.
   void showAccessBlocked(String message) {

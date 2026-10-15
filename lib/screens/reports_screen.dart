@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
@@ -92,7 +93,8 @@ class _ReportsScreenState extends State<ReportsScreen> implements Refreshable {
 
   @override
   Widget build(BuildContext context) {
-    if (!PermissionService.instance.can(Perm.reportsView)) {
+    if (!PermissionService.instance.can(Perm.reportsView) &&
+        !PermissionService.instance.can(Perm.opdReportsView)) {
       return Scaffold(
         backgroundColor: const Color(0xFFF6FAFD),
         appBar: _buildAppBar(),
@@ -121,7 +123,7 @@ class _ReportsScreenState extends State<ReportsScreen> implements Refreshable {
     return Scaffold(
       backgroundColor: const Color(0xFFF6FAFD),
       appBar: _buildAppBar(),
-      body: RefreshIndicator(
+      body: AppRefreshIndicator(
         onRefresh: _load,
         color: AppColors.primary,
         child: _buildBody(),
@@ -144,7 +146,8 @@ class _ReportsScreenState extends State<ReportsScreen> implements Refreshable {
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
         ),
         actions: [
-          if (PermissionService.instance.can(Perm.reportsExport)) ...[
+          if (PermissionService.instance.can(Perm.reportsExport) ||
+              PermissionService.instance.can(Perm.opdReportsExport)) ...[
             IconButton(
               tooltip: 'Export Excel',
               onPressed: _exporting ? null : () => _export('excel'),

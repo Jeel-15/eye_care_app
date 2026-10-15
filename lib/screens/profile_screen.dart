@@ -7,6 +7,7 @@ import '../models/auth_models.dart';
 import '../services/onboarding_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/widgets.dart';
+import 'debug_error_preview_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserInfo user;
@@ -541,6 +542,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(width: 14),
                   const Expanded(
                     child: Text('Reset Onboarding', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: AppColors.primaryA50),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primaryA08),
+            boxShadow: [BoxShadow(color: AppColors.primaryA05, blurRadius: 8, offset: const Offset(0, 2))],
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const DebugErrorPreviewScreen()),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(AppRadius.md)),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.error_outline_rounded, color: AppColors.primary, size: 20),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Text('Error Screen Previews', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
                   ),
                   Icon(Icons.chevron_right_rounded, color: AppColors.primaryA50),
                 ],

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../constants/permissions.dart';
+import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/skeleton.dart';
 import '../services/ot_charge_head_service.dart';
@@ -20,10 +23,15 @@ class OtChargeHeadMasterScreen extends StatefulWidget {
 }
 
 class _OtChargeHeadMasterScreenState extends State<OtChargeHeadMasterScreen> {
+  final _p = PermissionService.instance;
   List<OtChargeHeadItem> _all = [];
   bool _loading = false;
   String? _error;
   String _query = '';
+
+  bool get _canAdd => _p.can(Perm.masterOtChargeAdd);
+  bool get _canEdit => _p.can(Perm.masterOtChargeEdit);
+  bool get _canDelete => _p.can(Perm.masterOtChargeDelete);
 
   List<OtChargeHeadItem> get _filtered => _query.isEmpty
       ? _all
@@ -142,11 +150,12 @@ class _OtChargeHeadMasterScreenState extends State<OtChargeHeadMasterScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
-            tooltip: 'Add',
-            onPressed: () => _openSheet(),
-          ),
+          if (_canAdd)
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
+              tooltip: 'Add',
+              onPressed: () => _openSheet(),
+            ),
         ],
       ),
       body: Column(
@@ -241,7 +250,7 @@ class _OtChargeHeadMasterScreenState extends State<OtChargeHeadMasterScreen> {
       ]);
     }
 
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
@@ -328,28 +337,30 @@ class _OtChargeHeadMasterScreenState extends State<OtChargeHeadMasterScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  if (_canEdit) const SizedBox(width: 4),
                   // Edit
-                  InkWell(
-                    onTap: () => _openSheet(item: item),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.edit_outlined,
-                          size: 18, color: Color(0xFFE67E22)),
+                  if (_canEdit)
+                    InkWell(
+                      onTap: () => _openSheet(item: item),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      child: const Padding(
+                        padding: EdgeInsets.all(6),
+                        child: Icon(Icons.edit_outlined,
+                            size: 18, color: Color(0xFFE67E22)),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 2),
+                  if (_canDelete) const SizedBox(width: 2),
                   // Delete
-                  InkWell(
-                    onTap: () => _delete(item),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.delete_outline_rounded,
-                          size: 18, color: AppColors.red),
+                  if (_canDelete)
+                    InkWell(
+                      onTap: () => _delete(item),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      child: const Padding(
+                        padding: EdgeInsets.all(6),
+                        child: Icon(Icons.delete_outline_rounded,
+                            size: 18, color: AppColors.red),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

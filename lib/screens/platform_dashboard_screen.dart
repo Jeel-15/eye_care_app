@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -60,7 +61,7 @@ class _PlatformDashboardScreenState extends State<PlatformDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: RefreshIndicator(
+      body: AppRefreshIndicator(
         color: AppColors.primary,
         onRefresh: _load,
         child: CustomScrollView(

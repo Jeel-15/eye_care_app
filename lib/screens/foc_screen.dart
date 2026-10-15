@@ -3,6 +3,7 @@
 // how the web developer handled the same request on the web app.
 /*
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
@@ -363,7 +364,7 @@ class _FocScreenState extends State<FocScreen> {
       );
     }
 
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _load,
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 88),
