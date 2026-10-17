@@ -1,78 +1,52 @@
-// Throwaway — renders each AppFullScreenError kind to a PNG for a quick
-// visual check. Not a real test; delete after use.
+// Throwaway — renders AppErrorState in both its forms for a visual check.
 import 'dart:io';
 import 'dart:ui' show ImageByteFormat;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:eye_care_app/widgets/app_full_screen_error.dart';
+import 'package:eye_care_app/widgets/app_error_state.dart';
 
-Future<void> _capture(WidgetTester tester, AppErrorKind kind, String path, {String? infoPillText}) async {
+const _fonts = 'C:/src/bin/cache/artifacts/material_fonts';
+
+Future<void> _loadFonts() async {
+  Future<ByteData> bytes(String f) async => ByteData.view(File('$_fonts/$f').readAsBytesSync().buffer);
+  await (FontLoader('Roboto')
+        ..addFont(bytes('roboto-regular.ttf'))
+        ..addFont(bytes('roboto-bold.ttf'))
+        ..addFont(bytes('roboto-black.ttf')))
+      .load();
+  await (FontLoader('MaterialIcons')..addFont(bytes('materialicons-regular.otf'))).load();
+}
+
+Future<void> _shot(WidgetTester tester, Widget body, String path) async {
+  tester.view.physicalSize = const Size(400, 800);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
   final key = GlobalKey();
-  await tester.pumpWidget(
-    MaterialApp(
-      home: RepaintBoundary(
-        key: key,
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Preview')),
-          body: AppFullScreenError(
-            kind: kind,
-            message: 'preview',
-            infoPillText: infoPillText,
-            secondaryLabel: 'Return to Home',
-            onSecondary: () {},
-            onRetry: () {},
-          ),
-        ),
-      ),
-    ),
-  );
-  // Several short explicit pumps (never pumpAndSettle — the hero's ambient
-  // AnimationController repeats forever by design, so settle() would hang)
-  // to give the SVG asset's async decode a few frames to land.
-  for (var i = 0; i < 6; i++) {
-    await tester.pump(const Duration(milliseconds: 150));
+  await tester.pumpWidget(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(fontFamily: 'Roboto'),
+    home: RepaintBoundary(key: key, child: Scaffold(appBar: AppBar(title: const Text('Medicines')), body: body)),
+  ));
+  for (var i = 0; i < 9; i++) {
+    await tester.pump(const Duration(milliseconds: 160));
   }
   final rb = key.currentContext!.findRenderObject() as RenderRepaintBoundary;
   final image = await rb.toImage(pixelRatio: 2.0);
-  final bytes = await image.toByteData(format: ImageByteFormat.png);
-  File(path).writeAsBytesSync(bytes!.buffer.asUint8List());
+  File(path).writeAsBytesSync((await image.toByteData(format: ImageByteFormat.png))!.buffer.asUint8List());
 }
 
 void main() {
-  testWidgets(
-    'connection lost',
-    (tester) async {
-      tester.view.physicalSize = const Size(400, 780);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await _capture(tester, AppErrorKind.connectionLost, 'connection_lost.png');
-    },
-    timeout: const Timeout(Duration(seconds: 25)),
-  );
-
-  testWidgets(
-    'record not found',
-    (tester) async {
-      tester.view.physicalSize = const Size(400, 780);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await _capture(tester, AppErrorKind.recordNotFound, 'record_not_found.png', infoPillText: 'Last searched: #MRD-90421 · OPD Desk');
-    },
-    timeout: const Timeout(Duration(seconds: 25)),
-  );
-
-  testWidgets(
-    'server error',
-    (tester) async {
-      tester.view.physicalSize = const Size(400, 780);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await _capture(tester, AppErrorKind.serverError, 'server_error.png');
-    },
-    timeout: const Timeout(Duration(seconds: 25)),
-  );
+  setUpAll(_loadFonts);
+  testWidgets('compact in list', (t) => _shot(
+        t,
+        ListView(children: [
+          const Padding(padding: EdgeInsets.all(16), child: TextField(decoration: InputDecoration(hintText: 'Search medicines'))),
+          AppErrorState(message: 'SocketException: Failed host lookup', onRetry: () {}),
+        ]),
+        'shot_compact.png',
+      ));
+  testWidgets('full via AppErrorState', (t) => _shot(t, AppErrorState(message: 'Server error. Please try again later.', onRetry: () {}), 'shot_full.png'));
 }

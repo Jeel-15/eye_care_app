@@ -3,6 +3,7 @@
 // how the web developer handled the same request on the web app.
 /*
 import 'package:flutter/material.dart';
+import '../widgets/app_error_state.dart';
 import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -342,20 +343,7 @@ class _FocScreenState extends State<FocScreen> {
       return const AppSkeletonList();
     }
     if (_error != null) {
-      return Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.error_outline, color: AppColors.red, size: 48),
-          const SizedBox(height: 8),
-          Text(_error!, textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.red)),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _load,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-        ]),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
     if (_result == null || _result!.items.isEmpty) {
       return const AppEmptyState(

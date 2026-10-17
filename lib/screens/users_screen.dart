@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../widgets/app_error_state.dart';
 import 'package:flutter/material.dart';
 import '../widgets/app_refresh_indicator.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
@@ -588,43 +589,7 @@ class _UsersScreenState extends State<UsersScreen> {
     }
 
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.error_outline_rounded,
-                size: 52,
-                color: Colors.red.shade300,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () => _load(refresh: true),
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: () => _load(refresh: true));
     }
 
     if (_users.isEmpty) {

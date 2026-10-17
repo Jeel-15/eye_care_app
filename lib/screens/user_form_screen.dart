@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../widgets/app_error_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -410,48 +411,15 @@ class _UserFormScreenState extends State<UserFormScreen> {
     }
 
     if (_formError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.error_outline_rounded,
-                size: 52,
-                color: Colors.red.shade300,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _formError!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _loadingForm = true;
-                    _formError = null;
-                  });
-                  _loadFormData();
-                },
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      return AppErrorState(
+        message: _formError!,
+        onRetry: () {
+          setState(() {
+            _loadingForm = true;
+            _formError = null;
+          });
+          _loadFormData();
+        },
       );
     }
 

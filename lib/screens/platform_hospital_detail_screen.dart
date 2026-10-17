@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_error_state.dart';
 import '../widgets/app_refresh_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
@@ -166,16 +167,7 @@ class _PlatformHospitalDetailScreenState extends State<PlatformHospitalDetailScr
       body: _loading
           ? const AppSkeletonList()
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_error!, style: AppTextStyles.bodyMedium),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded, size: 16), label: const Text('Retry')),
-                    ],
-                  ),
-                )
+              ? AppErrorState(message: _error!, onRetry: _load)
               : AppRefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: _load,

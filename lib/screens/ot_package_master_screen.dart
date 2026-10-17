@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_error_state.dart';
 import '../widgets/app_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
@@ -135,18 +136,7 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
   Widget _buildBody() {
     if (_loading) return const AppSkeletonList();
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.red.withValues(alpha: 0.6)),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF64748B))),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white)),
-          ]),
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
     final items = _filtered;
     if (items.isEmpty) {

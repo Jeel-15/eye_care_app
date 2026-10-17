@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_error_state.dart';
 import '../widgets/app_refresh_indicator.dart';
 import '../utils/app_route.dart';
 import '../constants/app_colors.dart';
@@ -166,26 +167,7 @@ class _RolesScreenState extends State<RolesScreen> {
       return const AppSkeletonList();
     }
     if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, color: AppColors.red, size: 48),
-            const SizedBox(height: 8),
-            Text(
-              _error!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.red),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: _load,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
     if (_roles.isEmpty) {
       return const AppEmptyState(message: 'No roles found.');
@@ -670,30 +652,7 @@ class _RoleEditorScreenState extends State<RoleEditorScreen> {
       body: _loading
           ? const AppSkeletonList()
           : _error != null
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: AppColors.red,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _error!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppColors.red),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: _loadPermissions,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                  ),
-                ],
-              ),
-            )
+          ? AppErrorState(message: _error!, onRetry: _loadPermissions)
           : Form(
               key: _formKey,
               child: ListView(

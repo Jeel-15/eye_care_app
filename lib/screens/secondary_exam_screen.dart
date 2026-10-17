@@ -16,6 +16,7 @@ import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/exam/advice_picker.dart';
+import '../widgets/exam/diagnosis_grouped_chips.dart';
 import '../widgets/exam/exam_live_slip.dart';
 import '../widgets/exam/exam_section_sheet.dart';
 import '../widgets/exam/exam_finish_chooser.dart';
@@ -5134,10 +5135,6 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                 ),
               )
               .toList();
-    final sorted = [
-      ...filtered.where((d) => d.isFavourite),
-      ...filtered.where((d) => !d.isFavourite),
-    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -5224,7 +5221,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        if (sorted.isEmpty)
+        if (filtered.isEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
@@ -5239,10 +5236,10 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
             ),
           )
         else
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: sorted.map((d) {
+          DiagnosisGroupedChips(
+            items: filtered,
+            selectedIds: _selectedDiagnosisIds,
+            chipBuilder: (d) {
               final selected = _selectedDiagnosisIds.contains(d.id);
               return Container(
                 decoration: BoxDecoration(
@@ -5332,7 +5329,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                   ),
                 ),
               );
-            }).toList(),
+            },
           ),
       ],
     );
