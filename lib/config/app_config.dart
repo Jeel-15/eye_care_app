@@ -14,7 +14,7 @@ class AppConfig {
   // reverse tcp:8000 tcp:8000`) to debug the logo-loading issue with full
   // server-side visibility. Revert to the eyenosis.com line below once
   // done. See LOGO_403_INVESTIGATION.md.
-  static const String _devUrl  = 'http://eyenosis.com/api/v1';
+  static const String _devUrl  = 'http://localhost:8000/api/v1'; // TEMP-LOCAL: revert to http://eyenosis.com/api/v1
   static const String _prodUrl = 'http://eyenosis.com/api/v1';
   // static const String _devUrl  = 'http://eyenosis.com/api/v1';
 
